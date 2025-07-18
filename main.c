@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "include/InputManager.h"
 #include "include/Settings.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
@@ -18,16 +19,20 @@ int main(void) {
 
     GLFWwindow* window = window_init(&settings.window);
 
+    im_init();
+    im_register_key(GLFW_KEY_ESCAPE);
+
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        im_update_input(window);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (im_get_key_down(GLFW_KEY_ESCAPE)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
 
-        glfwPollEvents();
-
+        im_reset_input();
         glfwSwapBuffers(window);
         glFinish();
     }

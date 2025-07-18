@@ -15,6 +15,10 @@ add_executable(CVoxelEngine main.c
         src/glad.c
         src/Settings.c
         include/Settings.h
+        src/InputManager.c
+        include/InputManager.h
+        include/Vector.h
+        src/Vector.c
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl)
