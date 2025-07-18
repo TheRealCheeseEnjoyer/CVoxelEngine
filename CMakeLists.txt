@@ -3,4 +3,18 @@ project(CVoxelEngine C)
 
 set(CMAKE_C_STANDARD 23)
 
-add_executable(CVoxelEngine main.c)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif ()
+
+set(CMAKE_C_FLAGS "-Wall -Wextra")
+set(CMAKE_C_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_RELEASE "-O3")
+
+add_executable(CVoxelEngine main.c
+        src/glad.c
+        src/Settings.c
+        include/Settings.h
+)
+
+target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl)
