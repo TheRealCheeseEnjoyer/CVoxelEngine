@@ -20,7 +20,7 @@ int main(void) {
     GLFWwindow* window = window_init(&settings.window);
 
     im_init();
-    im_register_key(GLFW_KEY_ESCAPE);
+    im_register_key(settings.controls.exit);
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -28,7 +28,7 @@ int main(void) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (im_get_key_down(GLFW_KEY_ESCAPE)) {
+        if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
 
