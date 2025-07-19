@@ -22,7 +22,17 @@ int is_key_registered(KeyCode key) {
     return KEY_NOT_REGISTERED;
 }
 
-void im_init() {
+void im_init(KeyCode* keys, int n) {
+    im_init_empty();
+
+    int number_of_keys = 8;
+    for (int i = 0; i < number_of_keys; i++) {
+        im_register_key(keys[i]);
+    }
+
+}
+
+void im_init_empty() {
     KeyStates = vec_init(sizeof(KeyState));
 }
 

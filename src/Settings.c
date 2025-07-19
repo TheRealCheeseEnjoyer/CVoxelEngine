@@ -37,6 +37,7 @@ int load_window_settings(FILE* file, WindowSettings* settings) {
             strcpy(settings->title, value);
         }
     }
+    return 1;
 }
 
 int value_to_keycode(char* str) {
@@ -75,6 +76,7 @@ int load_controls(FILE* file, Controls* settings) {
         else if (strcmp(property, "interact") == 0) settings->interact = key;
         else if (strcmp(property, "exit") == 0) settings->exit = key;
     }
+    return 1;
 }
 
 int settings_save(Settings* settings) {
@@ -111,6 +113,7 @@ int settings_save(Settings* settings) {
     fprintf(file, "exit:%s\n", str);
 
     fclose(file);
+    return 1;
 }
 
 int settings_load(Settings* settings) {

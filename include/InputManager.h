@@ -2,9 +2,10 @@
 #define INPUTMANAGER_H
 #include <GLFW/glfw3.h>
 
-typedef unsigned int KeyCode;
+typedef int KeyCode;
 
-void im_init();
+void im_init(KeyCode* keys, int n);
+void im_init_empty();
 void im_destroy();
 
 void im_register_key(KeyCode key);

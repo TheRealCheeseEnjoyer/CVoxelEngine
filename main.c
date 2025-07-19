@@ -19,8 +19,9 @@ int main(void) {
 
     GLFWwindow* window = window_init(&settings.window);
 
-    im_init();
-    im_register_key(settings.controls.exit);
+    im_init((KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
+
+
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -36,6 +37,9 @@ int main(void) {
         glfwSwapBuffers(window);
         glFinish();
     }
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
 
     return 0;
 }
