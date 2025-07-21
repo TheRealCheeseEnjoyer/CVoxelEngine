@@ -9,6 +9,7 @@
 #include <cglm/cam.h>
 
 #include "include/InputManager.h"
+#include "include/Player.h"
 #include "include/Settings.h"
 #include "include/World.h"
 
@@ -26,20 +27,23 @@ int main(void) {
     vec3 startPos = {-3, 3, -3};
     world_init(startPos);
 
+    Player player = player_init(&settings.controls);
+
     mat4 projection, view;
     glm_perspective(glm_rad(45), (float)settings.window.width / settings.window.height, 0.1f, 100.0f, projection);
-    vec3 front = {1, -.5f, 1};
-    vec3 center = {0, 0, 0};
-    vec3 up = {0, 1, 0};
-    glm_look(startPos, front, up, view);
-    //glm_lookat(startPos, center, up, view);
 
+    float lastFrame = 0;
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         im_update_input(window);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        float currentFrame = (float)glfwGetTime();
+        float deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
+        player_update(player, deltaTime);
+        player_get_view_matrix(player, view);
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }

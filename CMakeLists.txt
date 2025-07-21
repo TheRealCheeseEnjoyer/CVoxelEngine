@@ -29,6 +29,8 @@ add_executable(CVoxelEngine main.c
         include/BlockType.h
         src/Shader.c
         include/Shader.h
+        src/Player.c
+        include/Player.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)
