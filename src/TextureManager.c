@@ -36,7 +36,7 @@ void generateTexture(BlockType type) {
     textures[type] = texture;
 }
 
-unsigned int getTextureId(BlockType type) {
+unsigned int tm_get_texture_id(BlockType type) {
     if (textures[type] == 0) {
         generateTexture(type);
     }

@@ -6,9 +6,11 @@
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <cglm/cam.h>
 
 #include "include/InputManager.h"
 #include "include/Settings.h"
+#include "include/World.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
 bool debuggerIsAttached();
@@ -21,7 +23,16 @@ int main(void) {
 
     im_init((KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
 
+    vec3 startPos = {-3, 3, -3};
+    world_init(startPos);
 
+    mat4 projection, view;
+    glm_perspective(glm_rad(45), (float)settings.window.width / settings.window.height, 0.1f, 100.0f, projection);
+    vec3 front = {1, -.5f, 1};
+    vec3 center = {0, 0, 0};
+    vec3 up = {0, 1, 0};
+    glm_look(startPos, front, up, view);
+    //glm_lookat(startPos, center, up, view);
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -32,6 +43,8 @@ int main(void) {
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+
+        world_draw(projection, view);
 
         im_reset_input();
         glfwSwapBuffers(window);

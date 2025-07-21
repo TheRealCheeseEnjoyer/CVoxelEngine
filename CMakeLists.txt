@@ -9,7 +9,7 @@ endif ()
 
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 set(CMAKE_C_FLAGS_DEBUG "-g")
-set(CMAKE_C_FLAGS_RELEASE "-O3")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -Werror")
 
 add_executable(CVoxelEngine main.c
         src/glad.c
@@ -19,6 +19,16 @@ add_executable(CVoxelEngine main.c
         include/InputManager.h
         include/Vector.h
         src/Vector.c
+        src/World.c
+        include/World.h
+        src/Chunk.c
+        include/Chunk.h
+        include/Block.h
+        src/TextureManager.c
+        include/TextureManager.h
+        include/BlockType.h
+        src/Shader.c
+        include/Shader.h
 )
 
-target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl)
+target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)

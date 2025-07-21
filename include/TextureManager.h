@@ -3,6 +3,6 @@
 
 #include "BlockType.h"
 
-unsigned int getTextureId(BlockType type);
+unsigned int tm_get_texture_id(BlockType type);
 
 #endif
