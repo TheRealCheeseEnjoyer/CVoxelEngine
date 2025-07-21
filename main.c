@@ -33,6 +33,9 @@ int main(void) {
     glm_perspective(glm_rad(45), (float)settings.window.width / settings.window.height, 0.1f, 100.0f, projection);
 
     float lastFrame = 0;
+    double totalFrameTimes = 0;
+    int numFrames = 0;
+    double start = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         im_update_input(window);
@@ -53,11 +56,13 @@ int main(void) {
         im_reset_input();
         glfwSwapBuffers(window);
         glFinish();
+        numFrames++;
+        totalFrameTimes += deltaTime;
+        //printf("FPS: %f\n", 1 / (glfwGetTime() - currentFrame));
     }
-
+    printf("avg FPS: %f\n", numFrames / totalFrameTimes);
     glfwDestroyWindow(window);
     glfwTerminate();
-
     return 0;
 }
 

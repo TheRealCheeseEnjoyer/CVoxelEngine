@@ -81,20 +81,20 @@ void player_update(Player player, float deltaTime) {
 
     vec2 input = {0, 0};
     if (im_get_key(controls->forward))
-        input[X] += 1;
-    if (im_get_key(controls->backward))
-        input[X] -= 1;
-    if (im_get_key(controls->left))
-        input[Y] -= 1;
-    if (im_get_key(controls->right))
         input[Y] += 1;
+    if (im_get_key(controls->backward))
+        input[Y] -= 1;
+    if (im_get_key(controls->left))
+        input[X] -= 1;
+    if (im_get_key(controls->right))
+        input[X] += 1;
 
     float speed = player->movementSpeed * deltaTime;
-    vec3 rightMovement, forwardMovement, movement;
-    glm_vec3_scale(player->right, input[Y] * speed, rightMovement);
-    glm_vec3_scale(player->front, input[X] * speed, forwardMovement);
-    glm_vec3_add(rightMovement, forwardMovement, movement);
-    glm_vec3_add(player->position, movement, player->position);
+    vec3 horizontalMovement, forwardMovement, totalMovement;
+    glm_vec3_scale(player->right, input[X] * speed, horizontalMovement);
+    glm_vec3_scale(player->front, input[Y] * speed, forwardMovement);
+    glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
+    glm_vec3_add(player->position, totalMovement, player->position);
 
     recalculate_vectors(player);
 }

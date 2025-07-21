@@ -9,7 +9,7 @@ endif ()
 
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 set(CMAKE_C_FLAGS_DEBUG "-g")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -Werror")
+set(CMAKE_C_FLAGS_RELEASE "-O3")
 
 add_executable(CVoxelEngine main.c
         src/glad.c
