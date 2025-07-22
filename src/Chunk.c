@@ -187,7 +187,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
 
     for (int i = 0; i < 3; i++) {
         if (i == neighborDirectionIndex) continue;
-        vertices[1].position[i] = *neighbor[i] -.5f;
+        vertices[1].position[i] = *neighbor[i] - .5f;
     }
 
     vertices[0].texCoords[X] *= length + 1;
@@ -196,14 +196,14 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     vertices[1].texCoords[Y] *= width + 1;
 }
 
-void chunk_create_mesh(Chunk *chunk) {
+void chunk_update_mesh(Chunk* chunk, BlockType targetType) {
     char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z] = {0};
 
     for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
         for (int y = 0; y < CHUNK_SIZE_Y; ++y) {
             for (int x = 0; x < CHUNK_SIZE_X; ++x) {
                 Block *block = chunk_get_block(chunk, x, y, z);
-                if (block == nullptr || block->type == BLOCK_AIR) continue;
+                if (block == nullptr ||  block->type == BLOCK_AIR || (targetType != 0 && block->type != targetType)) continue;
 
                 if (chunk->meshes[block->type] == nullptr) {
                     chunk->meshes[block->type] = vec_init(sizeof(Vertex));
@@ -340,6 +340,10 @@ void chunk_create_mesh(Chunk *chunk) {
     }
 }
 
+void chunk_create_mesh(Chunk *chunk) {
+    chunk_update_mesh(chunk, BLOCK_AIR);
+}
+
 void chunk_load_mesh(Chunk *chunk) {
     if (chunk->VAO == 0)
         glGenVertexArrays(1, &chunk->VAO);
@@ -355,6 +359,14 @@ void chunk_load_mesh(Chunk *chunk) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
+    glBindVertexArray(0);
+}
+
+void chunk_reload_mesh(Chunk *chunk, BlockType type) {
+    glBindVertexArray(chunk->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[type]);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(vec_size(chunk->meshes[type]) * sizeof(Vertex)), vec_get(chunk->meshes[type], 0), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
@@ -376,5 +388,65 @@ void chunk_draw(Chunk *chunk, Shader shader, mat4 projection, mat4 view) {
         glBindTexture(GL_TEXTURE_2D, tm_get_texture_id(i));
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->meshes[i]));
+    }
+}
+
+void chunk_neighbor_block_destroyed(Chunk* chunk, int x, int y, int z) {
+    Block* block = chunk_get_block(chunk, x, y, z);
+    if (block == nullptr || block->type == BLOCK_AIR) return;
+
+    vec_clear(chunk->meshes[block->type]);
+    chunk_update_mesh(chunk, block->type);
+    chunk_reload_mesh(chunk, block->type);
+}
+
+void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
+    Block *toDestroy = chunk_get_block(chunk, x, y, z);
+    BlockType oldType = toDestroy->type;
+    toDestroy->type = BLOCK_AIR;
+
+    BlockType neighborTypes[7] = {0};
+    neighborTypes[0] = oldType;
+    int lastIndex = 1;
+
+    for (int offsetX = -1; offsetX <= 1; offsetX++) {
+        for (int offsetY = -1; offsetY <= 1; offsetY++) {
+            for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
+                if ((offsetX != 0 && offsetY != 0) || (offsetX != 0 && offsetZ != 0) || (offsetY != 0 && offsetZ != 0))
+                    continue;
+                Block *block = chunk_get_block(chunk, x + offsetX, y + offsetY, z + offsetZ);
+                if (block == nullptr || block->type == BLOCK_AIR)
+                    continue;
+
+                bool isAlreadyInArray = false;
+                for (int i = 0; i < lastIndex; i++) {
+                    if (neighborTypes[i] == block->type) {isAlreadyInArray = true; break;}
+                }
+
+                if (!isAlreadyInArray) {
+                    neighborTypes[lastIndex] = block->type;
+                    lastIndex++;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < lastIndex; i++) {
+        BlockType toUpdate = neighborTypes[i];
+        vec_clear(chunk->meshes[toUpdate]);
+        chunk_update_mesh(chunk, toUpdate);
+        chunk_reload_mesh(chunk, toUpdate);
+    }
+
+    if (x == CHUNK_SIZE_X - 1 && chunk->west != nullptr) {
+        chunk_neighbor_block_destroyed(chunk->west, 0, y, z);
+    } else if (x == 0 && chunk->east != nullptr) {
+        chunk_neighbor_block_destroyed(chunk->east, CHUNK_SIZE_X - 1, y, z);
+    }
+
+    if (z == 0 && chunk->south != nullptr) {
+        chunk_neighbor_block_destroyed(chunk->south, x, y, CHUNK_SIZE_Z - 1);
+    } else if (z == CHUNK_SIZE_Z - 1 && chunk->north != nullptr) {
+        chunk_neighbor_block_destroyed(chunk->north, x, y, 0);
     }
 }

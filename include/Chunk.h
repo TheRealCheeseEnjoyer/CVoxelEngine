@@ -37,4 +37,6 @@ void chunk_create_mesh(Chunk *chunk);
 void chunk_load_mesh(Chunk *chunk);
 void chunk_draw(Chunk *chunk, Shader shader, mat4 projection, mat4 view);
 
+void chunk_destroy_block(Chunk* chunk, int x, int y, int z);
+
 #endif

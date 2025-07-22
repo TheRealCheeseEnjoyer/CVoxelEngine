@@ -149,6 +149,10 @@ void player_update(Player player, float deltaTime) {
         printf("Position: %f %f %f\n", blockPos[X], blockPos[Y], blockPos[Z]);
     }
 
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
+        world_destroy_block(blockPos[X], blockPos[Y], blockPos[Z]);
+    }
+
     recalculate_vectors(player);
 }
 
