@@ -62,7 +62,6 @@ void recalculate_vectors(Player player) {
 }
 
 Player player_init(Controls *playerControls) {
-    im_register_button(GLFW_MOUSE_BUTTON_LEFT);
     controls = playerControls;
     Player player = calloc(1, sizeof(struct player_t));
     player->movementSpeed = 15;
@@ -141,16 +140,42 @@ void player_update(Player player, float deltaTime) {
     glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
     glm_vec3_add(player->position, totalMovement, player->position);
 
-    vec3 eye, blockPos;
-    FaceOrientation face;
+    vec3 eye, blockLookedAt;
+    FaceOrientation faceLookedAt;
     player_eye_position(player, eye);
-    get_block_looked_at(eye, player->front, blockPos, &face);
+    get_block_looked_at(eye, player->front, blockLookedAt, &faceLookedAt);
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
-        printf("Position: %f %f %f\n", blockPos[X], blockPos[Y], blockPos[Z]);
+        printf("Position: %f %f %f\n", blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
     }
 
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
-        world_destroy_block(blockPos[X], blockPos[Y], blockPos[Z]);
+        world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
+    }
+
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT)) {
+        vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
+        switch (faceLookedAt) {
+            case FACE_TOP:
+                newBlockPos[Y] += 1;
+                break;
+            case FACE_BOTTOM:
+                newBlockPos[Y] -= 1;
+                break;
+            case FACE_LEFT:
+                newBlockPos[X] += 1;
+                break;
+            case FACE_RIGHT:
+                newBlockPos[X] -= 1;
+                break;
+            case FACE_FRONT:
+                newBlockPos[Z] += 1;
+                break;
+            case FACE_BACK:
+                newBlockPos[Z] -= 1;
+                break;
+        }
+
+        world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], BLOCK_GRASS);
     }
 
     recalculate_vectors(player);

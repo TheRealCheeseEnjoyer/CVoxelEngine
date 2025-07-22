@@ -450,3 +450,14 @@ void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
         chunk_neighbor_block_destroyed(chunk->north, x, y, 0);
     }
 }
+
+void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
+    Block* block = chunk_get_block(chunk, x, y, z);
+    if (block == nullptr || block->type != BLOCK_AIR) return;
+
+    block->type = type;
+    vec_clear(chunk->meshes[type]);
+    chunk_update_mesh(chunk, type);
+    chunk_reload_mesh(chunk, type);
+
+}

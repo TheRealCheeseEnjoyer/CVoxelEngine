@@ -12,6 +12,7 @@ void world_init(vec3 initialPosition);
 void world_draw(mat4 projection, mat4 view);
 Block* world_get_block_at(int x, int y, int z);
 void world_destroy_block(int x, int y, int z);
+void world_place_block(int x, int y, int z, BlockType type);
 void world_destroy();
 
 #endif
