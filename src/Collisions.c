@@ -56,3 +56,12 @@ bool collisions_ray_to_aabb(vec3 origin, vec3 direction, AABB aabb, float *dista
 
     return tMin <= tMax && tMax > 0;
 }
+
+bool collisions_aabb_to_aabb(AABB first, AABB second) {
+    return  first.min[X] <= second.max[X] &&
+            first.max[X] >= second.min[X] &&
+            first.min[Y] <= second.max[Y] &&
+            first.max[Y] >= second.min[Y] &&
+            first.min[Z] <= second.max[Z] &&
+            first.max[Z] >= second.min[Z];
+}

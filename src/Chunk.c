@@ -459,5 +459,4 @@ void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
     vec_clear(chunk->meshes[type]);
     chunk_update_mesh(chunk, type);
     chunk_reload_mesh(chunk, type);
-
 }
