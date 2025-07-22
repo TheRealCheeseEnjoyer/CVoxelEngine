@@ -107,6 +107,10 @@ void player_get_view_matrix(Player player, mat4 outView) {
     glm_lookat(eye, center, player->up, outView);
 }
 
+void player_get_eye_position(Player player, vec3 position) {
+    eye_position(player, position);
+}
+
 void player_free(Player player) {
     free(player);
 }

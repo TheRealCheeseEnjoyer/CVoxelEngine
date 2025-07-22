@@ -11,6 +11,7 @@
 #include "include/InputManager.h"
 #include "include/Player.h"
 #include "include/Settings.h"
+#include "include/Skybox.h"
 #include "include/World.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
@@ -28,9 +29,10 @@ int main(void) {
     world_init(startPos);
 
     Player player = player_init(&settings.controls);
+    skybox_init("yellowcloud");
 
     mat4 projection, view;
-    glm_perspective(glm_rad(45), (float)settings.window.width / settings.window.height, 0.1f, 100.0f, projection);
+    glm_perspective(glm_rad(60), (float)settings.window.width / settings.window.height, 0.1f, 100.0f, projection);
 
     float lastFrame = 0;
     double totalFrameTimes = 0;
@@ -39,8 +41,7 @@ int main(void) {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         im_update_input(window);
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
         float currentFrame = (float)glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -50,7 +51,9 @@ int main(void) {
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
-
+        vec3 eye;
+        player_get_eye_position(player, eye);
+        skybox_draw(eye, projection, view);
         world_draw(projection, view);
 
         im_reset_input();
@@ -61,6 +64,8 @@ int main(void) {
         //printf("FPS: %f\n", 1 / (glfwGetTime() - currentFrame));
     }
     printf("avg FPS: %f\n", numFrames / totalFrameTimes);
+    skybox_destroy();
+    player_free(player);
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

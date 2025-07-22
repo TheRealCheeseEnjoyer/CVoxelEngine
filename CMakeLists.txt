@@ -31,6 +31,8 @@ add_executable(CVoxelEngine main.c
         include/Shader.h
         src/Player.c
         include/Player.h
+        src/Skybox.c
+        include/Skybox.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)
