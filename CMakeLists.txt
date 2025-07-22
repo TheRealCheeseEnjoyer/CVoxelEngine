@@ -33,6 +33,10 @@ add_executable(CVoxelEngine main.c
         include/Player.h
         src/Skybox.c
         include/Skybox.h
+        include/AABB.h
+        src/Collisions.c
+        include/Collisions.h
+        include/FaceOrientation.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)

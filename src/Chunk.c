@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 
 #include "../include/TextureManager.h"
+#include "../include/FaceOrientation.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
 #define X 0

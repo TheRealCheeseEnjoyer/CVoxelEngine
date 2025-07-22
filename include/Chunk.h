@@ -16,15 +16,6 @@ typedef struct {
     vec2 texCoords;
 } Vertex;
 
-typedef enum {
-    FACE_TOP = 0b1,
-    FACE_BOTTOM = 0b10,
-    FACE_LEFT = 0b100,
-    FACE_RIGHT = 0b1000,
-    FACE_FRONT = 0b10000,
-    FACE_BACK = 0b100000
-} FaceOrientation;
-
 typedef struct chunk_t {
     vec3 position;
     mat4 model;
