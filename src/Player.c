@@ -44,6 +44,8 @@ struct player_t {
     float fallSpeed;
 };
 
+BlockType selectedBlock = BLOCK_GRASS;
+
 Player player_init(Controls *playerControls) {
     controls = playerControls;
     Player player = calloc(1, sizeof(struct player_t));
@@ -214,6 +216,11 @@ void player_update(Player player, float deltaTime) {
         world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
     }
 
+    if (im_get_key_down(GLFW_KEY_1))
+        selectedBlock = BLOCK_GRASS;
+    else if (im_get_key_down(GLFW_KEY_2))
+        selectedBlock = BLOCK_ROCK;
+
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT)) {
         vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
         switch (faceLookedAt) {
@@ -238,7 +245,7 @@ void player_update(Player player, float deltaTime) {
         }
 
         if (!player_is_colliding_with_block(player->position, newBlockPos))
-            world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], BLOCK_GRASS);
+            world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlock);
     }
 
     recalculate_vectors(player);

@@ -26,6 +26,8 @@ int main(void) {
     im_init((KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
     im_register_button(GLFW_MOUSE_BUTTON_LEFT);
     im_register_button(GLFW_MOUSE_BUTTON_RIGHT);
+    im_register_key(GLFW_KEY_1);
+    im_register_key(GLFW_KEY_2);
 
     vec3 startPos = {-3, 3, -3};
     world_init(startPos);
