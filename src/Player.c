@@ -160,8 +160,10 @@ void player_update(float deltaTime) {
 
     float speed = movementSpeed * deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
+    vec3 forwardAxis = {front[X], 0, front[Z]};
+    glm_normalize(forwardAxis);
     glm_vec3_scale(right, input[X] * speed, horizontalMovement);
-    glm_vec3_scale(front, input[Y] * speed, forwardMovement);
+    glm_vec3_scale(forwardAxis, input[Y] * speed, forwardMovement);
     glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
 
     vec3 newPos = {position[X], position[Y], position[Z]};
