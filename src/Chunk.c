@@ -92,10 +92,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
             neighbor[Y] = &neighborDirection;
             neighbor[Z] = widthDimension;
             neighborDirectionIndex = 1;
-            vertices[0].position[X] = start[X] - .5f;
-            vertices[0].position[Y] = start[Y] + (orientation == FACE_TOP ? .5f : -.5f);
-            vertices[0].position[Z] = start[Z] - .5f;
-            vertices[1].position[Y] = start[Y] + (orientation == FACE_TOP ? .5f : -.5f);
+            vertices[0].position[X] = start[X] - block_size[X] / 2;
+            vertices[0].position[Y] = start[Y] + (orientation == FACE_TOP ? block_size[Y] : -block_size[Y]) / 2;
+            vertices[0].position[Z] = start[Z] - block_size[Z] / 2;
+            vertices[1].position[Y] = start[Y] + (orientation == FACE_TOP ? block_size[Y] : -block_size[Y]) / 2;
             vertices[0].texCoords[X] = (orientation == FACE_TOP ? 1 : -1);
             vertices[0].texCoords[Y] = 0;
             vertices[1].texCoords[X] = 0;
@@ -114,10 +114,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
             neighbor[Y] = widthDimension;
             neighbor[Z] = lengthDimension;
             neighborDirectionIndex = 0;
-            vertices[0].position[X] = start[X] + (orientation == FACE_LEFT ? .5f : -.5f);
-            vertices[0].position[Y] = start[Y] - .5f;
-            vertices[0].position[Z] = start[Z] - .5f;
-            vertices[1].position[X] = start[X] + (orientation == FACE_LEFT ? .5f : -.5f);
+            vertices[0].position[X] = start[X] + (orientation == FACE_LEFT ? block_size[X] : -block_size[X]) / 2;
+            vertices[0].position[Y] = start[Y] - block_size[Y] / 2;
+            vertices[0].position[Z] = start[Z] - block_size[Z] / 2;
+            vertices[1].position[X] = start[X] + (orientation == FACE_LEFT ? block_size[X] : -block_size[X]) / 2;
             vertices[0].texCoords[X] = (orientation == FACE_LEFT ? 1 : -1);
             vertices[1].texCoords[X] = 0;
             vertices[0].texCoords[Y] = 0;
@@ -136,10 +136,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
             neighbor[Y] = widthDimension;
             neighbor[Z] = &neighborDirection;
             neighborDirectionIndex = 2;
-            vertices[0].position[X] = start[X] - .5f;
-            vertices[0].position[Y] = start[Y] - .5f;
-            vertices[0].position[Z] = start[Z] + (orientation == FACE_FRONT ? .5f : -.5f);
-            vertices[1].position[Z] = start[Z] + (orientation == FACE_FRONT ? .5f : -.5f);
+            vertices[0].position[X] = start[X] - block_size[X] / 2;
+            vertices[0].position[Y] = start[Y] - block_size[Y] / 2;
+            vertices[0].position[Z] = start[Z] + (orientation == FACE_FRONT ? block_size[Z] : -block_size[Z]) / 2;
+            vertices[1].position[Z] = start[Z] + (orientation == FACE_FRONT ? block_size[Z] : -block_size[Z]) / 2;
             vertices[0].texCoords[X] = 0;
             vertices[0].texCoords[Y] = 0;
             vertices[1].texCoords[X] = 1;
@@ -187,7 +187,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
 
     for (int i = 0; i < 3; i++) {
         if (i == neighborDirectionIndex) continue;
-        vertices[1].position[i] = *neighbor[i] - .5f;
+        vertices[1].position[i] = *neighbor[i] - block_size[i] / 2;
     }
 
     vertices[0].texCoords[X] *= length + 1;

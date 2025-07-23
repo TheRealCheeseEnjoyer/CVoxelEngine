@@ -32,30 +32,31 @@ int main(void) {
     vec3 startPos = {-3, 3, -3};
     world_init(startPos);
 
-    Player player = player_init(&settings.controls);
+    player_init(&settings.controls);
     skybox_init("yellowcloud");
 
     mat4 projection, view;
     glm_perspective(glm_rad(60), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
 
-    float lastFrame = 0;
+    float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
     int numFrames = 0;
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         im_update_input(window);
+        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT);
         float currentFrame = (float)glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        player_update(player, deltaTime);
-        player_get_view_matrix(player, view);
+        player_update(deltaTime);
+        player_get_view_matrix(view);
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
         vec3 eye;
-        player_eye_position(player, eye);
+        player_eye_position(eye);
         skybox_draw(eye, projection, view);
         world_draw(projection, view);
 
@@ -66,7 +67,6 @@ int main(void) {
     }
     printf("avg FPS: %f\n", numFrames / totalFrameTimes);
     skybox_destroy();
-    player_free(player);
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

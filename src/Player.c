@@ -1,18 +1,17 @@
 #include "../include/Player.h"
 
 #include <stdio.h>
-
-#include "../include/AABB.h"
-
 #include <string.h>
 #include <cglm/cam.h>
 #include <cglm/vec3.h>
 
+#include "../include/AABB.h"
 #include "../include/FaceOrientation.h"
 #include "../include/Block.h"
 #include "../include/Collisions.h"
 #include "../include/InputManager.h"
 #include "../include/World.h"
+#include "../include/Constants.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -22,46 +21,30 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 #define YAW 0
 #define PITCH 1
 #define SENSITIVITY 0.1
-#define X 0
-#define Y 1
-#define Z 2
 
 #define MAX_RANGE 4
 
-Controls *controls;
+Controls* controls;
 
 vec3 aabbSize = {.5f, 2, .5f};
-
-void recalculate_vectors(Player player);
-
-struct player_t {
-    vec2 rotation; // yaw and pitch
-    vec3 front;
-    vec3 up;
-    vec3 right;
-    vec3 position;
-    float movementSpeed;
-    float fallSpeed;
-};
-
+vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
+vec3 position = {0, 3, 0};
+vec3 front;
+vec3 up;
+vec3 right;
+float movementSpeed = 15;
+float fallSpeed = 2;
 BlockType selectedBlock = BLOCK_GRASS;
 
-Player player_init(Controls *playerControls) {
-    controls = playerControls;
-    Player player = calloc(1, sizeof(struct player_t));
-    player->movementSpeed = 15;
-    player->fallSpeed = 2;
-    player->rotation[YAW] = DEFAULT_YAW;
-    player->rotation[PITCH] = DEFAULT_PITCH;
-    recalculate_vectors(player);
+void recalculate_vectors();
 
-    vec3 position = {0, 10, 0};
-    memcpy(player->position, position, sizeof(vec3));
-    return player;
+void player_init(Controls *playerControls) {
+    controls = playerControls;
+    recalculate_vectors();
 }
 
-void player_eye_position(Player player, vec3 eye_pos) {
-    glm_vec3_add(player->position, cameraOffset, eye_pos);
+void player_eye_position(vec3 eye_pos) {
+    glm_vec3_add(position, cameraOffset, eye_pos);
 }
 
 void player_get_aabb(vec3 pos, AABB* out) {
@@ -85,8 +68,7 @@ bool player_is_colliding_with_near_blocks(vec3 pos) {
                     continue;
 
                 AABB blockAABB;
-                glm_vec3_adds(blockPos, .5f, blockAABB.max);
-                glm_vec3_subs(blockPos, .5f, blockAABB.min);
+                block_get_aabb(blockPos, &blockAABB);
                 if (collisions_aabb_to_aabb(player, blockAABB)) {
                     return true;
                 }
@@ -101,16 +83,14 @@ bool player_is_colliding_with_block(vec3 playerPos, vec3 blockPos) {
     AABB playerAABB;
     player_get_aabb(playerPos, &playerAABB);
     AABB blockAABB;
-    glm_vec3_adds(blockPos, .5f, blockAABB.max);
-    glm_vec3_subs(blockPos, .5f, blockAABB.min);
+    block_get_aabb(blockPos, &blockAABB);
     return collisions_aabb_to_aabb(playerAABB, blockAABB);
 }
 
-void recalculate_vectors(Player player) {
-    vec3 front, right, up;
-    front[0] = cosf(glm_rad(player->rotation[YAW])) * cosf(glm_rad(player->rotation[PITCH]));
-    front[1] = sinf(glm_rad(player->rotation[PITCH]));
-    front[2] = sinf(glm_rad(player->rotation[YAW])) * cosf(glm_rad(player->rotation[PITCH]));
+void recalculate_vectors() {
+    front[0] = cosf(glm_rad(rotation[YAW])) * cosf(glm_rad(rotation[PITCH]));
+    front[1] = sinf(glm_rad(rotation[PITCH]));
+    front[2] = sinf(glm_rad(rotation[YAW])) * cosf(glm_rad(rotation[PITCH]));
     glm_normalize(front);
 
     glm_cross(front, WorldUp, right);
@@ -118,10 +98,6 @@ void recalculate_vectors(Player player) {
 
     glm_cross(right, front, up);
     glm_normalize(up);
-
-    memcpy(player->front, front, sizeof(vec3));
-    memcpy(player->right, right, sizeof(vec3));
-    memcpy(player->up, up, sizeof(vec3));
 }
 
 void look_around(vec2 rotation, vec2 mouseDelta) {
@@ -153,8 +129,7 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation *f
                 float distance;
                 FaceOrientation face;
                 AABB box;
-                glm_vec3_subs(blockCoords, .5f, box.min);
-                glm_vec3_adds(blockCoords, .5f, box.max);
+                block_get_aabb(blockCoords, &box);
                 if (collisions_ray_to_aabb(eye, front, box, &distance, &face)) {
                     if (distance > MAX_RANGE) continue;
                     if (distance < minDistance) {
@@ -168,10 +143,10 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation *f
     }
 }
 
-void player_update(Player player, float deltaTime) {
+void player_update(float deltaTime) {
     vec2 mouseDelta;
     im_get_mouse_delta(mouseDelta);
-    look_around(player->rotation, mouseDelta);
+    look_around(rotation, mouseDelta);
 
     vec2 input = {0, 0};
     if (im_get_key(controls->forward))
@@ -183,31 +158,31 @@ void player_update(Player player, float deltaTime) {
     if (im_get_key(controls->right))
         input[X] += 1;
 
-    float speed = player->movementSpeed * deltaTime;
+    float speed = movementSpeed * deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
-    glm_vec3_scale(player->right, input[X] * speed, horizontalMovement);
-    glm_vec3_scale(player->front, input[Y] * speed, forwardMovement);
+    glm_vec3_scale(right, input[X] * speed, horizontalMovement);
+    glm_vec3_scale(front, input[Y] * speed, forwardMovement);
     glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
 
-    vec3 newPos = {player->position[X], player->position[Y], player->position[Z]};
+    vec3 newPos = {position[X], position[Y], position[Z]};
     newPos[X] += totalMovement[X];
     if (player_is_colliding_with_near_blocks(newPos))
-        newPos[X] = player->position[X];
+        newPos[X] = position[X];
 
     newPos[Z] += totalMovement[Z];
     if (player_is_colliding_with_near_blocks(newPos))
-        newPos[Z] = player->position[Z];
+        newPos[Z] = position[Z];
 
-    newPos[Y] -= player->fallSpeed * deltaTime;
+    newPos[Y] -= fallSpeed * deltaTime;
     if (player_is_colliding_with_near_blocks(newPos))
-        newPos[Y] = player->position[Y];
+        newPos[Y] = position[Y];
 
-    memcpy(player->position, newPos, sizeof(vec3));
+    memcpy(position, newPos, sizeof(vec3));
 
     vec3 eye, blockLookedAt;
     FaceOrientation faceLookedAt;
-    player_eye_position(player, eye);
-    get_block_looked_at(eye, player->front, blockLookedAt, &faceLookedAt);
+    player_eye_position(eye);
+    get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
         printf("Position: %f %f %f\n", blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
     }
@@ -244,21 +219,17 @@ void player_update(Player player, float deltaTime) {
                 break;
         }
 
-        if (!player_is_colliding_with_block(player->position, newBlockPos))
+        if (!player_is_colliding_with_block(position, newBlockPos))
             world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlock);
     }
 
-    recalculate_vectors(player);
+    recalculate_vectors();
 }
 
-void player_get_view_matrix(Player player, mat4 outView) {
+void player_get_view_matrix(mat4 outView) {
     vec3 eye;
-    player_eye_position(player, eye);
+    player_eye_position(eye);
     vec3 center;
-    glm_vec3_add(eye, player->front, center);
-    glm_lookat(eye, center, player->up, outView);
-}
-
-void player_free(Player player) {
-    free(player);
+    glm_vec3_add(eye, front, center);
+    glm_lookat(eye, center, up, outView);
 }

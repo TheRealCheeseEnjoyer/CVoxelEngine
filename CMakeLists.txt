@@ -37,6 +37,8 @@ add_executable(CVoxelEngine main.c
         src/Collisions.c
         include/Collisions.h
         include/FaceOrientation.h
+        src/Block.c
+        include/Constants.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)
