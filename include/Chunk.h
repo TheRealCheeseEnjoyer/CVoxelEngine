@@ -17,7 +17,7 @@ typedef struct {
 } Vertex;
 
 typedef struct chunk_t {
-    vec3 position;
+    ivec3 position;
     mat4 model;
     unsigned int VAO;
     struct chunk_t *north;

@@ -4,6 +4,7 @@
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
+#include "PerlinNoise.h"
 #include "../include/TextureManager.h"
 #include "../include/FaceOrientation.h"
 
@@ -12,6 +13,13 @@
 #define Y 1
 #define Z 2
 int mod(int a, int b) { return (a % b + b) % b; }
+
+BlockType height_mapper(int y) {
+    if (y == 0) return BLOCK_ROCK;
+    if (y > 0 && y <= 3) return BLOCK_WATER;
+    if (y > 3 && y <= 5) return BLOCK_SAND;
+    return BLOCK_GRASS;
+}
 
 void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west, Block *blocks) {
     chunk->blocks = blocks;
@@ -22,14 +30,18 @@ void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk 
 
     memset(chunk->vbos, 0, sizeof(chunk->vbos));
     memset(chunk->meshes, 0, sizeof(chunk->meshes));
+    memcpy(chunk->position, position, sizeof(ivec3));
 
     glm_mat4_identity(chunk->model);
     glm_translate(chunk->model, (vec3){position[X] * CHUNK_SIZE_X, 0, position[Z] * CHUNK_SIZE_Z});
 
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
-        for (int y = 0; y < 2; y++) {
-            for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                blocks[COORDS_TO_INDEX(x, y, z)].type = (y == 0 ? BLOCK_ROCK : BLOCK_GRASS);
+        for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+            int height = perlin_perlin2d(x + chunk->position[X] * CHUNK_SIZE_X, z + chunk->position[Z] * CHUNK_SIZE_Z,
+                                         0.1f, 1)
+                         * CHUNK_SIZE_Y + 1;
+            for (int y = 0; y <= fminf(height, CHUNK_SIZE_Y); y++) {
+                blocks[COORDS_TO_INDEX(x, y, z)].type = height_mapper(y);
             }
         }
     }
@@ -196,14 +208,15 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     vertices[1].texCoords[Y] *= width + 1;
 }
 
-void chunk_update_mesh(Chunk* chunk, BlockType targetType) {
+void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
     char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z] = {0};
 
     for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
         for (int y = 0; y < CHUNK_SIZE_Y; ++y) {
             for (int x = 0; x < CHUNK_SIZE_X; ++x) {
                 Block *block = chunk_get_block(chunk, x, y, z);
-                if (block == nullptr ||  block->type == BLOCK_AIR || (targetType != 0 && block->type != targetType)) continue;
+                if (block == nullptr || block->type == BLOCK_AIR || (targetType != 0 && block->type != targetType))
+                    continue;
 
                 if (chunk->meshes[block->type] == nullptr) {
                     chunk->meshes[block->type] = vec_init(sizeof(Vertex));
@@ -365,7 +378,8 @@ void chunk_load_mesh(Chunk *chunk) {
 void chunk_reload_mesh(Chunk *chunk, BlockType type) {
     glBindVertexArray(chunk->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[type]);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(vec_size(chunk->meshes[type]) * sizeof(Vertex)), vec_get(chunk->meshes[type], 0), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->meshes[type]) * sizeof(Vertex)),
+                 vec_get(chunk->meshes[type], 0), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
@@ -380,6 +394,7 @@ void chunk_draw(Chunk *chunk, Shader shader, mat4 projection, mat4 view) {
     shader_set_int(shader, "TextureUnitId", 0);
 
     for (int i = 1; i < BLOCK_NUM_BLOCK_TYPES; i++) {
+        if (chunk->meshes[i] == nullptr) continue;
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i]);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
@@ -391,8 +406,8 @@ void chunk_draw(Chunk *chunk, Shader shader, mat4 projection, mat4 view) {
     }
 }
 
-void chunk_neighbor_block_destroyed(Chunk* chunk, int x, int y, int z) {
-    Block* block = chunk_get_block(chunk, x, y, z);
+void chunk_neighbor_block_destroyed(Chunk *chunk, int x, int y, int z) {
+    Block *block = chunk_get_block(chunk, x, y, z);
     if (block == nullptr || block->type == BLOCK_AIR) return;
 
     vec_clear(chunk->meshes[block->type]);
@@ -420,7 +435,10 @@ void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
 
                 bool isAlreadyInArray = false;
                 for (int i = 0; i < lastIndex; i++) {
-                    if (neighborTypes[i] == block->type) {isAlreadyInArray = true; break;}
+                    if (neighborTypes[i] == block->type) {
+                        isAlreadyInArray = true;
+                        break;
+                    }
                 }
 
                 if (!isAlreadyInArray) {
@@ -452,7 +470,7 @@ void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
 }
 
 void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
-    Block* block = chunk_get_block(chunk, x, y, z);
+    Block *block = chunk_get_block(chunk, x, y, z);
     if (block == nullptr || block->type != BLOCK_AIR) return;
 
     block->type = type;

@@ -20,11 +20,16 @@ void generateTexture(BlockType type) {
     unsigned char* data = nullptr;
     switch (type) {
         case BLOCK_GRASS:
-            data = stbi_load("assets/image.png", &width, &height, &nrChannels, 0);
+            data = stbi_load("assets/grass.png", &width, &height, &nrChannels, 0);
             break;
         case BLOCK_ROCK:
-            data = stbi_load("assets/obamium.png", &width, &height, &nrChannels, 0);
+            data = stbi_load("assets/rock.png", &width, &height, &nrChannels, 0);
             break;
+        case BLOCK_WATER:
+            data = stbi_load("assets/water.png", &width, &height, &nrChannels, 0);
+            break;
+        case BLOCK_SAND:
+            data = stbi_load("assets/sand.png", &width, &height, &nrChannels, 0);
         default:
             break;
     }
