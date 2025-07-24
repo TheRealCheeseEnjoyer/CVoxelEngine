@@ -40,8 +40,7 @@ int is_button_registered(ButtonCode button) {
 void im_init(KeyCode* keys, int n) {
     im_init_empty();
 
-    int number_of_keys = 8;
-    for (int i = 0; i < number_of_keys; i++) {
+    for (int i = 0; i < n; i++) {
         im_register_key(keys[i]);
     }
 }

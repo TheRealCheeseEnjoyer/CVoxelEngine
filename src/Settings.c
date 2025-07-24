@@ -75,6 +75,7 @@ int load_controls(FILE* file, Controls* settings) {
         else if (strcmp(property, "run") == 0 ) settings->run = key;
         else if (strcmp(property, "interact") == 0) settings->interact = key;
         else if (strcmp(property, "exit") == 0) settings->exit = key;
+        else if (strcmp(property, "freecam") == 0) settings->freecam = key;
     }
     return 1;
 }

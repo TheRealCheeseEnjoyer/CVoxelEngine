@@ -28,7 +28,7 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 Controls *controls;
 
 vec3 jumpForce = {0, 5, 0};
-// Player is always levitating so a 2 block high aabb would not pass under 2 block high gaps
+// Player is always slightly levitating so a 2 block high aabb would not pass under 2 block high gaps
 constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
 vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
 vec3 position = {0, 10, 0};
@@ -39,6 +39,7 @@ float movementSpeed = 10;
 float fallSpeed = 2;
 BlockType selectedBlock = BLOCK_GRASS;
 Rigidbody rigidbody;
+bool is_freecam_enabled = false;
 
 
 void recalculate_vectors();
@@ -172,21 +173,17 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation *f
     }
 }
 
-void player_update(float deltaTime) {
-    vec2 mouseDelta;
-    im_get_mouse_delta(mouseDelta);
-    look_around(rotation, mouseDelta);
+void freecam_movement(vec2 input, float deltaTime) {
+    float speed = movementSpeed * deltaTime;
+    vec3 horizontalMovement, forwardMovement, totalMovement;
+    glm_vec3_scale(right, input[X] * speed, horizontalMovement);
+    glm_vec3_scale(front, input[Y] * speed, forwardMovement);
+    glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
 
-    vec2 input = {0, 0};
-    if (im_get_key(controls->forward))
-        input[Y] += 1;
-    if (im_get_key(controls->backward))
-        input[Y] -= 1;
-    if (im_get_key(controls->left))
-        input[X] -= 1;
-    if (im_get_key(controls->right))
-        input[X] += 1;
+    glm_vec3_add(position, totalMovement, position);
+}
 
+void normal_movement(vec2 input, float deltaTime) {
     float speed = movementSpeed * deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
     vec3 forwardAxis = {front[X], 0, front[Z]};
@@ -207,11 +204,34 @@ void player_update(float deltaTime) {
     if (im_get_key_down(controls->jump) && player_is_grounded())
         rigidbody_add_velocity(rigidbody, jumpForce);
 
-    //newPos[Y] -= fallSpeed * deltaTime;
-    //if (player_is_colliding_with_near_blocks(newPos))
-    //    newPos[Y] = position[Y];
-
     memcpy(position, newPos, sizeof(vec3));
+}
+
+void player_update(float deltaTime) {
+    vec2 mouseDelta;
+    im_get_mouse_delta(mouseDelta);
+    look_around(rotation, mouseDelta);
+
+    vec2 input = {0, 0};
+    if (im_get_key(controls->forward))
+        input[Y] += 1;
+    if (im_get_key(controls->backward))
+        input[Y] -= 1;
+    if (im_get_key(controls->left))
+        input[X] -= 1;
+    if (im_get_key(controls->right))
+        input[X] += 1;
+
+    if (im_get_key_down(controls->freecam)) {
+        rigidbody_set_enabled(rigidbody, is_freecam_enabled);
+        is_freecam_enabled = !is_freecam_enabled;
+    }
+
+    if (is_freecam_enabled)
+        freecam_movement(input, deltaTime);
+    else
+        normal_movement(input, deltaTime);
+
 
     vec3 eye, blockLookedAt;
     FaceOrientation faceLookedAt;

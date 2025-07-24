@@ -18,6 +18,7 @@ typedef struct {
     KeyCode run;
     KeyCode interact;
     KeyCode exit;
+    KeyCode freecam;
 } Controls;
 
 typedef struct {
