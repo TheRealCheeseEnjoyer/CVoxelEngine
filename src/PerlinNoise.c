@@ -1,4 +1,4 @@
-#include "PerlinNoise.h"
+#include "../include/PerlinNoise.h"
 
 int noise2(int x, int y) {
     int tmp = hash[(y + SEED) % 256];

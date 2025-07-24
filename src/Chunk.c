@@ -4,14 +4,13 @@
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
-#include "PerlinNoise.h"
+#include "../include/PerlinNoise.h"
+#include "../include/Constants.h"
 #include "../include/TextureManager.h"
 #include "../include/FaceOrientation.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
-#define X 0
-#define Y 1
-#define Z 2
+
 int mod(int a, int b) { return (a % b + b) % b; }
 
 BlockType height_mapper(int y) {
@@ -33,7 +32,7 @@ void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk 
     memcpy(chunk->position, position, sizeof(ivec3));
 
     glm_mat4_identity(chunk->model);
-    glm_translate(chunk->model, (vec3){position[X] * CHUNK_SIZE_X, 0, position[Z] * CHUNK_SIZE_Z});
+    glm_translate(chunk->model, (vec3){position[X] * CHUNK_SIZE_X, position[Y] * CHUNK_SIZE_Y, position[Z] * CHUNK_SIZE_Z});
 
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {

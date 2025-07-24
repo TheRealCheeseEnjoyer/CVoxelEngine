@@ -42,7 +42,7 @@ add_executable(CVoxelEngine main.c
         src/Rigidbody.c
         include/Rigidbody.h
         src/PerlinNoise.c
-        src/PerlinNoise.h
+        include/PerlinNoise.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)
