@@ -10,6 +10,7 @@
 
 #include "include/InputManager.h"
 #include "include/Player.h"
+#include "include/Rigidbody.h"
 #include "include/Settings.h"
 #include "include/Skybox.h"
 #include "include/World.h"
@@ -49,6 +50,8 @@ int main(void) {
         float currentFrame = (float)glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        rigidbody_update(deltaTime);
 
         player_update(deltaTime);
         player_get_view_matrix(view);

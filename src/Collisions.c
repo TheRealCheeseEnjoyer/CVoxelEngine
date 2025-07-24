@@ -1,4 +1,6 @@
 #include "../include/Collisions.h"
+#include "../include/Block.h"
+#include "../include/World.h"
 
 #define X 0
 #define Y 1
@@ -64,4 +66,35 @@ bool collisions_aabb_to_aabb(AABB first, AABB second) {
             first.max[Y] >= second.min[Y] &&
             first.min[Z] <= second.max[Z] &&
             first.max[Z] >= second.min[Z];
+}
+
+bool collisions_aabb_to_near_blocks(AABB aabb) {
+    vec3 pos = {
+        (aabb.min[X] + aabb.max[X]) / 2,
+        (aabb.min[Y] + aabb.max[Y]) / 2,
+        (aabb.min[Z] + aabb.max[Z]) / 2
+    };
+    vec3 aabbSize = {
+        aabb.max[X] - aabb.min[X],
+        aabb.max[Y] - aabb.min[Y],
+        aabb.max[Z] - aabb.min[Z]
+    };
+    for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
+        for (int y = -ceil(aabbSize[Y] / 2); y <= ceil(aabbSize[Y] / 2); y++) {
+            for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
+                vec3 blockPos = {round(pos[X] + x), round(pos[Y] + y), round(pos[Z] + z)};
+                Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+                if (block == nullptr || block->type == BLOCK_AIR)
+                    continue;
+
+                AABB blockAABB;
+                block_get_aabb(blockPos, &blockAABB);
+                if (collisions_aabb_to_aabb(aabb, blockAABB)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }

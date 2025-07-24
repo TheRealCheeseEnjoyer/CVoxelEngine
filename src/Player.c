@@ -12,6 +12,7 @@
 #include "../include/InputManager.h"
 #include "../include/World.h"
 #include "../include/Constants.h"
+#include "../include/Rigidbody.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -24,36 +25,64 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 
 #define MAX_RANGE 4
 
-Controls* controls;
+Controls *controls;
 
-vec3 aabbSize = {.5f, 2, .5f};
+vec3 jumpForce = {0, 5, 0};
+// Player is always levitating so a 2 block high aabb would not pass under 2 block high gaps
+constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
 vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
-vec3 position = {0, 3, 0};
+vec3 position = {0, 10, 0};
 vec3 front;
 vec3 up;
 vec3 right;
-float movementSpeed = 15;
+float movementSpeed = 10;
 float fallSpeed = 2;
 BlockType selectedBlock = BLOCK_GRASS;
+Rigidbody rigidbody;
+
 
 void recalculate_vectors();
 
 void player_init(Controls *playerControls) {
     controls = playerControls;
     recalculate_vectors();
+    rigidbody = rigidbody_register(&position, aabbSize);
 }
 
 void player_eye_position(vec3 eye_pos) {
     glm_vec3_add(position, cameraOffset, eye_pos);
 }
 
-void player_get_aabb(vec3 pos, AABB* out) {
+void player_get_aabb(vec3 pos, AABB *out) {
     out->max[X] = pos[X] + aabbSize[X] / 2;
     out->min[X] = pos[X] - aabbSize[X] / 2;
     out->max[Y] = pos[Y] + aabbSize[Y] / 2;
     out->min[Y] = pos[Y] - aabbSize[Y] / 2;
     out->max[Z] = pos[Z] + aabbSize[Z] / 2;
     out->min[Z] = pos[Z] - aabbSize[Z] / 2;
+}
+
+bool player_is_grounded() {
+    // Player is always levitating, so we check a bit down if there is a collision
+    vec3 pos = {position[X], position[Y] - 0.001, position[Z]};
+    for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
+        for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
+            vec3 blockPos = {round(pos[X] + x), round(pos[Y] - 1), round(pos[Z] + z)};
+            Block *block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+            if (block == nullptr || block->type == BLOCK_AIR)
+                continue;
+
+            AABB blockAABB;
+            AABB playerAABB;
+            player_get_aabb(pos, &playerAABB);
+            block_get_aabb(blockPos, &blockAABB);
+            if (collisions_aabb_to_aabb(playerAABB, blockAABB)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool player_is_colliding_with_near_blocks(vec3 pos) {
@@ -63,7 +92,7 @@ bool player_is_colliding_with_near_blocks(vec3 pos) {
         for (int y = -ceil(aabbSize[Y] / 2); y <= ceil(aabbSize[Y] / 2); y++) {
             for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
                 vec3 blockPos = {round(pos[X] + x), round(pos[Y] + y), round(pos[Z] + z)};
-                Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+                Block *block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
                 if (block == nullptr || block->type == BLOCK_AIR)
                     continue;
 
@@ -175,9 +204,12 @@ void player_update(float deltaTime) {
     if (player_is_colliding_with_near_blocks(newPos))
         newPos[Z] = position[Z];
 
-    newPos[Y] -= fallSpeed * deltaTime;
-    if (player_is_colliding_with_near_blocks(newPos))
-        newPos[Y] = position[Y];
+    if (im_get_key_down(controls->jump) && player_is_grounded())
+        rigidbody_add_velocity(rigidbody, jumpForce);
+
+    //newPos[Y] -= fallSpeed * deltaTime;
+    //if (player_is_colliding_with_near_blocks(newPos))
+    //    newPos[Y] = position[Y];
 
     memcpy(position, newPos, sizeof(vec3));
 
@@ -185,9 +217,6 @@ void player_update(float deltaTime) {
     FaceOrientation faceLookedAt;
     player_eye_position(eye);
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
-        printf("Position: %f %f %f\n", blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
-    }
 
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
         world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
