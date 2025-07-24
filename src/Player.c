@@ -1,7 +1,10 @@
 #include "../include/Player.h"
 
 #include <stdio.h>
+#include <glad/glad.h>
+
 #include <string.h>
+#include <cglm/affine.h>
 #include <cglm/cam.h>
 #include <cglm/vec3.h>
 
@@ -31,7 +34,7 @@ vec3 jumpForce = {0, 5, 0};
 // Player is always slightly levitating so a 2 block high aabb would not pass under 2 block high gaps
 constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
 vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
-vec3 position = {0, 10, 0};
+vec3 position = {0, 4, 0};
 vec3 front;
 vec3 up;
 vec3 right;
@@ -40,7 +43,8 @@ float fallSpeed = 2;
 BlockType selectedBlock = BLOCK_GRASS;
 Rigidbody rigidbody;
 bool is_freecam_enabled = false;
-
+unsigned int VAO, VBO;
+vec3 blockLookedAt = {-1, -1, -1};
 
 void recalculate_vectors();
 
@@ -48,6 +52,12 @@ void player_init(Controls *playerControls) {
     controls = playerControls;
     recalculate_vectors();
     rigidbody = rigidbody_register(&position, aabbSize);
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(block_vertices), block_vertices, GL_STATIC_DRAW);
+    glBindVertexArray(0);
 }
 
 void player_eye_position(vec3 eye_pos) {
@@ -233,7 +243,7 @@ void player_update(float deltaTime) {
         normal_movement(input, deltaTime);
 
 
-    vec3 eye, blockLookedAt;
+    vec3 eye;
     FaceOrientation faceLookedAt;
     player_eye_position(eye);
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
@@ -275,6 +285,32 @@ void player_update(float deltaTime) {
     }
 
     recalculate_vectors();
+}
+
+void player_draw(Shader shader, mat4 projection) {
+    glBindVertexArray(VAO);
+    shader_use(shader);
+    mat4 bounds, view;
+    glm_mat4_identity(bounds);
+    glm_translate(bounds, blockLookedAt);
+    vec3 scale = {1.01f, 1.01f, 1.01f};
+    glm_scale(bounds, scale);
+    player_get_view_matrix(view);
+    glm_mat4_scale(bounds, 1.01f);
+    mat4 finalMatrix;
+    glm_mat4_mul(projection, view, finalMatrix);
+    glm_mat4_mul(finalMatrix, bounds, finalMatrix);
+    shader_set_mat4(shader, "finalMatrix", &finalMatrix);
+    shader_set_int(shader, "TextureUnitId", 1);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+    //glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(0);
+    //glEnableVertexAttribArray(1);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindVertexArray(0);
 }
 
 void player_get_view_matrix(mat4 outView) {

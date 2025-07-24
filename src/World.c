@@ -14,11 +14,11 @@ Chunk* get_chunk(int x, int y, int z) {
     return &chunks[CHUNK_COORDS_TO_INDEX(x, y, z)];
 }
 
-void world_init(vec3 initialPosition) {
+void world_init(vec3 initialPosition, Shader sh) {
     blocks = calloc(CHUNK_SIZE * WORLD_NUM_CHUNKS, sizeof(Block));
     chunks = calloc(WORLD_NUM_CHUNKS, sizeof(Chunk));
 
-    shader = shader_create("shaders/default.vsh", "shaders/default.fsh");
+    shader = sh;
 
     for (int z = 0; z < WORLD_SIZE_Z; z++) {
         for (int y = 0; y < WORLD_SIZE_Y; y++) {

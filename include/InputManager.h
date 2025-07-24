@@ -1,6 +1,7 @@
 #ifndef INPUTMANAGER_H
 #define INPUTMANAGER_H
 #include <cglm/types.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 typedef int KeyCode;
