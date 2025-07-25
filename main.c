@@ -30,9 +30,8 @@ int main() {
     im_register_key(GLFW_KEY_1);
     im_register_key(GLFW_KEY_2);
 
-    Shader shader = shader_create("shaders/default.vsh", "shaders/default.fsh");
     vec3 startPos = {-3, 3, -3};
-    world_init(startPos, shader);
+    world_init(startPos);
 
     player_init(&settings.controls);
     skybox_init("yellowcloud");
@@ -63,7 +62,7 @@ int main() {
         player_eye_position(eye);
         skybox_draw(eye, projection, view);
         world_draw(projection, view);
-        player_draw(shader, projection);
+        player_draw(projection);
 
         im_reset_input();
         glfwSwapBuffers(window);

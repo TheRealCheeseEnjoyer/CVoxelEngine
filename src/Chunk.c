@@ -8,8 +8,11 @@
 #include "../include/Constants.h"
 #include "../include/TextureManager.h"
 #include "../include/FaceOrientation.h"
+#include "../include/ShaderManager.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
+
+Shader shader = 0;
 
 int mod(int a, int b) { return (a % b + b) % b; }
 
@@ -32,6 +35,8 @@ void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk 
     memset(chunk->vbos, 0, sizeof(chunk->vbos));
     memset(chunk->meshes, 0, sizeof(chunk->meshes));
     memcpy(chunk->position, position, sizeof(ivec3));
+
+    shader = sm_get_shader(SHADER_DEFAULT);
 
     glm_mat4_identity(chunk->model);
     glm_translate(chunk->model, (vec3){position[X] * CHUNK_SIZE_X, position[Y] * CHUNK_SIZE_Y, position[Z] * CHUNK_SIZE_Z});
@@ -392,7 +397,7 @@ void chunk_reload_mesh(Chunk *chunk, BlockType type) {
     glBindVertexArray(0);
 }
 
-void chunk_draw(Chunk *chunk, Shader shader, mat4 projection, mat4 view) {
+void chunk_draw(Chunk *chunk, mat4 projection, mat4 view) {
     glBindVertexArray(chunk->VAO);
     glActiveTexture(GL_TEXTURE0);
     mat4 final;

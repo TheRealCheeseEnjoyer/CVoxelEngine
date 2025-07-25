@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 
 #include "../include/Shader.h"
+#include "../include/ShaderManager.h"
 #include "../include/stb_image.h"
 
 float skyboxVertices[] = {
@@ -115,7 +116,7 @@ void skybox_init(const char *name) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    shader = shader_create("shaders/skybox.vsh", "shaders/skybox.fsh");
+    shader = sm_get_shader(SHADER_SKYBOX);
     glBindVertexArray(0);
 
     for (int i = 0; i < sizeof(faces) / sizeof(faces[0]); i++)

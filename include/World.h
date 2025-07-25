@@ -8,7 +8,7 @@
 #define WORLD_SIZE_Y 2
 #define WORLD_SIZE_Z 10
 
-void world_init(vec3 initialPosition, Shader shader);
+void world_init(vec3 initialPosition);
 void world_draw(mat4 projection, mat4 view);
 Block* world_get_block_at(int x, int y, int z);
 void world_destroy_block(int x, int y, int z);

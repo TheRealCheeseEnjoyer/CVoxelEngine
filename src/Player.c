@@ -16,6 +16,7 @@
 #include "../include/World.h"
 #include "../include/Constants.h"
 #include "../include/Rigidbody.h"
+#include "../include/ShaderManager.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -287,8 +288,9 @@ void player_update(float deltaTime) {
     recalculate_vectors();
 }
 
-void player_draw(Shader shader, mat4 projection) {
+void player_draw(mat4 projection) {
     glBindVertexArray(VAO);
+    Shader shader = sm_get_shader(SHADER_DEFAULT);
     shader_use(shader);
     mat4 bounds, view;
     glm_mat4_identity(bounds);
