@@ -20,12 +20,14 @@ BlockType height_mapper(int y) {
     return BLOCK_GRASS;
 }
 
-void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west, Block *blocks) {
+void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west, Chunk* above, Chunk* below, Block *blocks) {
     chunk->blocks = blocks;
     chunk->north = north;
     chunk->south = south;
     chunk->east = east;
     chunk->west = west;
+    chunk->above = above;
+    chunk->below = below;
 
     memset(chunk->vbos, 0, sizeof(chunk->vbos));
     memset(chunk->meshes, 0, sizeof(chunk->meshes));
@@ -33,7 +35,7 @@ void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk 
 
     glm_mat4_identity(chunk->model);
     glm_translate(chunk->model, (vec3){position[X] * CHUNK_SIZE_X, position[Y] * CHUNK_SIZE_Y, position[Z] * CHUNK_SIZE_Z});
-
+    if (position[Y] != 0) return;
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
             int height = perlin_perlin2d(x + chunk->position[X] * CHUNK_SIZE_X, z + chunk->position[Z] * CHUNK_SIZE_Z,
@@ -47,8 +49,6 @@ void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk 
 }
 
 Block *chunk_get_block(Chunk *chunk, int x, int y, int z) {
-    if (y < 0 || y >= CHUNK_SIZE_Y) return nullptr;
-
     if (x < 0) {
         if (!chunk->east)
             return nullptr;
@@ -73,6 +73,15 @@ Block *chunk_get_block(Chunk *chunk, int x, int y, int z) {
         return chunk_get_block(chunk->north, x, y, mod(z, CHUNK_SIZE_Z));
     }
 
+    if (y < 0) {
+        if (!chunk->below) return nullptr;
+        return chunk_get_block(chunk->below, x, mod(y, CHUNK_SIZE_Y), z);
+    }
+
+    if (y >= CHUNK_SIZE_Y) {
+        if (!chunk->above) return nullptr;
+        return chunk_get_block(chunk->above, x, mod(y, CHUNK_SIZE_Y), z);
+    }
     return &chunk->blocks[COORDS_TO_INDEX(x, y, z)];
 }
 
@@ -405,7 +414,7 @@ void chunk_draw(Chunk *chunk, Shader shader, mat4 projection, mat4 view) {
     }
 }
 
-void chunk_neighbor_block_destroyed(Chunk *chunk, int x, int y, int z) {
+void chunk_block_updated_at(Chunk *chunk, int x, int y, int z) {
     Block *block = chunk_get_block(chunk, x, y, z);
     if (block == nullptr || block->type == BLOCK_AIR) return;
 
@@ -414,13 +423,9 @@ void chunk_neighbor_block_destroyed(Chunk *chunk, int x, int y, int z) {
     chunk_reload_mesh(chunk, block->type);
 }
 
-void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
-    Block *toDestroy = chunk_get_block(chunk, x, y, z);
-    BlockType oldType = toDestroy->type;
-    toDestroy->type = BLOCK_AIR;
-
+void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockType changedBlockType) {
     BlockType neighborTypes[7] = {0};
-    neighborTypes[0] = oldType;
+    neighborTypes[0] = changedBlockType;
     int lastIndex = 1;
 
     for (int offsetX = -1; offsetX <= 1; offsetX++) {
@@ -450,22 +455,41 @@ void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
 
     for (int i = 0; i < lastIndex; i++) {
         BlockType toUpdate = neighborTypes[i];
-        vec_clear(chunk->meshes[toUpdate]);
-        chunk_update_mesh(chunk, toUpdate);
-        chunk_reload_mesh(chunk, toUpdate);
+        if (chunk->meshes[toUpdate] != nullptr) {
+            vec_clear(chunk->meshes[toUpdate]);
+            chunk_update_mesh(chunk, toUpdate);
+            chunk_reload_mesh(chunk, toUpdate);
+        } else {
+            chunk_update_mesh(chunk, toUpdate);
+            chunk_load_mesh(chunk);
+        }
     }
 
     if (x == CHUNK_SIZE_X - 1 && chunk->west != nullptr) {
-        chunk_neighbor_block_destroyed(chunk->west, 0, y, z);
+        chunk_block_updated_at(chunk->west, 0, y, z);
     } else if (x == 0 && chunk->east != nullptr) {
-        chunk_neighbor_block_destroyed(chunk->east, CHUNK_SIZE_X - 1, y, z);
+        chunk_block_updated_at(chunk->east, CHUNK_SIZE_X - 1, y, z);
     }
 
     if (z == 0 && chunk->south != nullptr) {
-        chunk_neighbor_block_destroyed(chunk->south, x, y, CHUNK_SIZE_Z - 1);
+        chunk_block_updated_at(chunk->south, x, y, CHUNK_SIZE_Z - 1);
     } else if (z == CHUNK_SIZE_Z - 1 && chunk->north != nullptr) {
-        chunk_neighbor_block_destroyed(chunk->north, x, y, 0);
+        chunk_block_updated_at(chunk->north, x, y, 0);
     }
+
+    if (y == 0 && chunk->below != nullptr) {
+        chunk_block_updated_at(chunk->below, x, CHUNK_SIZE_Y - 1, z);
+    } else if (y == CHUNK_SIZE_Y - 1 && chunk->above != nullptr) {
+        chunk_block_updated_at(chunk->above, x, 0, z);
+    }
+}
+
+void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
+    Block *toDestroy = chunk_get_block(chunk, x, y, z);
+    BlockType oldType = toDestroy->type;
+    toDestroy->type = BLOCK_AIR;
+
+    chunk_register_changes(chunk, x, y, z, oldType);
 }
 
 void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
@@ -473,7 +497,5 @@ void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
     if (block == nullptr || block->type != BLOCK_AIR) return;
 
     block->type = type;
-    vec_clear(chunk->meshes[type]);
-    chunk_update_mesh(chunk, type);
-    chunk_reload_mesh(chunk, type);
+    chunk_register_changes(chunk, x, y, z, type);
 }

@@ -31,6 +31,8 @@ void world_init(vec3 initialPosition, Shader sh) {
                     get_chunk(x, y, z - 1),
                     get_chunk(x - 1, y, z),
                     get_chunk(x + 1, y, z),
+                    get_chunk(x, y + 1, z),
+                    get_chunk(x, y - 1, z),
                     &blocks[CHUNK_COORDS_TO_INDEX(x, y, z) * CHUNK_SIZE]
                     );
             }

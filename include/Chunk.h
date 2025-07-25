@@ -24,13 +24,15 @@ typedef struct chunk_t {
     struct chunk_t *south;
     struct chunk_t *east;
     struct chunk_t *west;
+    struct chunk_t *above;
+    struct chunk_t *below;
 
     Block *blocks;
     unsigned int vbos[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to vbo
     Vector meshes[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to mesh
 } Chunk;
 
-void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west,
+void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west, Chunk* above, Chunk* below,
                 Block *blocks);
 Block *chunk_get_block(Chunk *chunk, int x, int y, int z);
 void chunk_create_mesh(Chunk *chunk);

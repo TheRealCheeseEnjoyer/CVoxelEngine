@@ -5,7 +5,7 @@
 #include "Shader.h"
 
 #define WORLD_SIZE_X 10
-#define WORLD_SIZE_Y 1
+#define WORLD_SIZE_Y 2
 #define WORLD_SIZE_Z 10
 
 void world_init(vec3 initialPosition, Shader shader);
