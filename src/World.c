@@ -56,7 +56,7 @@ void world_init(vec3 initialPosition) {
         }
     }
 
-
+    // Wait since we need to do the mesh loading on the main thread due to OpenGL context not working in worker threads
     thpool_wait();
 
     for (int z = 0; z < WORLD_SIZE_X; z++) {
