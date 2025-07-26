@@ -32,8 +32,20 @@ typedef struct chunk_t {
     Vector meshes[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to mesh
 } Chunk;
 
-void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west, Chunk* above, Chunk* below,
-                Block *blocks);
+struct init_args {
+    Chunk* chunk;
+    ivec3 position;
+    Chunk* north;
+    Chunk* south;
+    Chunk* east;
+    Chunk* west;
+    Chunk* above;
+    Chunk* below;
+    Block* blocks;
+};
+
+void chunk_init(struct init_args* args);
+void chunk_init_mesh(Chunk* chunk);
 Block *chunk_get_block(Chunk *chunk, int x, int y, int z);
 void chunk_create_mesh(Chunk *chunk);
 void chunk_load_mesh(Chunk *chunk);

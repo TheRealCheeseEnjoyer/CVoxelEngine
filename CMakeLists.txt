@@ -46,6 +46,8 @@ add_executable(CVoxelEngine main.c
         src/ShaderManager.c
         include/ShaderManager.h
         include/ShaderType.h
+        src/thpool.c
+        include/thpool.h
 )
 
-target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm)
+target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)

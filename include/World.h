@@ -4,9 +4,9 @@
 #include "Block.h"
 #include "Shader.h"
 
-#define WORLD_SIZE_X 20
+#define WORLD_SIZE_X 500
 #define WORLD_SIZE_Y 2
-#define WORLD_SIZE_Z 20
+#define WORLD_SIZE_Z 500
 
 void world_init(vec3 initialPosition);
 void world_draw(vec3 playerPos, mat4 projection, mat4 view);

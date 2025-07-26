@@ -24,34 +24,40 @@ BlockType height_mapper(int y) {
     return BLOCK_GRASS;
 }
 
-void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk *east, Chunk *west, Chunk* above, Chunk* below, Block *blocks) {
-    chunk->blocks = blocks;
-    chunk->north = north;
-    chunk->south = south;
-    chunk->east = east;
-    chunk->west = west;
-    chunk->above = above;
-    chunk->below = below;
+void chunk_init(struct init_args* args) {
+    args->chunk->blocks = args->blocks;
+    args->chunk->north = args->north;
+    args->chunk->east = args->east;
+    args->chunk->south = args->south;
+    args->chunk->west = args->west;
+    args->chunk->above = args->above;
+    args->chunk->below = args->below;
 
-    memset(chunk->vbos, 0, sizeof(chunk->vbos));
-    memset(chunk->meshes, 0, sizeof(chunk->meshes));
-    memcpy(chunk->position, position, sizeof(ivec3));
+    memset(args->chunk->vbos, 0, sizeof(args->chunk->vbos));
+    memset(args->chunk->meshes, 0, sizeof(args->chunk->meshes));
+    memcpy(args->chunk->position, args->position, sizeof(ivec3));
 
     shader = sm_get_shader(SHADER_DEFAULT);
 
-    glm_mat4_identity(chunk->model);
-    glm_translate(chunk->model, (vec3){position[X] * CHUNK_SIZE_X, position[Y] * CHUNK_SIZE_Y, position[Z] * CHUNK_SIZE_Z});
-    if (position[Y] != 0) return;
+    glm_mat4_identity(args->chunk->model);
+    glm_translate(args->chunk->model, (vec3){args->position[X] * CHUNK_SIZE_X, args->position[Y] * CHUNK_SIZE_Y, args->position[Z] * CHUNK_SIZE_Z});
+    if (args->position[Y] != 0) return;
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-            int height = perlin_perlin2d(x + chunk->position[X] * CHUNK_SIZE_X, z + chunk->position[Z] * CHUNK_SIZE_Z,
+            int height = perlin_perlin2d(x + args->chunk->position[X] * CHUNK_SIZE_X, z + args->chunk->position[Z] * CHUNK_SIZE_Z,
                                          0.1f, 1)
                          * CHUNK_SIZE_Y;
             for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
-                blocks[COORDS_TO_INDEX(x, y, z)].type = height_mapper(y);
+                args->blocks[COORDS_TO_INDEX(x, y, z)].type = height_mapper(y);
             }
         }
     }
+    free(args);
+}
+
+void chunk_init_mesh(Chunk *chunk) {
+    chunk_create_mesh(chunk);
+    chunk_load_mesh(chunk);
 }
 
 Block *chunk_get_block(Chunk *chunk, int x, int y, int z) {

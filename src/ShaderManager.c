@@ -15,9 +15,15 @@ Shader init_shader(ShaderType type) {
     return shader;
 }
 
+void sm_init() {
+    for (int i = 0; i < SHADER_NUM_TYPES; i++) {
+        shaders[i] = init_shader(i);
+    }
+}
+
 Shader sm_get_shader(ShaderType type) {
-    if (shaders[type] == 0)
-        return init_shader(type);
+    if (type >= SHADER_NUM_TYPES)
+        return 0;
 
     return shaders[type];
 }

@@ -12,7 +12,9 @@
 #include "include/Player.h"
 #include "include/Rigidbody.h"
 #include "include/Settings.h"
+#include "include/ShaderManager.h"
 #include "include/Skybox.h"
+#include "include/thpool.h"
 #include "include/World.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
@@ -21,7 +23,7 @@ bool debuggerIsAttached();
 int main() {
     Settings settings;
     settings_load(&settings);
-
+    thpool_init(16);
     GLFWwindow* window = window_init(&settings.window);
 
     im_init((KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
@@ -31,8 +33,11 @@ int main() {
     im_register_key(GLFW_KEY_2);
 
     vec3 startPos = {-3, 3, -3};
+    sm_init();
+    double time = glfwGetTime();
     world_init(startPos);
-
+    double timeElapsed = glfwGetTime() - time;
+    printf("Generated 500x500x2 chunks in %f seconds\n", timeElapsed);
     player_init(&settings.controls);
     skybox_init("yellowcloud");
 
@@ -72,6 +77,7 @@ int main() {
     }
     printf("avg FPS: %f\n", numFrames / totalFrameTimes);
     skybox_destroy();
+    thpool_destroy();
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

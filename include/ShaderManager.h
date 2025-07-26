@@ -3,6 +3,8 @@
 #include "Shader.h"
 #include "ShaderType.h"
 
+
+void sm_init();
 Shader sm_get_shader(ShaderType type);
 
 #endif

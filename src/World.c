@@ -1,7 +1,11 @@
 #include "../include/World.h"
+
+#include <string.h>
+
 #include "../include/Chunk.h"
 #include "../include/ShaderManager.h"
 #include "../include/Constants.h"
+#include "../include/thpool.h"
 
 #define CHUNK_COORDS_TO_INDEX(x, y, z) (x + y * WORLD_SIZE_X + z * WORLD_SIZE_X * WORLD_SIZE_Y)
 #define GLOBAL_COORDS_TO_CHUNK_INDEX(x, y, z) (CHUNK_COORDS_TO_INDEX(x / CHUNK_SIZE_X, y / CHUNK_SIZE_Y, z / CHUNK_SIZE_Z))
@@ -25,25 +29,39 @@ void world_init(vec3 initialPosition) {
         for (int y = 0; y < WORLD_SIZE_Y; y++) {
             for (int x = 0; x < WORLD_SIZE_Z; x++) {
                 ivec3 position = {x, y, z};
-                chunk_init(
-                    get_chunk(x, y, z),
-                    position,
-                    get_chunk(x, y, z + 1),
-                    get_chunk(x, y, z - 1),
-                    get_chunk(x - 1, y, z),
-                    get_chunk(x + 1, y, z),
-                    get_chunk(x, y + 1, z),
-                    get_chunk(x, y - 1, z),
-                    &blocks[CHUNK_COORDS_TO_INDEX(x, y, z) * CHUNK_SIZE]
-                    );
+                struct init_args* args = malloc(sizeof(struct init_args));
+                    args->chunk = get_chunk(x, y, z);
+                    memcpy(args->position, position, sizeof(ivec3));
+                    args->north = get_chunk(x, y, z + 1);
+                    args->south = get_chunk(x, y, z - 1);
+                    args->east = get_chunk(x - 1, y, z);
+                    args->west = get_chunk(x + 1, y, z);
+                    args->above = get_chunk(x, y + 1, z);
+                    args->below = get_chunk(x, y - 1, z);
+                    args->blocks = &blocks[CHUNK_COORDS_TO_INDEX(x, y, z) * CHUNK_SIZE];
+                thpool_add_work((void*)chunk_init, args);
+                //chunk_init(args);
             }
         }
     }
 
+    // Wait since we need all chunks to be ready to be meshed for the next step
+    thpool_wait();
+
     for (int z = 0; z < WORLD_SIZE_X; z++) {
         for (int y = 0; y < WORLD_SIZE_Y; y++) {
             for (int x = 0; x < WORLD_SIZE_Z; x++) {
-                chunk_create_mesh(get_chunk(x, y, z));
+                thpool_add_work((void*)chunk_create_mesh, get_chunk(x, y, z));
+            }
+        }
+    }
+
+
+    thpool_wait();
+
+    for (int z = 0; z < WORLD_SIZE_X; z++) {
+        for (int y = 0; y < WORLD_SIZE_Y; y++) {
+            for (int x = 0; x < WORLD_SIZE_Z; x++) {
                 chunk_load_mesh(get_chunk(x, y, z));
             }
         }
