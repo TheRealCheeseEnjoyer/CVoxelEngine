@@ -1,11 +1,14 @@
 #include "../include/World.h"
 #include "../include/Chunk.h"
 #include "../include/ShaderManager.h"
+#include "../include/Constants.h"
 
 #define CHUNK_COORDS_TO_INDEX(x, y, z) (x + y * WORLD_SIZE_X + z * WORLD_SIZE_X * WORLD_SIZE_Y)
 #define GLOBAL_COORDS_TO_CHUNK_INDEX(x, y, z) (CHUNK_COORDS_TO_INDEX(x / CHUNK_SIZE_X, y / CHUNK_SIZE_Y, z / CHUNK_SIZE_Z))
 #define WORLD_NUM_CHUNKS WORLD_SIZE_X * WORLD_SIZE_Y * WORLD_SIZE_Z
 #define WORLD_SIZE WORLD_NUM_CHUNKS * CHUNK_SIZE
+#define MAX_CHUNK_DRAW_DISTANCE 12
+
 Chunk* chunks;
 Block* blocks;
 
@@ -47,11 +50,19 @@ void world_init(vec3 initialPosition) {
     }
 }
 
-void world_draw(mat4 projection, mat4 view) {
+void world_draw(vec3 playerPos, mat4 projection, mat4 view) {
     shader_use(sm_get_shader(SHADER_DEFAULT));
-    for (int i = 0; i < WORLD_NUM_CHUNKS; i++) {
-        chunk_draw(&chunks[i], projection, view);
+    vec3 chunkPos = {playerPos[X] / CHUNK_SIZE_X, playerPos[Y] / CHUNK_SIZE_Y, playerPos[Z] / CHUNK_SIZE_Z};
+
+    for (int x = fmax(0, chunkPos[X] - MAX_CHUNK_DRAW_DISTANCE); x < fmin(chunkPos[X] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_X); x++ ) {
+        for (int y = fmax(0, chunkPos[Y] - MAX_CHUNK_DRAW_DISTANCE); y < fmin(chunkPos[Y] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_Y); y++) {
+            for (int z = fmax(0, chunkPos[Z] - MAX_CHUNK_DRAW_DISTANCE); z < fmin(chunkPos[Z] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_Z); z++) {
+                if (glm_vec3_distance2(chunkPos, (vec3){x, y, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)
+                    chunk_draw(get_chunk(x, y, z), projection, view);
+            }
+        }
     }
+
     shader_use(0);
 }
 

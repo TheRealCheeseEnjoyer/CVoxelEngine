@@ -58,10 +58,11 @@ int main() {
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
-        vec3 eye;
+        vec3 eye, pos;
         player_eye_position(eye);
+        player_position(pos);
         skybox_draw(eye, projection, view);
-        world_draw(projection, view);
+        world_draw(pos, projection, view);
         player_draw(projection);
 
         im_reset_input();

@@ -1,5 +1,6 @@
 #include "../include/Chunk.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
@@ -45,7 +46,7 @@ void chunk_init(Chunk *chunk, ivec3 position, Chunk *north, Chunk *south, Chunk 
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
             int height = perlin_perlin2d(x + chunk->position[X] * CHUNK_SIZE_X, z + chunk->position[Z] * CHUNK_SIZE_Z,
                                          0.1f, 1)
-                         * CHUNK_SIZE_Y + 1;
+                         * CHUNK_SIZE_Y;
             for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
                 blocks[COORDS_TO_INDEX(x, y, z)].type = height_mapper(y);
             }

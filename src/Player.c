@@ -288,6 +288,10 @@ void player_update(float deltaTime) {
     recalculate_vectors();
 }
 
+void player_position(vec3 pos) {
+    memcpy(pos, position, sizeof(vec3));
+}
+
 void player_draw(mat4 projection) {
     glBindVertexArray(VAO);
     Shader shader = sm_get_shader(SHADER_DEFAULT);
