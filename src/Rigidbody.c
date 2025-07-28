@@ -57,7 +57,6 @@ void rigidbody_update(float deltaTime) {
 
 void rigidbody_add_velocity(Rigidbody rigidbody, vec3 velocity) {
     struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
-    printf("%f\n", rb->velocity[Y]);
     glm_vec3_add(rb->velocity, velocity, rb->velocity);
 }
 

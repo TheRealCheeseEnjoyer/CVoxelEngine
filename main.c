@@ -42,7 +42,7 @@ int main() {
     skybox_init("yellowcloud");
 
     mat4 projection, view;
-    glm_perspective(glm_rad(60), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
+    glm_perspective(glm_rad(90), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
 
     float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
@@ -50,7 +50,6 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         im_update_input(window);
-        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT);
         float currentFrame = (float)glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
