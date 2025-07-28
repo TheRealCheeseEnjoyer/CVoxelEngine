@@ -8,5 +8,6 @@ Rigidbody rigidbody_register(vec3* postion, vec3 size);
 void rigidbody_update(float deltaTime);
 void rigidbody_add_velocity(Rigidbody rigidbody, vec3 velocity);
 void rigidbody_set_enabled(Rigidbody rigidbody, bool enabled);
+void rigidbody_get_velocity(Rigidbody rigidbody, vec3 velocity);
 
 #endif

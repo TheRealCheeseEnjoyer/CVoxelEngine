@@ -8,7 +8,7 @@
 #include "../include/Constants.h"
 #include "../include/Vector.h"
 
-constexpr vec3 Gravity = {0, -9.81f, 0};
+constexpr vec3 Gravity = {0, -15.f, 0};
 
 struct rigidbody_t {
     vec3* position;
@@ -57,11 +57,17 @@ void rigidbody_update(float deltaTime) {
 
 void rigidbody_add_velocity(Rigidbody rigidbody, vec3 velocity) {
     struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
+    printf("%f\n", rb->velocity[Y]);
     glm_vec3_add(rb->velocity, velocity, rb->velocity);
 }
 
 void rigidbody_set_enabled(Rigidbody rigidbody, bool enabled) {
     struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
     rb->enabled = enabled;
+}
+
+void rigidbody_get_velocity(Rigidbody rigidbody, vec3 velocity) {
+    struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
+    memcpy(velocity, rb->velocity, sizeof(vec3));
 }
 

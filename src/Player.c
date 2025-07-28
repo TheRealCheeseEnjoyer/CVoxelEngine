@@ -31,7 +31,7 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 
 Controls *controls;
 
-vec3 jumpForce = {0, 5, 0};
+vec3 jumpForce = {0, 6, 0};
 // Player is always slightly levitating so a 2 block high aabb would not pass under 2 block high gaps
 constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
 vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
@@ -76,7 +76,7 @@ void player_get_aabb(vec3 pos, AABB *out) {
 
 bool player_is_grounded() {
     // Player is always levitating, so we check a bit down if there is a collision
-    vec3 pos = {position[X], position[Y] - 0.001, position[Z]};
+    vec3 pos = {position[X], position[Y] - 0.0001, position[Z]};
     for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
         for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
             vec3 blockPos = {round(pos[X] + x), round(pos[Y] - 1), round(pos[Z] + z)};
@@ -212,7 +212,9 @@ void normal_movement(vec2 input, float deltaTime) {
     if (player_is_colliding_with_near_blocks(newPos))
         newPos[Z] = position[Z];
 
-    if (im_get_key_down(controls->jump) && player_is_grounded())
+    vec3 velocity;
+    rigidbody_get_velocity(rigidbody, velocity);
+    if (im_get_key(controls->jump) && player_is_grounded() && velocity[Y] == 0)
         rigidbody_add_velocity(rigidbody, jumpForce);
 
     memcpy(position, newPos, sizeof(vec3));
@@ -249,7 +251,7 @@ void player_update(float deltaTime) {
     player_eye_position(eye);
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
 
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
+    if (im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT)) {
         world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
     }
 
@@ -258,7 +260,7 @@ void player_update(float deltaTime) {
     else if (im_get_key_down(GLFW_KEY_2))
         selectedBlock = BLOCK_ROCK;
 
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT)) {
+    if (im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT)) {
         vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
         switch (faceLookedAt) {
             case FACE_TOP:
@@ -281,7 +283,7 @@ void player_update(float deltaTime) {
                 break;
         }
 
-        if (!player_is_colliding_with_block(position, newBlockPos))
+        if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos))
             world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlock);
     }
 
