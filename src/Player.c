@@ -26,6 +26,8 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 #define YAW 0
 #define PITCH 1
 #define SENSITIVITY 0.1
+#define COOLDOWN_BLOCK_DESTRUCTION .5f
+#define COOLDOWN_BLOCK_PLACEMENT .3f
 
 #define MAX_RANGE 4
 
@@ -46,6 +48,8 @@ Rigidbody rigidbody;
 bool is_freecam_enabled = false;
 unsigned int VAO, VBO;
 vec3 blockLookedAt = {-1, -1, -1};
+float destroyBlockCooldown = 1;
+float placeBlockCooldown = 1;
 
 void recalculate_vectors();
 
@@ -251,7 +255,9 @@ void player_update(float deltaTime) {
     player_eye_position(eye);
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
 
-    if (im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT)) {
+    destroyBlockCooldown += deltaTime;
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) && destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
+        destroyBlockCooldown = 0;
         world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
     }
 
@@ -260,7 +266,9 @@ void player_update(float deltaTime) {
     else if (im_get_key_down(GLFW_KEY_2))
         selectedBlock = BLOCK_ROCK;
 
-    if (im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT)) {
+    placeBlockCooldown += deltaTime;
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) && placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
+        placeBlockCooldown = 0;
         vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
         switch (faceLookedAt) {
             case FACE_TOP:

@@ -37,7 +37,7 @@ int main() {
     double time = glfwGetTime();
     world_init(startPos);
     double timeElapsed = glfwGetTime() - time;
-    printf("Generated 500x500x2 chunks in %f seconds\n", timeElapsed);
+    printf("Generated %dx%dx%d chunks in %f seconds\n", WORLD_SIZE_X, WORLD_SIZE_Y, WORLD_SIZE_Z, timeElapsed);
     player_init(&settings.controls);
     skybox_init("yellowcloud");
 
