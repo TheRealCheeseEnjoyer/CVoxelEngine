@@ -30,6 +30,9 @@ void generateTexture(BlockType type) {
             break;
         case BLOCK_SAND:
             data = stbi_load("assets/sand.png", &width, &height, &nrChannels, 0);
+            break;
+        case BLOCK_WOOD:
+            data = stbi_load("assets/wood.png", &width, &height, &nrChannels, 0);
         default:
             break;
     }

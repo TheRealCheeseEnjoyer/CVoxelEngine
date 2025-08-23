@@ -31,6 +31,7 @@ int main() {
     im_register_button(GLFW_MOUSE_BUTTON_RIGHT);
     im_register_key(GLFW_KEY_1);
     im_register_key(GLFW_KEY_2);
+    im_register_key(GLFW_KEY_3);
 
     vec3 startPos = {-3, 3, -3};
     sm_init();

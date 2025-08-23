@@ -265,6 +265,8 @@ void player_update(float deltaTime) {
         selectedBlock = BLOCK_GRASS;
     else if (im_get_key_down(GLFW_KEY_2))
         selectedBlock = BLOCK_ROCK;
+    else if (im_get_key_down(GLFW_KEY_3))
+        selectedBlock = BLOCK_WOOD;
 
     placeBlockCooldown += deltaTime;
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) && placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
