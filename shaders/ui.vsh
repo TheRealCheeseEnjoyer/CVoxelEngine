@@ -1,12 +1,12 @@
 #version 330 core
 
 layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec2 aTexCoord;
 
 out vec2 TexCoord;
-uniform mat4 finalMatrix;
+uniform mat4 model;
+uniform mat4 ortho;
 
 void main() {
-    gl_Position = finalMatrix * vec4(aPos.x, aPos.y, 0, 1);
-    TexCoord = aTexCoord;
+    gl_Position = ortho * model * vec4(aPos.x, aPos.y, 1, 1);
+    TexCoord = aPos;
 }
