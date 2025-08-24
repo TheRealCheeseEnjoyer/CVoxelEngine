@@ -16,6 +16,7 @@
 #include "include/Skybox.h"
 #include "include/thpool.h"
 #include "include/World.h"
+#include "include/ui/UIManager.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
 bool debuggerIsAttached();
@@ -45,6 +46,7 @@ int main() {
     mat4 projection, view;
     glm_perspective(glm_rad(90), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
 
+    UIManager_init();
     float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
     int numFrames = 0;
@@ -69,6 +71,8 @@ int main() {
         skybox_draw(eye, projection, view);
         world_draw(pos, projection, view);
         player_draw(projection);
+
+        UIManager_draw();
 
         im_reset_input();
         glfwSwapBuffers(window);

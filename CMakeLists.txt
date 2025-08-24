@@ -48,6 +48,9 @@ add_executable(CVoxelEngine main.c
         include/ShaderType.h
         src/thpool.c
         include/thpool.h
+        include/ui/Hotbar.h
+        include/ui/UISprite.h
+        include/ui/UIManager.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)
