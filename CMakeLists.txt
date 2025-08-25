@@ -51,6 +51,8 @@ add_executable(CVoxelEngine main.c
         include/ui/Hotbar.h
         include/ui/UISprite.h
         include/ui/UIManager.h
+        include/hashmap.h
+        src/hashmap.c
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)

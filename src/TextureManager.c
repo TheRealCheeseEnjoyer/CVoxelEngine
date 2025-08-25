@@ -3,10 +3,11 @@
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
+#include "../include/hashmap.h"
 
-unsigned int textures[BLOCK_NUM_BLOCK_TYPES] = { 0 };
+hashmap* textures;
 
-void generateTexture(BlockType type) {
+void generateTexture(const char* name) {
     unsigned int texture;
     glActiveTexture(GL_TEXTURE0);
     glGenTextures(1, &texture);
@@ -17,37 +18,27 @@ void generateTexture(BlockType type) {
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels;
-    unsigned char* data = nullptr;
-    switch (type) {
-        case BLOCK_GRASS:
-            data = stbi_load("assets/grass.png", &width, &height, &nrChannels, 0);
-            break;
-        case BLOCK_ROCK:
-            data = stbi_load("assets/rock.png", &width, &height, &nrChannels, 0);
-            break;
-        case BLOCK_WATER:
-            data = stbi_load("assets/water.png", &width, &height, &nrChannels, 0);
-            break;
-        case BLOCK_SAND:
-            data = stbi_load("assets/sand.png", &width, &height, &nrChannels, 0);
-            break;
-        case BLOCK_WOOD:
-            data = stbi_load("assets/wood.png", &width, &height, &nrChannels, 0);
-        default:
-            break;
-    }
+    unsigned char* data = stbi_load(name, &width, &height, &nrChannels, 0);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
 
-    textures[type] = texture;
+    hashmap_set(textures, name, texture);
 }
 
-unsigned int tm_get_texture_id(BlockType type) {
-    if (textures[type] == 0) {
-        generateTexture(type);
+void tm_init() {
+    textures = hashmap_init();
+}
+
+void tm_destroy() {
+    hashmap_free(textures);
+}
+
+unsigned int tm_get_texture_id(const char* name) {
+    if (hashmap_get(textures, name) == NULL) {
+        generateTexture(name);
     }
 
-    return textures[type];
+    return hashmap_get(textures, name)->value;
 }

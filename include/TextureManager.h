@@ -3,6 +3,9 @@
 
 #include "BlockType.h"
 
-unsigned int tm_get_texture_id(BlockType type);
+void tm_init();
 
+unsigned int tm_get_texture_id(const char* texture);
+
+void tm_destroy();
 #endif

@@ -420,7 +420,7 @@ void chunk_draw(Chunk *chunk, mat4 projection, mat4 view) {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        glBindTexture(GL_TEXTURE_2D, tm_get_texture_id(i));
+        glBindTexture(GL_TEXTURE_2D, tm_get_texture_id(blocktype_to_texture_path(i)));
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->meshes[i]));
     }
