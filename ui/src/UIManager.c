@@ -1,12 +1,8 @@
-#ifndef UIMANAGER_H
-#define UIMANAGER_H
-
+#include "../include/UIManager.h"
 #include <cglm/cam.h>
 #include <glad/glad.h>
 
-#include "../ShaderManager.h"
-#include "../TextureManager.h"
-#include "UISprite.h"
+#include "../../include/ShaderManager.h"
 
 static mat4 orthoMatrix;
 static Shader shader;
@@ -21,6 +17,7 @@ static float vertices[] = {
     1, 0,
     1, 1
 };
+
 
 void UIManager_init() {
     glm_ortho(0.f, 1920.f, 0.f, 1080.f, -1.f, 1.f, orthoMatrix);
@@ -52,5 +49,3 @@ void UIManager_destroy() {
     glDeleteVertexArrays(1, &vertexBuffer);
     glDeleteVertexArrays(1, &VAO);
 }
-
-#endif

@@ -1,6 +1,5 @@
 #include "../include/Player.h"
 
-#include <stdio.h>
 #include <glad/glad.h>
 
 #include <string.h>
@@ -17,6 +16,7 @@
 #include "../include/Constants.h"
 #include "../include/Rigidbody.h"
 #include "../include/ShaderManager.h"
+#include "../ui/include/Hotbar.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -43,10 +43,10 @@ vec3 up;
 vec3 right;
 float movementSpeed = 10;
 float fallSpeed = 2;
-BlockType selectedBlock = BLOCK_GRASS;
+BlockType selectedBlockType = BLOCK_GRASS;
 Rigidbody rigidbody;
 bool is_freecam_enabled = false;
-unsigned int VAO, VBO;
+static unsigned int VAO, VBO;
 vec3 blockLookedAt = {-1, -1, -1};
 float destroyBlockCooldown = 1;
 float placeBlockCooldown = 1;
@@ -239,6 +239,26 @@ void player_update(float deltaTime) {
     if (im_get_key(controls->right))
         input[X] += 1;
 
+    if (im_get_key_down(controls->hotbar_1)) {
+        selectedBlockType = Hotbar_change_selection(0);
+    } else if (im_get_key_down(controls->hotbar_2)) {
+        selectedBlockType = Hotbar_change_selection(1);
+    } else if (im_get_key_down(controls->hotbar_3)) {
+        selectedBlockType = Hotbar_change_selection(2);
+    } else if (im_get_key_down(controls->hotbar_4)) {
+        selectedBlockType = Hotbar_change_selection(3);
+    } else if (im_get_key_down(controls->hotbar_5)) {
+        selectedBlockType = Hotbar_change_selection(4);
+    } else if (im_get_key_down(controls->hotbar_6)) {
+        selectedBlockType = Hotbar_change_selection(5);
+    } else if (im_get_key_down(controls->hotbar_7)) {
+        selectedBlockType = Hotbar_change_selection(6);
+    } else if (im_get_key_down(controls->hotbar_8)) {
+        selectedBlockType = Hotbar_change_selection(7);
+    } else if (im_get_key_down(controls->hotbar_9)) {
+        selectedBlockType = Hotbar_change_selection(8);
+    }
+
     if (im_get_key_down(controls->freecam)) {
         rigidbody_set_enabled(rigidbody, is_freecam_enabled);
         is_freecam_enabled = !is_freecam_enabled;
@@ -260,13 +280,6 @@ void player_update(float deltaTime) {
         destroyBlockCooldown = 0;
         world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
     }
-
-    if (im_get_key_down(GLFW_KEY_1))
-        selectedBlock = BLOCK_GRASS;
-    else if (im_get_key_down(GLFW_KEY_2))
-        selectedBlock = BLOCK_ROCK;
-    else if (im_get_key_down(GLFW_KEY_3))
-        selectedBlock = BLOCK_WOOD;
 
     placeBlockCooldown += deltaTime;
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) && placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
@@ -294,7 +307,7 @@ void player_update(float deltaTime) {
         }
 
         if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos))
-            world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlock);
+            world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlockType);
     }
 
     recalculate_vectors();

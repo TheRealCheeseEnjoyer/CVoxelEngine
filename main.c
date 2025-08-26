@@ -14,9 +14,11 @@
 #include "include/Settings.h"
 #include "include/ShaderManager.h"
 #include "include/Skybox.h"
+#include "include/TextureManager.h"
 #include "include/thpool.h"
 #include "include/World.h"
-#include "include/ui/Hotbar.h"
+#include "ui/include/Hotbar.h"
+#include "ui/include/UIManager.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
 bool debuggerIsAttached();
@@ -65,26 +67,6 @@ int main() {
         player_get_view_matrix(view);
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-
-        if (im_get_key_down(settings.controls.hotbar_1)) {
-            Hotbar_change_selection(0);
-        } else if (im_get_key_down(settings.controls.hotbar_2)) {
-            Hotbar_change_selection(1);
-        } else if (im_get_key_down(settings.controls.hotbar_3)) {
-            Hotbar_change_selection(2);
-        } else if (im_get_key_down(settings.controls.hotbar_4)) {
-            Hotbar_change_selection(3);
-        } else if (im_get_key_down(settings.controls.hotbar_5)) {
-            Hotbar_change_selection(4);
-        } else if (im_get_key_down(settings.controls.hotbar_6)) {
-            Hotbar_change_selection(5);
-        } else if (im_get_key_down(settings.controls.hotbar_7)) {
-            Hotbar_change_selection(6);
-        } else if (im_get_key_down(settings.controls.hotbar_8)) {
-            Hotbar_change_selection(7);
-        } else if (im_get_key_down(settings.controls.hotbar_9)) {
-            Hotbar_change_selection(8);
         }
 
         vec3 eye, pos;
