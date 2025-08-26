@@ -19,6 +19,15 @@ typedef struct {
     KeyCode interact;
     KeyCode exit;
     KeyCode freecam;
+    KeyCode hotbar_1;
+    KeyCode hotbar_2;
+    KeyCode hotbar_3;
+    KeyCode hotbar_4;
+    KeyCode hotbar_5;
+    KeyCode hotbar_6;
+    KeyCode hotbar_7;
+    KeyCode hotbar_8;
+    KeyCode hotbar_9;
 } Controls;
 
 typedef struct {

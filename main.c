@@ -30,9 +30,6 @@ int main() {
     im_init((KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
     im_register_button(GLFW_MOUSE_BUTTON_LEFT);
     im_register_button(GLFW_MOUSE_BUTTON_RIGHT);
-    im_register_key(GLFW_KEY_1);
-    im_register_key(GLFW_KEY_2);
-    im_register_key(GLFW_KEY_3);
 
     vec3 startPos = {-3, 3, -3};
     sm_init();
@@ -70,12 +67,24 @@ int main() {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
 
-        if (im_get_key_down(GLFW_KEY_1)) {
+        if (im_get_key_down(settings.controls.hotbar_1)) {
             Hotbar_change_selection(0);
-        } else if (im_get_key_down(GLFW_KEY_2)) {
+        } else if (im_get_key_down(settings.controls.hotbar_2)) {
             Hotbar_change_selection(1);
-        } else if (im_get_key_down(GLFW_KEY_3)) {
+        } else if (im_get_key_down(settings.controls.hotbar_3)) {
             Hotbar_change_selection(2);
+        } else if (im_get_key_down(settings.controls.hotbar_4)) {
+            Hotbar_change_selection(3);
+        } else if (im_get_key_down(settings.controls.hotbar_5)) {
+            Hotbar_change_selection(4);
+        } else if (im_get_key_down(settings.controls.hotbar_6)) {
+            Hotbar_change_selection(5);
+        } else if (im_get_key_down(settings.controls.hotbar_7)) {
+            Hotbar_change_selection(6);
+        } else if (im_get_key_down(settings.controls.hotbar_8)) {
+            Hotbar_change_selection(7);
+        } else if (im_get_key_down(settings.controls.hotbar_9)) {
+            Hotbar_change_selection(8);
         }
 
         vec3 eye, pos;

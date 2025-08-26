@@ -76,6 +76,15 @@ int load_controls(FILE* file, Controls* settings) {
         else if (strcmp(property, "interact") == 0) settings->interact = key;
         else if (strcmp(property, "exit") == 0) settings->exit = key;
         else if (strcmp(property, "freecam") == 0) settings->freecam = key;
+        else if (strcmp(property, "hotbar_1") == 0) settings->hotbar_1 = key;
+        else if (strcmp(property, "hotbar_2") == 0) settings->hotbar_2 = key;
+        else if (strcmp(property, "hotbar_3") == 0) settings->hotbar_3 = key;
+        else if (strcmp(property, "hotbar_4") == 0) settings->hotbar_4 = key;
+        else if (strcmp(property, "hotbar_5") == 0) settings->hotbar_5 = key;
+        else if (strcmp(property, "hotbar_6") == 0) settings->hotbar_6 = key;
+        else if (strcmp(property, "hotbar_7") == 0) settings->hotbar_7 = key;
+        else if (strcmp(property, "hotbar_8") == 0) settings->hotbar_8 = key;
+        else if (strcmp(property, "hotbar_9") == 0) settings->hotbar_9 = key;
     }
     return 1;
 }
