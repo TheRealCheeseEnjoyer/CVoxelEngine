@@ -16,7 +16,7 @@
 #include "include/Skybox.h"
 #include "include/thpool.h"
 #include "include/World.h"
-#include "include/ui/UIManager.h"
+#include "include/ui/Hotbar.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
 bool debuggerIsAttached();
@@ -46,6 +46,10 @@ int main() {
     mat4 projection, view;
     glm_perspective(glm_rad(90), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
 
+    tm_init();
+
+    Hotbar_init();
+
     UIManager_init();
     float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
@@ -65,6 +69,15 @@ int main() {
         if (im_get_key_down(settings.controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+
+        if (im_get_key_down(GLFW_KEY_1)) {
+            Hotbar_change_selection(0);
+        } else if (im_get_key_down(GLFW_KEY_2)) {
+            Hotbar_change_selection(1);
+        } else if (im_get_key_down(GLFW_KEY_3)) {
+            Hotbar_change_selection(2);
+        }
+
         vec3 eye, pos;
         player_eye_position(eye);
         player_position(pos);
@@ -72,7 +85,9 @@ int main() {
         world_draw(pos, projection, view);
         player_draw(projection);
 
-        UIManager_draw();
+        UIManager_begin_draw();
+        Hotbar_draw();
+        UIManager_end_draw();
 
         im_reset_input();
         glfwSwapBuffers(window);
