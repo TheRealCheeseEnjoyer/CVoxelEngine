@@ -6,7 +6,7 @@
 
 void UISprite_init(UISprite *sprite, const char *texture, vec2 position, vec2 size) {
     glm_mat4_identity(sprite->transform);
-    glm_translate(sprite->transform, (vec3) {position[0], position[1], 0});
+    glm_translate(sprite->transform, (vec3) {position[0] - size[0] / 2, position[1] - size[1] / 2, 0});
     glm_scale(sprite->transform, (vec3) {size[0], size[1], 1});
 
     if (texture != NULL)
@@ -18,7 +18,7 @@ void UISprite_set_position(UISprite *sprite, vec2 position) {
     mat4 rot;
     glm_decompose_rs(sprite->transform, rot, scale);
     glm_mat4_identity(sprite->transform);
-    glm_translate(sprite->transform, (vec3) {position[0], position[1], 0});
+    glm_translate(sprite->transform, (vec3) {position[0] - scale[0] / 2, position[1] - scale[1] / 2, 0});
     glm_scale(sprite->transform, scale);
 }
 
