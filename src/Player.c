@@ -259,6 +259,8 @@ void player_update(float deltaTime) {
         selectedBlockType = Hotbar_change_selection(8);
     }
 
+    selectedBlockType = Hotbar_change_selection(Hotbar_get_current_index() - im_get_scroll_direction());
+
     if (im_get_key_down(controls->freecam)) {
         rigidbody_set_enabled(rigidbody, is_freecam_enabled);
         is_freecam_enabled = !is_freecam_enabled;

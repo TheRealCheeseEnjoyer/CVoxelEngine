@@ -7,8 +7,8 @@
 typedef int KeyCode;
 typedef int ButtonCode;
 
-void im_init(KeyCode* keys, int n);
-void im_init_empty();
+void im_init(GLFWwindow* window, KeyCode* keys, int n);
+void im_init_empty(GLFWwindow* window);
 void im_destroy();
 
 void im_register_key(KeyCode key);
@@ -22,6 +22,7 @@ void im_register_button(ButtonCode button);
 bool im_get_mouse_button_down(ButtonCode button);
 bool im_get_mouse_button(ButtonCode button);
 bool im_get_mouse_button_up(ButtonCode button);
+int im_get_scroll_direction();
 
 void im_update_input(GLFWwindow* window);
 void im_reset_input();

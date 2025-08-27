@@ -29,7 +29,7 @@ int main() {
     thpool_init(16);
     GLFWwindow* window = window_init(&settings.window);
 
-    im_init((KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
+    im_init(window, (KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
     im_register_button(GLFW_MOUSE_BUTTON_LEFT);
     im_register_button(GLFW_MOUSE_BUTTON_RIGHT);
 
@@ -46,10 +46,9 @@ int main() {
     glm_perspective(glm_rad(90), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
 
     tm_init();
+    UIManager_init();
 
     Hotbar_init();
-
-    UIManager_init();
     float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
     int numFrames = 0;

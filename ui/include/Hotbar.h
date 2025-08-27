@@ -4,6 +4,7 @@
 
 void Hotbar_init();
 
+int Hotbar_get_current_index();
 BlockType Hotbar_change_selection(int slotSelected);
 
 void Hotbar_draw();

@@ -4,6 +4,7 @@
 UISprite sprites[9];
 UISprite selector;
 BlockType slots[9];
+int currentIndex = 0;
 
 void Hotbar_init() {
     for (int i = 0; i < 9; i++) {
@@ -14,12 +15,17 @@ void Hotbar_init() {
     UISprite_init(&selector, "assets/ui/hotbar_selector.png", (vec2){100, 100}, (vec2){100, 100});
 }
 
+int Hotbar_get_current_index() {
+    return currentIndex;
+}
+
 BlockType Hotbar_change_selection(int slotSelected) {
-    if (slotSelected > 9) {
+    if (slotSelected >= 9) {
         slotSelected = 0;
     } else if (slotSelected < 0) {
-        slotSelected = 9;
+        slotSelected = 8;
     }
+    currentIndex = slotSelected;
 
     UISprite_set_position(&selector, (vec2){100 + slotSelected * 100, 100});
     return slots[slotSelected];

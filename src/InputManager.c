@@ -1,5 +1,6 @@
 #include "../include/InputManager.h"
 
+#include <stdio.h>
 #include <GLFW/glfw3.h>
 
 #include "../include/Vector.h"
@@ -23,6 +24,17 @@ Vector KeyStates;
 Vector ButtonStates;
 vec2 mousePos = {0, 0};
 vec2 mouseDelta = {0, 0};
+int mouseScrollDirection = 0;
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    printf("%f\n", yoffset);
+    if (yoffset > 0) {
+        mouseScrollDirection = 1;
+    } else if (yoffset < 0) {
+        mouseScrollDirection = -1;
+    }
+}
+
 
 int is_key_registered(KeyCode key) {
     for (int i = 0; i < vec_size(KeyStates); i++) {
@@ -37,17 +49,18 @@ int is_button_registered(ButtonCode button) {
     return BUTTON_NOT_REGISTERED;
 }
 
-void im_init(KeyCode* keys, int n) {
-    im_init_empty();
+void im_init(GLFWwindow* window, KeyCode* keys, int n) {
+    im_init_empty(window);
 
     for (int i = 0; i < n; i++) {
         im_register_key(keys[i]);
     }
 }
 
-void im_init_empty() {
+void im_init_empty(GLFWwindow* window) {
     KeyStates = vec_init(sizeof(KeyState));
     ButtonStates = vec_init(sizeof(ButtonState));
+    glfwSetScrollCallback(window, scroll_callback);
 }
 
 void im_destroy() {
@@ -120,6 +133,10 @@ bool im_get_mouse_button_up(ButtonCode button) {
     return !state.isPressed && state.wasPressed;
 }
 
+int im_get_scroll_direction() {
+    return mouseScrollDirection;
+}
+
 void im_update_input(GLFWwindow* window) {
     for (int i = 0; i < vec_size(KeyStates); i++) {
         KeyState* state = vec_get(KeyStates, i);
@@ -151,4 +168,6 @@ void im_reset_input() {
         state->wasPressed = state->isPressed;
         state->isPressed = false;
     }
+
+    mouseScrollDirection = 0;
 }
