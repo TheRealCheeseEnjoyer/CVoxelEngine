@@ -1,5 +1,5 @@
-#include "../include/Block.h"
-#include "../include/Constants.h"
+#include "Block.h"
+#include "Constants.h"
 
 void block_get_aabb(vec3 pos, AABB *out) {
     out->max[X] = pos[X] + block_size[X] / 2;

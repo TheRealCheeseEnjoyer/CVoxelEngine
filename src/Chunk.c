@@ -1,15 +1,14 @@
 #include "../include/Chunk.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
-#include "../include/PerlinNoise.h"
-#include "../include/Constants.h"
-#include "../include/TextureManager.h"
-#include "../include/FaceOrientation.h"
-#include "../include/ShaderManager.h"
+#include "PerlinNoise.h"
+#include "Constants.h"
+#include "TextureManager.h"
+#include "FaceOrientation.h"
+#include "ShaderManager.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
 

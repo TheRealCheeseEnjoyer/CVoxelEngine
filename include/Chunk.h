@@ -1,10 +1,9 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include <cglm/mat4.h>
 #include "Block.h"
-#include "Shader.h"
 #include "Vector.h"
+#include <cglm/mat4.h>
 
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 16

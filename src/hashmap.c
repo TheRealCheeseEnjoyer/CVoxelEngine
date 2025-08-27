@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/hashmap.h"
+#include "hashmap.h"
 
 static int hashmap_ensure_size(hashmap *hm);
 static int hashmap_resize(hashmap *hm);

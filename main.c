@@ -8,17 +8,17 @@
 #include <fcntl.h>
 #include <cglm/cam.h>
 
-#include "include/InputManager.h"
-#include "include/Player.h"
-#include "include/Rigidbody.h"
-#include "include/Settings.h"
-#include "include/ShaderManager.h"
-#include "include/Skybox.h"
-#include "include/TextureManager.h"
-#include "include/thpool.h"
-#include "include/World.h"
-#include "ui/include/Hotbar.h"
-#include "ui/include/UIManager.h"
+#include "InputManager.h"
+#include "Player.h"
+#include "Rigidbody.h"
+#include "Settings.h"
+#include "ShaderManager.h"
+#include "Skybox.h"
+#include "TextureManager.h"
+#include "thpool.h"
+#include "World.h"
+#include "ui/Hotbar.h"
+#include "ui/UIManager.h"
 
 GLFWwindow* window_init(const WindowSettings* settings);
 bool debuggerIsAttached();

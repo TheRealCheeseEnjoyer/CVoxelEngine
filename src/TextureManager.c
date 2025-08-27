@@ -1,9 +1,9 @@
-#include "../include/TextureManager.h"
+#include "TextureManager.h"
 
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/stb_image.h"
-#include "../include/hashmap.h"
+#include "stb_image.h"
+#include "hashmap.h"
 
 hashmap* textures;
 

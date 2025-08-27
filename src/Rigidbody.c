@@ -1,12 +1,11 @@
-#include "../include/Rigidbody.h"
+#include "Rigidbody.h"
 
-#include <stdio.h>
 #include <string.h>
 
-#include "../include/AABB.h"
-#include "../include/Collisions.h"
-#include "../include/Constants.h"
-#include "../include/Vector.h"
+#include "AABB.h"
+#include "Collisions.h"
+#include "Constants.h"
+#include "Vector.h"
 
 constexpr vec3 Gravity = {0, -15.f, 0};
 

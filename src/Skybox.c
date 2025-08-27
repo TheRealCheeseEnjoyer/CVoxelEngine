@@ -1,12 +1,12 @@
-#include "../include/Skybox.h"
+#include "Skybox.h"
 
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
-#include "../include/Shader.h"
-#include "../include/ShaderManager.h"
-#include "../include/stb_image.h"
+#include "Shader.h"
+#include "ShaderManager.h"
+#include "stb_image.h"
 
 float skyboxVertices[] = {
     // positions

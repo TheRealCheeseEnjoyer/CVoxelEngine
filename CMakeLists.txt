@@ -11,6 +11,10 @@ set(CMAKE_C_FLAGS "-Wall -Wextra")
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
+include_directories(
+        ${PROJECT_SOURCE_DIR}/include
+)
+
 add_executable(CVoxelEngine main.c
         src/glad.c
         src/Settings.c
@@ -48,14 +52,14 @@ add_executable(CVoxelEngine main.c
         include/ShaderType.h
         src/thpool.c
         include/thpool.h
-        ui/include/Hotbar.h
-        ui/include/UISprite.h
-        ui/include/UIManager.h
+        include/ui/Hotbar.h
+        include/ui/UISprite.h
+        include/ui/UIManager.h
         include/hashmap.h
         src/hashmap.c
-        ui/src/Hotbar.c
-        ui/src/UISprite.c
-        ui/src/UIManager.c
+        src/ui/Hotbar.c
+        src/ui/UISprite.c
+        src/ui/UIManager.c
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)

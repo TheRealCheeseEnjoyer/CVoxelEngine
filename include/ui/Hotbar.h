@@ -1,6 +1,6 @@
 #ifndef HOTBAR_H
 #define HOTBAR_H
-#include "../../include/BlockType.h"
+#include "BlockType.h"
 
 void Hotbar_init();
 

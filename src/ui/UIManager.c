@@ -1,8 +1,8 @@
-#include "../include/UIManager.h"
+#include "ui/UIManager.h"
 #include <cglm/cam.h>
 #include <glad/glad.h>
 
-#include "../../include/ShaderManager.h"
+#include "ShaderManager.h"
 
 static mat4 orthoMatrix;
 static Shader shader;

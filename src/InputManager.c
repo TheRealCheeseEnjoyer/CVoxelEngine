@@ -1,4 +1,4 @@
-#include "../include/InputManager.h"
+#include "InputManager.h"
 
 #include <stdio.h>
 #include <GLFW/glfw3.h>

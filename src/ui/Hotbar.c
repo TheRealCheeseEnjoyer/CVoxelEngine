@@ -1,5 +1,5 @@
-#include "../include/Hotbar.h"
-#include "../include/UISprite.h"
+#include "ui/Hotbar.h"
+#include "ui/UISprite.h"
 
 UISprite sprites[9];
 UISprite selector;

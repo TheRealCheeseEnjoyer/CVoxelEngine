@@ -1,6 +1,6 @@
-#include "../include/Collisions.h"
-#include "../include/Block.h"
-#include "../include/World.h"
+#include "Collisions.h"
+#include "Block.h"
+#include "World.h"
 
 #define X 0
 #define Y 1

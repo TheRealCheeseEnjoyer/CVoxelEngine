@@ -1,11 +1,11 @@
-#include "../include/World.h"
+#include "World.h"
 
 #include <string.h>
 
-#include "../include/Chunk.h"
-#include "../include/ShaderManager.h"
-#include "../include/Constants.h"
-#include "../include/thpool.h"
+#include "Chunk.h"
+#include "ShaderManager.h"
+#include "Constants.h"
+#include "thpool.h"
 
 #define CHUNK_COORDS_TO_INDEX(x, y, z) (x + y * WORLD_SIZE_X + z * WORLD_SIZE_X * WORLD_SIZE_Y)
 #define GLOBAL_COORDS_TO_CHUNK_INDEX(x, y, z) (CHUNK_COORDS_TO_INDEX(x / CHUNK_SIZE_X, y / CHUNK_SIZE_Y, z / CHUNK_SIZE_Z))

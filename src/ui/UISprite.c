@@ -1,6 +1,6 @@
-#include "../include/UISprite.h"
-#include "../../include/ShaderManager.h"
-#include "../../include/TextureManager.h"
+#include "ui/UISprite.h"
+#include "ShaderManager.h"
+#include "TextureManager.h"
 #include <cglm/affine.h>
 #include <glad/glad.h>
 

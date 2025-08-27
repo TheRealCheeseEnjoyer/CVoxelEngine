@@ -1,4 +1,4 @@
-#include "../include/Player.h"
+#include "Player.h"
 
 #include <glad/glad.h>
 
@@ -7,16 +7,16 @@
 #include <cglm/cam.h>
 #include <cglm/vec3.h>
 
-#include "../include/AABB.h"
-#include "../include/FaceOrientation.h"
-#include "../include/Block.h"
-#include "../include/Collisions.h"
-#include "../include/InputManager.h"
-#include "../include/World.h"
-#include "../include/Constants.h"
-#include "../include/Rigidbody.h"
-#include "../include/ShaderManager.h"
-#include "../ui/include/Hotbar.h"
+#include "AABB.h"
+#include "FaceOrientation.h"
+#include "Block.h"
+#include "Collisions.h"
+#include "InputManager.h"
+#include "World.h"
+#include "Constants.h"
+#include "Rigidbody.h"
+#include "ShaderManager.h"
+#include "ui/Hotbar.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
