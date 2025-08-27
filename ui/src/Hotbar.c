@@ -3,15 +3,17 @@
 
 UISprite sprites[9];
 UISprite selector;
+UISprite background;
 BlockType slots[9];
 int currentIndex = 0;
 
 void Hotbar_init() {
     for (int i = 0; i < 9; i++) {
-        UISprite_init(&(sprites[i]), blocktype_to_texture_path(i % BLOCK_NUM_BLOCK_TYPES), (vec2){100 + i * 100, 100},
-                      (vec2){100, 100});
+        UISprite_init(&(sprites[i]), blocktype_to_texture_path(i % BLOCK_NUM_BLOCK_TYPES), (vec2){105 + i * 100, 105},
+                      (vec2){90, 90});
         slots[i] = i % BLOCK_NUM_BLOCK_TYPES;
     }
+    UISprite_init(&background, "assets/ui/hotbar_bg.png", (vec2){100, 100}, (vec2) {900, 100});
     UISprite_init(&selector, "assets/ui/hotbar_selector.png", (vec2){100, 100}, (vec2){100, 100});
 }
 
@@ -32,8 +34,10 @@ BlockType Hotbar_change_selection(int slotSelected) {
 }
 
 void Hotbar_draw() {
+    UISprite_draw(&background);
     for (int i = 0; i < 9; i++) {
-        UISprite_draw(&(sprites[i]));
+        if (slots[i] != 0)
+            UISprite_draw(&(sprites[i]));
     }
     UISprite_draw(&selector);
 }

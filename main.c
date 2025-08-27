@@ -116,6 +116,8 @@ GLFWwindow* window_init(const WindowSettings* settings) {
         exit(1);
     }
     glViewport(0, 0, settings->width, settings->height);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -147,9 +149,7 @@ bool debuggerIsAttached() {
 
     for (const char* characterPtr = tracer_pid_ptr + sizeof(tracerPidString) - 1;
          characterPtr <= buf + num_read; ++characterPtr) {
-        if (isspace(*characterPtr))
-            continue;
-        else
+        if (!isspace(*characterPtr))
             return isdigit(*characterPtr) != 0 && *characterPtr != '0';
          }
 

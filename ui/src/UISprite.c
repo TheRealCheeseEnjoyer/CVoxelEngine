@@ -9,7 +9,8 @@ void UISprite_init(UISprite *sprite, const char *texture, vec2 position, vec2 si
     glm_translate(sprite->transform, (vec3) {position[0], position[1], 0});
     glm_scale(sprite->transform, (vec3) {size[0], size[1], 1});
 
-    sprite->texture = tm_get_texture_id(texture);
+    if (texture != NULL)
+        sprite->texture = tm_get_texture_id(texture);
 }
 
 void UISprite_set_position(UISprite *sprite, vec2 position) {
