@@ -1,7 +1,10 @@
 #include "ui/UIManager.h"
+
+#include <stdio.h>
 #include <cglm/cam.h>
 #include <glad/glad.h>
 
+#include "InputManager.h"
 #include "ShaderManager.h"
 
 static mat4 orthoMatrix;
@@ -9,18 +12,18 @@ static Shader shader;
 static unsigned int VAO, vertexBuffer;
 
 static float vertices[] = {
-    0, 0,
-    1, 1,
     0, 1,
-
+    1, 1,
     0, 0,
+
     1, 0,
+    0, 0,
     1, 1
 };
 
 
 void UIManager_init() {
-    glm_ortho(0.f, 1920.f, 0.f, 1080.f, -1.f, 1.f, orthoMatrix);
+    glm_ortho(0.f, 1920.f, 1080.f, 0.f, -1.f, 1.f, orthoMatrix);
     shader = sm_get_shader(SHADER_UI);
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -30,6 +33,27 @@ void UIManager_init() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
+}
+
+int UIManager_check_hovered(UISprite *sprite, int size) {
+    vec2 mousePos;
+    im_get_mouse_position(mousePos);
+    for (int i = 0; i < size; i++) {
+        if (sprite[i].enabled) {
+            vec2 spritePos;
+            vec2 spriteSize;
+            UISprite_get_size(&sprite[i], spriteSize);
+            UISprite_get_position(&sprite[i], spritePos);
+            printf("%f %f\n", spritePos[0], spritePos[1]);
+            if (mousePos[0] > spritePos[0] - spriteSize[0] / 2 &&
+                mousePos[0] < spritePos[0] + spriteSize[0] / 2 &&
+                mousePos[1] > spritePos[1] - spriteSize[1] / 2 &&
+                mousePos[1] < spritePos[1] + spriteSize[1] / 2) {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
 void UIManager_begin_draw() {

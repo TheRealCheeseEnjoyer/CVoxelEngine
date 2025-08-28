@@ -5,7 +5,7 @@
 #include "AABB.h"
 #include "Collisions.h"
 #include "Constants.h"
-#include "Vector.h"
+#include "../libs/Vector.h"
 
 constexpr vec3 Gravity = {0, -15.f, 0};
 

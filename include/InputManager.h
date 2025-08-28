@@ -23,6 +23,7 @@ bool im_get_mouse_button_down(ButtonCode button);
 bool im_get_mouse_button(ButtonCode button);
 bool im_get_mouse_button_up(ButtonCode button);
 int im_get_scroll_direction();
+void im_get_mouse_position(vec2 position);
 
 void im_update_input(GLFWwindow* window);
 void im_reset_input();

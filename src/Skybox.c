@@ -6,7 +6,7 @@
 
 #include "Shader.h"
 #include "ShaderManager.h"
-#include "stb_image.h"
+#include "../libs/stb_image.h"
 
 float skyboxVertices[] = {
     // positions

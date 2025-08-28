@@ -2,7 +2,7 @@
 #define CHUNK_H
 
 #include "Block.h"
-#include "Vector.h"
+#include "../libs/Vector.h"
 #include <cglm/mat4.h>
 
 #define CHUNK_SIZE_X 16

@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../libs/stb_image.h"
 #include "hashmap.h"
 
 hashmap* textures;
@@ -39,6 +39,8 @@ void tm_destroy() {
 }
 
 unsigned int tm_get_texture_id(const char* name) {
+    if (name == nullptr)
+        return 0;
     if (hashmap_get(textures, name) == NULL) {
         generateTexture(name);
     }

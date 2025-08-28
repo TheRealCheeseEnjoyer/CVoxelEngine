@@ -17,6 +17,7 @@
 #include "Rigidbody.h"
 #include "ShaderManager.h"
 #include "ui/Hotbar.h"
+#include "ui/Inventory.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -63,6 +64,7 @@ void player_init(Controls *playerControls) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(block_vertices), block_vertices, GL_STATIC_DRAW);
     glBindVertexArray(0);
+    inventory_init();
 }
 
 void player_eye_position(vec3 eye_pos) {
@@ -227,6 +229,12 @@ void normal_movement(vec2 input, float deltaTime) {
 void player_update(float deltaTime) {
     vec2 mouseDelta;
     im_get_mouse_delta(mouseDelta);
+    if (inventory_is_enabled()) {
+        if (im_get_key_down(GLFW_KEY_E))
+            inventory_toggle();
+        inventory_update();
+        return;
+    }
     look_around(rotation, mouseDelta);
 
     vec2 input = {0, 0};
@@ -260,6 +268,9 @@ void player_update(float deltaTime) {
     }
 
     selectedBlockType = Hotbar_change_selection(Hotbar_get_current_index() - im_get_scroll_direction());
+
+    if (im_get_key_down(GLFW_KEY_E))
+        inventory_toggle();
 
     if (im_get_key_down(controls->freecam)) {
         rigidbody_set_enabled(rigidbody, is_freecam_enabled);
@@ -338,12 +349,11 @@ void player_draw(mat4 projection) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
-    //glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
-    //glEnableVertexAttribArray(1);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindVertexArray(0);
+    inventory_draw();
 }
 
 void player_get_view_matrix(mat4 outView) {

@@ -13,16 +13,17 @@ set(CMAKE_C_FLAGS_RELEASE "-O3")
 
 include_directories(
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/libs
 )
 
 add_executable(CVoxelEngine main.c
-        src/glad.c
+        libs/glad.c
         src/Settings.c
         include/Settings.h
         src/InputManager.c
         include/InputManager.h
-        include/Vector.h
-        src/Vector.c
+        libs/Vector.h
+        libs/Vector.c
         src/World.c
         include/World.h
         src/Chunk.c
@@ -50,16 +51,20 @@ add_executable(CVoxelEngine main.c
         src/ShaderManager.c
         include/ShaderManager.h
         include/ShaderType.h
-        src/thpool.c
-        include/thpool.h
+        libs/thpool.c
+        libs/thpool.h
         include/ui/Hotbar.h
         include/ui/UISprite.h
         include/ui/UIManager.h
-        include/hashmap.h
-        src/hashmap.c
+        libs/hashmap.h
+        libs/hashmap.c
         src/ui/Hotbar.c
         src/ui/UISprite.c
         src/ui/UIManager.c
+        src/ui/Inventory.c
+        include/ui/Inventory.h
+        src/WindowManager.c
+        include/WindowManager.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)

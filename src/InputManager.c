@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <GLFW/glfw3.h>
 
-#include "../include/Vector.h"
+#include "../libs/Vector.h"
 
 #define KEY_NOT_REGISTERED (-1)
 #define BUTTON_NOT_REGISTERED (-1)
@@ -20,11 +20,11 @@ typedef struct {
     bool wasPressed;
 } ButtonState;
 
-Vector KeyStates;
-Vector ButtonStates;
-vec2 mousePos = {0, 0};
-vec2 mouseDelta = {0, 0};
-int mouseScrollDirection = 0;
+static Vector KeyStates;
+static Vector ButtonStates;
+static vec2 mousePos = {0, 0};
+static vec2 mouseDelta = {0, 0};
+static int mouseScrollDirection = 0;
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     printf("%f\n", yoffset);
@@ -135,6 +135,11 @@ bool im_get_mouse_button_up(ButtonCode button) {
 
 int im_get_scroll_direction() {
     return mouseScrollDirection;
+}
+
+void im_get_mouse_position(vec2 position) {
+    position[0] = mousePos[0];
+    position[1] = mousePos[1];
 }
 
 void im_update_input(GLFWwindow* window) {

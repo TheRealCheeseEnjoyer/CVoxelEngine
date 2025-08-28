@@ -35,7 +35,7 @@ Vector vec_init_c(const size_t typeSize, const size_t capacity) {
 
 /// Resizes the vector to trim excess space
 /// @param v Handle to a vector
-void vec_resize(Vector v) {
+void vec_shrink_to_fit(Vector v) {
     void* newMem = realloc(v->data, v->size * v->typeSize);
     if (!newMem) return;
     v->data = newMem;

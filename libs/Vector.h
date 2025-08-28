@@ -9,7 +9,7 @@ typedef struct vector_t* Vector;
 Vector vec_init(size_t typeSize);
 Vector vec_init_c(size_t typeSize, size_t capacity);
 
-void vec_resize(Vector v);
+void vec_shrink_to_fit(Vector v);
 void* vec_append(Vector v, void* item);
 void* vec_get(Vector v, size_t index);
 void vec_remove(Vector v, size_t index);
