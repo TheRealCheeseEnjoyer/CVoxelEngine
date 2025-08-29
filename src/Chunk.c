@@ -504,10 +504,11 @@ BlockType chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
     return oldType;
 }
 
-void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
+bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
     Block *block = chunk_get_block(chunk, x, y, z);
-    if (block == nullptr || block->type != BLOCK_AIR) return;
+    if (block == nullptr || block->type != BLOCK_AIR) return false;
 
     block->type = type;
     chunk_register_changes(chunk, x, y, z, type);
+    return true;
 }

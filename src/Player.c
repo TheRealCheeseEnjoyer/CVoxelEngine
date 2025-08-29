@@ -323,8 +323,13 @@ void player_update(float deltaTime) {
                 break;
         }
 
-        if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos))
-            world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlockType);
+        if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos)) {
+            bool success = world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlockType);
+            if (success) {
+                inventory_use_block_from_hotbar();
+                selectedBlockType = 0;
+            }
+        }
     }
 
     recalculate_vectors();

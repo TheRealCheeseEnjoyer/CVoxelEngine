@@ -1,6 +1,7 @@
 #include "Inventory.h"
 #include <string.h>
 #include "BlockType.h"
+#include "ui/UIHotbar.h"
 #include "ui/UIInventory.h"
 
 static BlockType inventoryBlocks[NUM_SLOTS];
@@ -38,4 +39,10 @@ void inventory_add_block(BlockType type) {
             }
         }
     }
+}
+
+void inventory_use_block_from_hotbar() {
+    int selectedIndex = UIHotbar_get_current_index();
+    inventoryBlocks[selectedIndex] = 0;
+    UIInventory_reload_slot(selectedIndex, 0, inventoryBlocks[selectedIndex]);
 }
