@@ -15,6 +15,7 @@ BlockType inventory_get_block_from_slot(int x, int y) {
 
 void inventory_set_block_in_slot(int x, int y, BlockType type) {
     inventoryBlocks[y * NUM_SLOTS_X + x] = type;
+    UIInventory_reload_slot(x, y, type);
 }
 
 void inventory_add_block(BlockType type) {

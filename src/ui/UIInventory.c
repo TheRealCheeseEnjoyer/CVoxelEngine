@@ -77,14 +77,13 @@ void UIInventory_update() {
                 inventory_set_block_in_slot(hovered % 9, hovered / 9, 0);
                 if (hovered / NUM_SLOTS_X == 0)
                     UIHotbar_set_slot_item_texture(hovered % 9, nullptr);
-            } else if (isPickingUp && block == 0) {
-                isPickingUp = false;
-                UISprite_set_enabled(&pickedUp, false);
+            } else if (isPickingUp) {
+                isPickingUp = block != 0;
+                UISprite_set_enabled(&pickedUp, isPickingUp);
                 UISprite_set_texture(&slotSprites[hovered], blocktype_to_texture_path(blockPickedUp));
                 inventory_set_block_in_slot(hovered % 9, hovered / 9, blockPickedUp);
-                if (hovered / NUM_SLOTS_X == 0)
-                    UIHotbar_set_slot_item_texture(hovered % 9, blocktype_to_texture_path(blockPickedUp));
-                blockPickedUp = 0;
+                UISprite_set_texture(&pickedUp, blocktype_to_texture_path(block));
+                blockPickedUp = block;
             }
         }
     }
