@@ -14,6 +14,7 @@
 #include "InputManager.h"
 #include "World.h"
 #include "Constants.h"
+#include "Inventory.h"
 #include "Rigidbody.h"
 #include "ShaderManager.h"
 #include "ui/UIHotbar.h"
@@ -293,7 +294,8 @@ void player_update(float deltaTime) {
     destroyBlockCooldown += deltaTime;
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) && destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
         destroyBlockCooldown = 0;
-        world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
+        BlockType destroyedBlock = world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
+        inventory_add_block(destroyedBlock);
     }
 
     placeBlockCooldown += deltaTime;

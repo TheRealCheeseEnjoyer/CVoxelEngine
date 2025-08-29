@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 
-#include "BlockType.h"
 #include "InputManager.h"
 #include "Inventory.h"
 #include "WindowManager.h"
@@ -115,4 +114,12 @@ void UIInventory_toggle() {
         }
     }
 
+}
+
+void UIInventory_reload_slot(int x, int y, BlockType type) {
+    if (y == 0) {
+        UIHotbar_set_slot_item_texture(x, blocktype_to_texture_path(type));
+    }
+
+    UISprite_set_texture(&slotSprites[y * NUM_SLOTS_X + x], blocktype_to_texture_path(type));
 }

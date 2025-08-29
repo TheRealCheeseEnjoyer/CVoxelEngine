@@ -495,12 +495,13 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockType changed
     }
 }
 
-void chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
+BlockType chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
     Block *toDestroy = chunk_get_block(chunk, x, y, z);
     BlockType oldType = toDestroy->type;
     toDestroy->type = BLOCK_AIR;
 
     chunk_register_changes(chunk, x, y, z, oldType);
+    return oldType;
 }
 
 void chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
