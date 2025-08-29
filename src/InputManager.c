@@ -27,7 +27,6 @@ static vec2 mouseDelta = {0, 0};
 static int mouseScrollDirection = 0;
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    printf("%f\n", yoffset);
     if (yoffset > 0) {
         mouseScrollDirection = 1;
     } else if (yoffset < 0) {

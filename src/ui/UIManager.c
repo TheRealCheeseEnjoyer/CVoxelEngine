@@ -44,7 +44,6 @@ int UIManager_check_hovered(UISprite *sprite, int size) {
             vec2 spriteSize;
             UISprite_get_size(&sprite[i], spriteSize);
             UISprite_get_position(&sprite[i], spritePos);
-            printf("%f %f\n", spritePos[0], spritePos[1]);
             if (mousePos[0] > spritePos[0] - spriteSize[0] / 2 &&
                 mousePos[0] < spritePos[0] + spriteSize[0] / 2 &&
                 mousePos[1] > spritePos[1] - spriteSize[1] / 2 &&

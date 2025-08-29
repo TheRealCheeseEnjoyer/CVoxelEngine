@@ -18,7 +18,7 @@
 #include "libs/thpool.h"
 #include "WindowManager.h"
 #include "World.h"
-#include "ui/Hotbar.h"
+#include "ui/UIHotbar.h"
 #include "ui/UIManager.h"
 
 int main() {
@@ -46,7 +46,6 @@ int main() {
 
     UIManager_init();
 
-    Hotbar_init();
     float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
     int numFrames = 0;
@@ -72,10 +71,6 @@ int main() {
         skybox_draw(eye, projection, view);
         world_draw(pos, projection, view);
         player_draw(projection);
-
-        UIManager_begin_draw();
-        Hotbar_draw();
-        UIManager_end_draw();
 
         im_reset_input();
         glfwSwapBuffers(window);

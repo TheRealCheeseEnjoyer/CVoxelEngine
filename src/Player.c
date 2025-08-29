@@ -16,8 +16,9 @@
 #include "Constants.h"
 #include "Rigidbody.h"
 #include "ShaderManager.h"
-#include "ui/Hotbar.h"
-#include "ui/Inventory.h"
+#include "ui/UIHotbar.h"
+#include "ui/UIInventory.h"
+#include "ui/UIManager.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -64,7 +65,8 @@ void player_init(Controls *playerControls) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(block_vertices), block_vertices, GL_STATIC_DRAW);
     glBindVertexArray(0);
-    inventory_init();
+    UIInventory_init();
+    UIHotbar_init();
 }
 
 void player_eye_position(vec3 eye_pos) {
@@ -229,10 +231,10 @@ void normal_movement(vec2 input, float deltaTime) {
 void player_update(float deltaTime) {
     vec2 mouseDelta;
     im_get_mouse_delta(mouseDelta);
-    if (inventory_is_enabled()) {
+    if (UIInventory_is_enabled()) {
         if (im_get_key_down(GLFW_KEY_E))
-            inventory_toggle();
-        inventory_update();
+            UIInventory_toggle();
+        UIInventory_update();
         return;
     }
     look_around(rotation, mouseDelta);
@@ -248,29 +250,29 @@ void player_update(float deltaTime) {
         input[X] += 1;
 
     if (im_get_key_down(controls->hotbar_1)) {
-        selectedBlockType = Hotbar_change_selection(0);
+        selectedBlockType = UIHotbar_move_selector_to_slot(0);
     } else if (im_get_key_down(controls->hotbar_2)) {
-        selectedBlockType = Hotbar_change_selection(1);
+        selectedBlockType = UIHotbar_move_selector_to_slot(1);
     } else if (im_get_key_down(controls->hotbar_3)) {
-        selectedBlockType = Hotbar_change_selection(2);
+        selectedBlockType = UIHotbar_move_selector_to_slot(2);
     } else if (im_get_key_down(controls->hotbar_4)) {
-        selectedBlockType = Hotbar_change_selection(3);
+        selectedBlockType = UIHotbar_move_selector_to_slot(3);
     } else if (im_get_key_down(controls->hotbar_5)) {
-        selectedBlockType = Hotbar_change_selection(4);
+        selectedBlockType = UIHotbar_move_selector_to_slot(4);
     } else if (im_get_key_down(controls->hotbar_6)) {
-        selectedBlockType = Hotbar_change_selection(5);
+        selectedBlockType = UIHotbar_move_selector_to_slot(5);
     } else if (im_get_key_down(controls->hotbar_7)) {
-        selectedBlockType = Hotbar_change_selection(6);
+        selectedBlockType = UIHotbar_move_selector_to_slot(6);
     } else if (im_get_key_down(controls->hotbar_8)) {
-        selectedBlockType = Hotbar_change_selection(7);
+        selectedBlockType = UIHotbar_move_selector_to_slot(7);
     } else if (im_get_key_down(controls->hotbar_9)) {
-        selectedBlockType = Hotbar_change_selection(8);
+        selectedBlockType = UIHotbar_move_selector_to_slot(8);
     }
 
-    selectedBlockType = Hotbar_change_selection(Hotbar_get_current_index() - im_get_scroll_direction());
+    selectedBlockType = UIHotbar_move_selector_to_slot(UIHotbar_get_current_index() - im_get_scroll_direction());
 
     if (im_get_key_down(GLFW_KEY_E))
-        inventory_toggle();
+        UIInventory_toggle();
 
     if (im_get_key_down(controls->freecam)) {
         rigidbody_set_enabled(rigidbody, is_freecam_enabled);
@@ -353,7 +355,11 @@ void player_draw(mat4 projection) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindVertexArray(0);
-    inventory_draw();
+
+    UIManager_begin_draw();
+    UIHotbar_draw();
+    UIInventory_draw();
+    UIManager_end_draw();
 }
 
 void player_get_view_matrix(mat4 outView) {

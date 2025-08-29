@@ -53,18 +53,20 @@ add_executable(CVoxelEngine main.c
         include/ShaderType.h
         libs/thpool.c
         libs/thpool.h
-        include/ui/Hotbar.h
+        include/ui/UIHotbar.h
         include/ui/UISprite.h
         include/ui/UIManager.h
         libs/hashmap.h
         libs/hashmap.c
-        src/ui/Hotbar.c
+        src/ui/UIHotbar.c
         src/ui/UISprite.c
         src/ui/UIManager.c
-        src/ui/Inventory.c
-        include/ui/Inventory.h
         src/WindowManager.c
         include/WindowManager.h
+        src/Inventory.c
+        include/Inventory.h
+        src/ui/UIInventory.c
+        include/ui/UIInventory.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)
