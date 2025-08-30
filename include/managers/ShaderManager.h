@@ -1,7 +1,7 @@
 #ifndef SHADERMANAGER_H
 #define SHADERMANAGER_H
-#include "Shader.h"
-#include "ShaderType.h"
+#include "../Shader.h"
+#include "../ShaderType.h"
 
 
 void sm_init();

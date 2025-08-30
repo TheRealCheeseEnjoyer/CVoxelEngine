@@ -1,9 +1,8 @@
-#include "InputManager.h"
+#include "managers/InputManager.h"
 
-#include <stdio.h>
 #include <GLFW/glfw3.h>
 
-#include "../libs/Vector.h"
+#include "Vector.h"
 
 #define KEY_NOT_REGISTERED (-1)
 #define BUTTON_NOT_REGISTERED (-1)

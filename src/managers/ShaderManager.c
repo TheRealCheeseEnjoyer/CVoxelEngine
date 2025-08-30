@@ -1,4 +1,4 @@
-#include "ShaderManager.h"
+#include "managers/ShaderManager.h"
 
 #define BASE_PATH "shaders/"
 

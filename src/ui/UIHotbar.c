@@ -1,19 +1,24 @@
 #include "ui/UIHotbar.h"
 
 #include "Inventory.h"
+#include "Settings.h"
+#include "managers/SettingsManager.h"
+#include "managers/WindowManager.h"
 #include "ui/UISprite.h"
 
-static UISprite sprites[9];
+static UISprite sprites[NUM_SLOTS_X];
 static UISprite selector;
 static UISprite background;
 static int currentIndex = 0;
 
 void UIHotbar_init() {
-    for (int i = 0; i < 9; i++) {
-        UISprite_init(&(sprites[i]), blocktype_to_texture_path(inventory_get_stack_from_slot(i, 0).type), (vec2){960 + (i - 4) * 100, 980},(vec2){90, 90}, true);
+    vec2 screenSize;
+    window_get_size(screenSize);
+    for (int i = 0; i < NUM_SLOTS_X; i++) {
+        UISprite_init(&(sprites[i]), blocktype_to_texture_path(inventory_get_stack_from_slot(i, 0).type), (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90}, true);
     }
-    UISprite_init(&background, "assets/ui/hotbar_bg.png", (vec2){960, 980}, (vec2) {900, 100}, true);
-    UISprite_init(&selector, "assets/ui/hotbar_selector.png", (vec2){960 - 4 * 100, 980}, (vec2){100, 100}, true);
+    UISprite_init(&background, "assets/ui/hotbar_bg.png", (vec2){screenSize[0] / 2, screenSize[1] - 100}, (vec2) {900, 100}, true);
+    UISprite_init(&selector, "assets/ui/hotbar_selector.png", (vec2){screenSize[0] / 2 - 4 * 100, screenSize[1] - 100}, (vec2){100, 100}, true);
 }
 
 int UIHotbar_get_current_index() {
@@ -32,8 +37,10 @@ BlockType UIHotbar_move_selector_to_slot(int slotSelected) {
     }
 
     currentIndex = slotSelected;
+    vec2 screenSize;
+    window_get_size(screenSize);
 
-    UISprite_set_position(&selector, (vec2){960 + (currentIndex - 4) * 100, 980});
+    UISprite_set_position(&selector, (vec2){screenSize[0] / 2 + (currentIndex - 4) * 100, screenSize[1] - 100});
     return inventory_get_stack_from_slot(currentIndex, 0).type;
 }
 

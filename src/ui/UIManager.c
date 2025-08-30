@@ -4,8 +4,12 @@
 #include <cglm/cam.h>
 #include <glad/glad.h>
 
-#include "InputManager.h"
-#include "ShaderManager.h"
+#include "Settings.h"
+#include "../../include/managers/InputManager.h"
+#include "../../include/managers/ShaderManager.h"
+#include "managers/SettingsManager.h"
+#include "managers/WindowManager.h"
+#include "ui/UIInventory.h"
 
 static mat4 orthoMatrix;
 static Shader shader;
@@ -23,7 +27,9 @@ static float vertices[] = {
 
 
 void UIManager_init() {
-    glm_ortho(0.f, 1920.f, 1080.f, 0.f, -1.f, 1.f, orthoMatrix);
+    vec2 screenSize;
+    window_get_size(screenSize);
+    glm_ortho(0.f, screenSize[0], screenSize[1], 0.f, -1.f, 1.f, orthoMatrix);
     shader = sm_get_shader(SHADER_UI);
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);

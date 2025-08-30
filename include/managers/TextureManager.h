@@ -1,7 +1,7 @@
 #ifndef TEXTUREMANAGER_H
 #define TEXTUREMANAGER_H
 
-#include "BlockType.h"
+#include "../BlockType.h"
 
 void tm_init();
 

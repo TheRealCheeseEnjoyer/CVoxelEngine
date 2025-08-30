@@ -1,6 +1,6 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
-#include "InputManager.h"
+#include "managers/InputManager.h"
 
 typedef struct {
     char* title;
@@ -34,7 +34,5 @@ typedef struct {
     WindowSettings window;
     Controls controls;
 } Settings;
-
-int settings_load(Settings* settings);
 
 #endif

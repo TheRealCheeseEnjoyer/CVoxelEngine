@@ -1,4 +1,4 @@
-#include "WindowManager.h"
+#include "managers/WindowManager.h"
 
 #include <ctype.h>
 #include <unistd.h>
@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glad/glad.h>
+
+#include "managers/SettingsManager.h"
 
 static GLFWwindow* window = nullptr;
 
@@ -39,7 +41,8 @@ bool debuggerIsAttached() {
 }
 
 
-GLFWwindow* window_create(const WindowSettings *settings) {
+GLFWwindow* window_create() {
+    WindowSettings* settings = settings_manager_get_window_settings();
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -77,6 +80,13 @@ GLFWwindow* window_create(const WindowSettings *settings) {
 
 GLFWwindow* window_get_handler() {
     return window;
+}
+
+void window_get_size(vec2 size) {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    size[0] = width;
+    size[1] = height;
 }
 
 

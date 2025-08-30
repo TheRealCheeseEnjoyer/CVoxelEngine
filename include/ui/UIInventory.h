@@ -1,5 +1,6 @@
 #ifndef UIINVENTORY_H
 #define UIINVENTORY_H
+
 #include "BlockType.h"
 
 void UIInventory_init();

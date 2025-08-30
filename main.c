@@ -8,27 +8,26 @@
 #include <unistd.h>
 #include <cglm/cam.h>
 
-#include "InputManager.h"
+#include "managers/InputManager.h"
 #include "Player.h"
 #include "Rigidbody.h"
-#include "Settings.h"
-#include "ShaderManager.h"
+#include "include/Settings.h"
+#include "managers/ShaderManager.h"
 #include "Skybox.h"
-#include "TextureManager.h"
+#include "managers/TextureManager.h"
 #include "libs/thpool.h"
-#include "WindowManager.h"
+#include "include/managers/WindowManager.h"
 #include "World.h"
-#include "ui/UIHotbar.h"
+#include "managers/SettingsManager.h"
 #include "ui/UIManager.h"
 
 int main() {
-    Settings settings;
-    settings_load(&settings);
+    Settings* settings = settings_manager_load();
     thpool_init(16);
     tm_init();
-    GLFWwindow* window = window_create(&settings.window);
+    GLFWwindow* window = window_create();
 
-    im_init(window, (KeyCode*)&settings.controls, sizeof(settings.controls) / sizeof(KeyCode)); // Use struct as array
+    im_init(window, (KeyCode*)&settings->controls, sizeof(settings->controls) / sizeof(KeyCode)); // Use struct as array
     im_register_button(GLFW_MOUSE_BUTTON_LEFT);
     im_register_button(GLFW_MOUSE_BUTTON_RIGHT);
 
@@ -38,11 +37,11 @@ int main() {
     world_init(startPos);
     double timeElapsed = glfwGetTime() - time;
     printf("Generated %dx%dx%d chunks in %f seconds\n", WORLD_SIZE_X, WORLD_SIZE_Y, WORLD_SIZE_Z, timeElapsed);
-    player_init(&settings.controls);
+    player_init();
     skybox_init("yellowcloud");
 
     mat4 projection, view;
-    glm_perspective(glm_rad(90), (float)settings.window.width / settings.window.height, 0.1f, 1000.0f, projection);
+    glm_perspective(glm_rad(90), (float)settings->window.width / settings->window.height, 0.1f, 1000.0f, projection);
 
     UIManager_init();
 
@@ -61,7 +60,7 @@ int main() {
 
         player_update(deltaTime);
         player_get_view_matrix(view);
-        if (im_get_key_down(settings.controls.exit)) {
+        if (im_get_key_down(settings->controls.exit)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
 

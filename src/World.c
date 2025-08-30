@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "Chunk.h"
-#include "ShaderManager.h"
+#include "../include/managers/ShaderManager.h"
 #include "Constants.h"
 #include "thpool.h"
 

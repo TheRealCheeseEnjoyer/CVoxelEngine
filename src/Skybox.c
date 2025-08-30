@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 
 #include "Shader.h"
-#include "ShaderManager.h"
+#include "../include/managers/ShaderManager.h"
 #include "../libs/stb_image.h"
 
 float skyboxVertices[] = {

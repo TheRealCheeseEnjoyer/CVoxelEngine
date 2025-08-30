@@ -11,12 +11,13 @@
 #include "FaceOrientation.h"
 #include "Block.h"
 #include "Collisions.h"
-#include "InputManager.h"
+#include "../include/managers/InputManager.h"
 #include "World.h"
 #include "Constants.h"
 #include "Inventory.h"
 #include "Rigidbody.h"
-#include "ShaderManager.h"
+#include "managers/SettingsManager.h"
+#include "managers/ShaderManager.h"
 #include "ui/UIHotbar.h"
 #include "ui/UIInventory.h"
 #include "ui/UIManager.h"
@@ -57,8 +58,8 @@ UISprite crosshair;
 
 void recalculate_vectors();
 
-void player_init(Controls *playerControls) {
-    controls = playerControls;
+void player_init() {
+    controls = settings_manager_get_controls();
     recalculate_vectors();
     rigidbody = rigidbody_register(&position, aabbSize);
     glGenVertexArrays(1, &VAO);

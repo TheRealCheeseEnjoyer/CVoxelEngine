@@ -6,7 +6,7 @@
 
 typedef struct player_t* Player;
 
-void player_init(Controls* controls);
+void player_init();
 void player_draw(mat4 projection);
 void player_update(float deltaTime);
 void player_position(vec3 position);

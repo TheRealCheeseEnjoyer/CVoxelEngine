@@ -6,9 +6,9 @@
 
 #include "PerlinNoise.h"
 #include "Constants.h"
-#include "TextureManager.h"
+#include "managers/TextureManager.h"
 #include "FaceOrientation.h"
-#include "ShaderManager.h"
+#include "../include/managers/ShaderManager.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
 

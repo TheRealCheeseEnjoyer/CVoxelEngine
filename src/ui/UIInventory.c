@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-#include "InputManager.h"
+#include "managers/InputManager.h"
 #include "Inventory.h"
-#include "WindowManager.h"
+#include "managers/WindowManager.h"
 #include "ui/BlockStack.h"
 #include "ui/UIHotbar.h"
 #include "ui/UIManager.h"
@@ -26,7 +26,9 @@ static bool enabled;
 void UIInventory_init() {
     inventory_init();
     im_register_key(GLFW_KEY_Q);
-    UISprite_init(&background, "assets/ui/inventory_bg.png", (vec2){960, 540}, (vec2){
+    vec2 screenSize;
+    window_get_size(screenSize);
+    UISprite_init(&background, "assets/ui/inventory_bg.png", (vec2){screenSize[0] / 2, screenSize[1] / 2}, (vec2){
         (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
         (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y},
         false);
@@ -35,13 +37,13 @@ void UIInventory_init() {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
             UISprite_init(&slotSprites[y * NUM_SLOTS_X + x], blocktype_to_texture_path(inventory_get_stack_from_slot(x, y).type),
                 (vec2) {
-                    960 + (x - NUM_SLOTS_X / 2.f) * (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
-                    540 - (y - NUM_SLOTS_Y / 2.f) * (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2},
+                    screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
+                    screenSize[1] / 2 - (y - NUM_SLOTS_Y / 2.f) * (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2},
                     (vec2) {90, 90}, false);
             UISprite_init(&slotBackgrounds[y * NUM_SLOTS_X + x], "assets/ui/hotbar_bg.png",
                 (vec2) {
-                    960 + (x - NUM_SLOTS_X / 2.f) * (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
-                    540 - (y - NUM_SLOTS_Y / 2.f) * (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2},
+                    screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
+                    screenSize[1] / 2 - (y - NUM_SLOTS_Y / 2.f) * (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2},
                 slotBackgroundSize, false);
         }
     }
@@ -53,7 +55,7 @@ void UIInventory_draw() {
     UISprite_draw(&background);
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
         UISprite_draw(&slotBackgrounds[i]);
-        if (inventory_get_stack_from_slot(i % 9, i / 9).type != 0)
+        if (inventory_get_stack_from_slot(i % NUM_SLOTS_X, i / NUM_SLOTS_X).type != 0)
             UISprite_draw(&slotSprites[i]);
     }
     UISprite_draw(&itemPickedUp);
@@ -78,13 +80,13 @@ void UIInventory_update() {
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
         int hovered = UIManager_check_hovered(slotSprites, NUM_SLOTS);
         if (hovered != -1) {
-            BlockStack stack = inventory_get_stack_from_slot(hovered % 9, hovered / 9);
+            BlockStack stack = inventory_get_stack_from_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X);
             if (!isPickingUp && stack.type != 0) {
                 isPickingUp = true;
                 blockPickedUp = stack;
                 UISprite_set_enabled(&itemPickedUp, true);
                 UISprite_set_texture(&itemPickedUp, blocktype_to_texture_path(blockPickedUp.type));
-                inventory_set_stack_in_slot(hovered % 9, hovered / 9, STACK_EMPTY);
+                inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, STACK_EMPTY);
                 if (hovered / NUM_SLOTS_X == 0)
                     UIHotbar_set_slot_item_texture(hovered % 9, nullptr);
             } else if (isPickingUp) {
