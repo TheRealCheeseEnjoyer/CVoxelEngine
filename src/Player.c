@@ -40,7 +40,7 @@ vec3 jumpForce = {0, 6, 0};
 // Player is always slightly levitating so a 2 block high aabb would not pass under 2 block high gaps
 constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
 vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
-vec3 position = {0, 4, 0};
+vec3 position = {0, 5, 0};
 vec3 front;
 vec3 up;
 vec3 right;
@@ -53,6 +53,7 @@ static unsigned int VAO, VBO;
 vec3 blockLookedAt = {-1, -1, -1};
 float destroyBlockCooldown = 1;
 float placeBlockCooldown = 1;
+UISprite crosshair;
 
 void recalculate_vectors();
 
@@ -68,6 +69,7 @@ void player_init(Controls *playerControls) {
     glBindVertexArray(0);
     UIInventory_init();
     UIHotbar_init();
+    UISprite_init(&crosshair, "assets/ui/crosshair.png", (vec2) {1920 / 2, 1080 / 2}, (vec2) {20, 20}, true);
 }
 
 void player_eye_position(vec3 eye_pos) {
@@ -364,6 +366,7 @@ void player_draw(mat4 projection) {
     glBindVertexArray(0);
 
     UIManager_begin_draw();
+    UISprite_draw(&crosshair);
     UIHotbar_draw();
     UIInventory_draw();
     UIManager_end_draw();
