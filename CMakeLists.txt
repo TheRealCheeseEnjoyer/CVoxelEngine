@@ -67,6 +67,7 @@ add_executable(CVoxelEngine main.c
         include/Inventory.h
         src/ui/UIInventory.c
         include/ui/UIInventory.h
+        include/ui/Stack.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)

@@ -5,6 +5,7 @@
 #include "InputManager.h"
 #include "Inventory.h"
 #include "WindowManager.h"
+#include "ui/BlockStack.h"
 #include "ui/UIHotbar.h"
 #include "ui/UIManager.h"
 #include "ui/UISprite.h"
@@ -16,9 +17,9 @@ static constexpr vec2 slotBackgroundSpacerSize = {6, 6};
 static UISprite background;
 static UISprite slotSprites[NUM_SLOTS_X * NUM_SLOTS_Y];
 static UISprite slotBackgrounds[NUM_SLOTS_X * NUM_SLOTS_Y];
-static UISprite pickedUp;
+static UISprite itemPickedUp;
 static bool isPickingUp = false;
-static BlockType blockPickedUp = 0;
+static BlockStack blockPickedUp;
 static bool enabled;
 
 
@@ -29,10 +30,10 @@ void UIInventory_init() {
         (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
         (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y},
         false);
-    UISprite_init(&pickedUp, nullptr, (vec2) {0, 0}, (vec2) {90, 90}, false);
+    UISprite_init(&itemPickedUp, nullptr, (vec2) {0, 0}, (vec2) {90, 90}, false);
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
-            UISprite_init(&slotSprites[y * NUM_SLOTS_X + x], blocktype_to_texture_path(inventory_get_block_from_slot(x, y)),
+            UISprite_init(&slotSprites[y * NUM_SLOTS_X + x], blocktype_to_texture_path(inventory_get_stack_from_slot(x, y).type),
                 (vec2) {
                     960 + (x - NUM_SLOTS_X / 2.f) * (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
                     540 - (y - NUM_SLOTS_Y / 2.f) * (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2},
@@ -52,10 +53,10 @@ void UIInventory_draw() {
     UISprite_draw(&background);
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
         UISprite_draw(&slotBackgrounds[i]);
-        if (inventory_get_block_from_slot(i % 9, i / 9) != 0)
+        if (inventory_get_stack_from_slot(i % 9, i / 9).type != 0)
             UISprite_draw(&slotSprites[i]);
     }
-    UISprite_draw(&pickedUp);
+    UISprite_draw(&itemPickedUp);
 }
 
 void UIInventory_update() {
@@ -63,13 +64,13 @@ void UIInventory_update() {
     if (isPickingUp) {
         vec2 mousePos;
         im_get_mouse_position(mousePos);
-        UISprite_set_position(&pickedUp, mousePos);
+        UISprite_set_position(&itemPickedUp, mousePos);
     }
 
     if (im_get_key_down(GLFW_KEY_Q)) {
         int hovered = UIManager_check_hovered(slotSprites, NUM_SLOTS);
         if (hovered != -1) {
-            inventory_set_block_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_Y, 0);
+            inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_Y, STACK_EMPTY);
             UISprite_set_enabled(&slotSprites[hovered], false);
         }
     }
@@ -77,22 +78,22 @@ void UIInventory_update() {
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
         int hovered = UIManager_check_hovered(slotSprites, NUM_SLOTS);
         if (hovered != -1) {
-            BlockType block = inventory_get_block_from_slot(hovered % 9, hovered / 9);
-            if (!isPickingUp && block != 0) {
+            BlockStack stack = inventory_get_stack_from_slot(hovered % 9, hovered / 9);
+            if (!isPickingUp && stack.type != 0) {
                 isPickingUp = true;
-                blockPickedUp = block;
-                UISprite_set_enabled(&pickedUp, true);
-                UISprite_set_texture(&pickedUp, blocktype_to_texture_path(block));
-                inventory_set_block_in_slot(hovered % 9, hovered / 9, 0);
+                blockPickedUp = stack;
+                UISprite_set_enabled(&itemPickedUp, true);
+                UISprite_set_texture(&itemPickedUp, blocktype_to_texture_path(blockPickedUp.type));
+                inventory_set_stack_in_slot(hovered % 9, hovered / 9, STACK_EMPTY);
                 if (hovered / NUM_SLOTS_X == 0)
                     UIHotbar_set_slot_item_texture(hovered % 9, nullptr);
             } else if (isPickingUp) {
-                isPickingUp = block != 0;
-                UISprite_set_enabled(&pickedUp, isPickingUp);
-                UISprite_set_texture(&slotSprites[hovered], blocktype_to_texture_path(blockPickedUp));
-                inventory_set_block_in_slot(hovered % 9, hovered / 9, blockPickedUp);
-                UISprite_set_texture(&pickedUp, blocktype_to_texture_path(block));
-                blockPickedUp = block;
+                isPickingUp = stack.type != 0;
+                UISprite_set_enabled(&itemPickedUp, isPickingUp);
+                UISprite_set_texture(&slotSprites[hovered], blocktype_to_texture_path(blockPickedUp.type));
+                inventory_set_stack_in_slot(hovered % 9, hovered / 9, blockPickedUp);
+                UISprite_set_texture(&itemPickedUp, blocktype_to_texture_path(stack.type));
+                blockPickedUp = stack;
             }
         }
     }
