@@ -24,6 +24,7 @@ static bool enabled;
 
 void UIInventory_init() {
     inventory_init();
+    im_register_key(GLFW_KEY_Q);
     UISprite_init(&background, "assets/ui/inventory_bg.png", (vec2){960, 540}, (vec2){
         (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
         (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y},
@@ -63,6 +64,14 @@ void UIInventory_update() {
         vec2 mousePos;
         im_get_mouse_position(mousePos);
         UISprite_set_position(&pickedUp, mousePos);
+    }
+
+    if (im_get_key_down(GLFW_KEY_Q)) {
+        int hovered = UIManager_check_hovered(slotSprites, NUM_SLOTS);
+        if (hovered != -1) {
+            inventory_set_block_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_Y, 0);
+            UISprite_set_enabled(&slotSprites[hovered], false);
+        }
     }
 
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
