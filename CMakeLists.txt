@@ -12,6 +12,7 @@ set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
 include_directories(
+        ${PROJECT_SOURCE_DIR}
         include
         ${PROJECT_SOURCE_DIR}/libs
 )
@@ -69,6 +70,13 @@ add_executable(CVoxelEngine main.c
         include/ui/BlockStack.h
         src/managers/SettingsManager.c
         include/managers/SettingsManager.h
+        ft2build.h
+        src/ui/UIText.c
+        include/ui/UIText.h
+        include/ui/CharGlyph.h
+        src/managers/GlyphManager.c
+        src/managers/GlyphManager.c
+        include/managers/GlyphManager.h
 )
 
-target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread)
+target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype)

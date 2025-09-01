@@ -9,6 +9,7 @@
 #include "ui/UIHotbar.h"
 #include "ui/UIManager.h"
 #include "ui/UISprite.h"
+#include "ui/UIText.h"
 
 static constexpr vec2 slotBackgroundSize = {100, 100};
 static constexpr vec2 slotSpriteSize = {90, 90};
@@ -17,6 +18,7 @@ static constexpr vec2 slotBackgroundSpacerSize = {6, 6};
 static UISprite background;
 static UISprite slotSprites[NUM_SLOTS_X * NUM_SLOTS_Y];
 static UISprite slotBackgrounds[NUM_SLOTS_X * NUM_SLOTS_Y];
+static UIText text;
 static UISprite itemPickedUp;
 static bool isPickingUp = false;
 static BlockStack blockPickedUp;
@@ -28,6 +30,8 @@ void UIInventory_init() {
     im_register_key(GLFW_KEY_Q);
     vec2 screenSize;
     window_get_size(screenSize);
+    UIText_init(&text, "sosig", (vec2) {screenSize[0] / 2, screenSize[1] / 2}, true);
+    UIText_init(&text, "sosig", (vec2) {screenSize[0] / 2, screenSize[1] / 2}, true);
     UISprite_init(&background, "assets/ui/inventory_bg.png", (vec2){screenSize[0] / 2, screenSize[1] / 2}, (vec2){
         (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
         (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y},
@@ -59,6 +63,7 @@ void UIInventory_draw() {
             UISprite_draw(&slotSprites[i]);
     }
     UISprite_draw(&itemPickedUp);
+    UIText_draw(&text);
 }
 
 void UIInventory_update() {

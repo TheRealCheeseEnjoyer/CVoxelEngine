@@ -37,13 +37,13 @@ int main() {
     world_init(startPos);
     double timeElapsed = glfwGetTime() - time;
     printf("Generated %dx%dx%d chunks in %f seconds\n", WORLD_SIZE_X, WORLD_SIZE_Y, WORLD_SIZE_Z, timeElapsed);
-    player_init();
     skybox_init("yellowcloud");
 
     mat4 projection, view;
     glm_perspective(glm_rad(90), (float)settings->window.width / settings->window.height, 0.1f, 1000.0f, projection);
 
     UIManager_init();
+    player_init();
 
     float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
