@@ -8,6 +8,6 @@ void UIInventory_draw();
 void UIInventory_update();
 bool UIInventory_is_enabled();
 void UIInventory_toggle();
-void UIInventory_reload_slot(int x, int y, BlockType type);
+void UIInventory_reload_slot(int x, int y, BlockType type, int amount);
 
 #endif

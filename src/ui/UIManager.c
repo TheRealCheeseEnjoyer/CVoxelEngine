@@ -32,7 +32,7 @@ void UIManager_init() {
     window_get_size(screenSize);
     glm_ortho(0.f, screenSize[0], screenSize[1], 0.f, -1.f, 1.f, orthoMatrix);
     shader = sm_get_shader(SHADER_UI);
-    glyph_manager_init_glyphs("assets/fonts/Times New Roman Regular.ttf");
+    glyph_manager_init_glyphs("assets/fonts/COMIC.ttf");
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glGenBuffers(1, &vertexBuffer);
