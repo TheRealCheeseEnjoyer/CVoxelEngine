@@ -98,7 +98,7 @@ void UIInventory_update() {
                 isPickingUp = stack.type != 0;
                 UISprite_set_enabled(&itemPickedUp, isPickingUp);
                 UISprite_set_texture(&slotSprites[hovered], blocktype_to_texture_path(blockPickedUp.type));
-                inventory_set_stack_in_slot(hovered % 9, hovered / 9, blockPickedUp);
+                inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, blockPickedUp);
                 UISprite_set_texture(&itemPickedUp, blocktype_to_texture_path(stack.type));
                 blockPickedUp = stack;
             }

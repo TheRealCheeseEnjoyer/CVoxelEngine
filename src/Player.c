@@ -1,5 +1,6 @@
 #include "Player.h"
 
+#include <stdio.h>
 #include <glad/glad.h>
 
 #include <string.h>
@@ -21,6 +22,7 @@
 #include "ui/UIHotbar.h"
 #include "ui/UIInventory.h"
 #include "ui/UIManager.h"
+#include "ui/UIText.h"
 
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
@@ -55,6 +57,7 @@ vec3 blockLookedAt = {-1, -1, -1};
 float destroyBlockCooldown = 1;
 float placeBlockCooldown = 1;
 UISprite crosshair;
+UIText fpsCounter;
 
 void recalculate_vectors();
 
@@ -71,6 +74,7 @@ void player_init() {
     UIInventory_init();
     UIHotbar_init();
     UISprite_init(&crosshair, "assets/ui/crosshair.png", (vec2) {1920 / 2, 1080 / 2}, (vec2) {20, 20}, true);
+    UIText_init(&fpsCounter, "FPS:", (vec2) {0, 50}, true);
 }
 
 void player_eye_position(vec3 eye_pos) {
@@ -234,6 +238,9 @@ void normal_movement(vec2 input, float deltaTime) {
 
 void player_update(float deltaTime) {
     vec2 mouseDelta;
+    char fps[32];
+    sprintf(fps, "FPS: %d", (int) (1 / deltaTime));
+    UIText_set_text(&fpsCounter, fps);
     im_get_mouse_delta(mouseDelta);
     if (UIInventory_is_enabled()) {
         if (im_get_key_down(GLFW_KEY_E))
@@ -367,6 +374,7 @@ void player_draw(mat4 projection) {
     glBindVertexArray(0);
 
     UIManager_begin_draw();
+    UIText_draw(&fpsCounter);
     UISprite_draw(&crosshair);
     UIHotbar_draw();
     UIInventory_draw();

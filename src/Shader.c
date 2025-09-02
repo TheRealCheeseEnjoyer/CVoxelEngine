@@ -99,3 +99,7 @@ void shader_set_mat4(Shader shader, const char* name, const mat4* matrix) {
 void shader_set_int(Shader shader, const char *name, int value) {
     glUniform1i(glGetUniformLocation(shader, name), value);
 }
+
+void shader_set_vec3(Shader shader, const char *name, const vec3 *vector) {
+    glUniform3fv(glGetUniformLocation(shader, name), 1, vector[0]);
+}

@@ -76,7 +76,7 @@ int main() {
         numFrames++;
         totalFrameTimes += deltaTime;
     }
-    printf("avg FPS: %f\n", numFrames / totalFrameTimes);
+    printf("\ FPS: %f\n", numFrames / totalFrameTimes);
     skybox_destroy();
     thpool_destroy();
     glfwDestroyWindow(window);
