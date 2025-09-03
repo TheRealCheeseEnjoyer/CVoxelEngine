@@ -73,7 +73,7 @@ void player_init() {
     glBindVertexArray(0);
     UIInventory_init();
     UIHotbar_init();
-    UISprite_init(&crosshair, "assets/ui/crosshair.png", (vec2) {1920 / 2, 1080 / 2}, (vec2) {20, 20}, true);
+    crosshair = UISprite_init("assets/ui/crosshair.png", (vec2) {1920 / 2, 1080 / 2}, (vec2) {20, 20});
     UIText_init(&fpsCounter, "FPS:", (vec2) {0, 50}, true);
 }
 
@@ -375,7 +375,7 @@ void player_draw(mat4 projection) {
 
     UIManager_begin_draw();
     UIText_draw(&fpsCounter);
-    UISprite_draw(&crosshair);
+    UISprite_draw(crosshair);
     UIHotbar_draw();
     UIInventory_draw();
     UIManager_end_draw();

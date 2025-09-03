@@ -19,8 +19,8 @@ void UIHotbar_init() {
         BlockStack stack = inventory_get_stack_from_slot(i, 0);
         UIInventorySlot_init(&sprites[i], blocktype_to_texture_path(stack.type), stack.size, (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90});
     }
-    UISprite_init(&background, "assets/ui/hotbar_bg.png", (vec2){screenSize[0] / 2, screenSize[1] - 100}, (vec2) {900, 100}, true);
-    UISprite_init(&selector, "assets/ui/hotbar_selector.png", (vec2){screenSize[0] / 2 - 4 * 100, screenSize[1] - 100}, (vec2){100, 100}, true);
+    background = UISprite_init("assets/ui/hotbar_bg.png", (vec2){screenSize[0] / 2, screenSize[1] - 100}, (vec2) {900, 100});
+    selector = UISprite_init("assets/ui/hotbar_selector.png", (vec2){screenSize[0] / 2 - 4 * 100, screenSize[1] - 100}, (vec2){100, 100});
 }
 
 int UIHotbar_get_current_index() {
@@ -43,15 +43,15 @@ BlockType UIHotbar_move_selector_to_slot(int slotSelected) {
     vec2 screenSize;
     window_get_size(screenSize);
 
-    UISprite_set_position(&selector, (vec2){screenSize[0] / 2 + (currentIndex - 4) * 100, screenSize[1] - 100});
+    UISprite_set_position(selector, (vec2){screenSize[0] / 2 + (currentIndex - 4) * 100, screenSize[1] - 100});
     return inventory_get_stack_from_slot(currentIndex, 0).type;
 }
 
 void UIHotbar_draw() {
-    UISprite_draw(&background);
+    UISprite_draw(background);
     for (int i = 0; i < 9; i++) {
         if (inventory_get_stack_from_slot(i, 0).type != 0)
             UIInventorySlot_draw(&sprites[i]);
     }
-    UISprite_draw(&selector);
+    UISprite_draw(selector);
 }

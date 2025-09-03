@@ -46,12 +46,11 @@ void UIInventory_init() {
     im_register_key(GLFW_KEY_Q);
     vec2 screenSize;
     window_get_size(screenSize);
-    UISprite_init(&background, "assets/ui/inventory_bg.png", (vec2){screenSize[0] / 2, screenSize[1] / 2}, (vec2){
+    background = UISprite_init("assets/ui/inventory_bg.png", (vec2){screenSize[0] / 2, screenSize[1] / 2}, (vec2){
                       (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
                       (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y
-                  },
-                  false);
-    UISprite_init(&itemPickedUp, nullptr, (vec2){0, 0}, (vec2){90, 90}, false);
+                  });
+    itemPickedUp = UISprite_init(nullptr, (vec2){0, 0}, (vec2){90, 90});
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
             UIInventorySlot_init(&slotSprites[y * NUM_SLOTS_X + x],
@@ -65,8 +64,7 @@ void UIInventory_init() {
                                          slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
                                  },
                                  (vec2){90, 90});
-            UISprite_init(&slotBackgrounds[y * NUM_SLOTS_X + x], "assets/ui/hotbar_bg.png",
-                          (vec2){
+            slotBackgrounds[y * NUM_SLOTS_X + x] = UISprite_init("assets/ui/hotbar_bg.png", (vec2){
                               screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
                                   slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
                                   slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
@@ -74,7 +72,7 @@ void UIInventory_init() {
                                   slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (
                                   slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
                           },
-                          slotBackgroundSize, false);
+                          slotBackgroundSize);
         }
     }
 }
@@ -82,13 +80,14 @@ void UIInventory_init() {
 void UIInventory_draw() {
     if (!enabled) return;
 
-    UISprite_draw(&background);
+    UISprite_draw(background);
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
-        UISprite_draw(&slotBackgrounds[i]);
+        UISprite_draw(slotBackgrounds[i]);
         if (inventory_get_stack_from_slot(i % NUM_SLOTS_X, i / NUM_SLOTS_X).type != 0)
             UIInventorySlot_draw(&slotSprites[i]);
     }
-    UISprite_draw(&itemPickedUp);
+    if (isPickingUp)
+        UISprite_draw(itemPickedUp);
 }
 
 void UIInventory_update() {
@@ -96,7 +95,7 @@ void UIInventory_update() {
     if (isPickingUp) {
         vec2 mousePos;
         im_get_mouse_position(mousePos);
-        UISprite_set_position(&itemPickedUp, mousePos);
+        UISprite_set_position(itemPickedUp, mousePos);
     }
 
     if (im_get_key_down(GLFW_KEY_Q)) {
@@ -113,17 +112,15 @@ void UIInventory_update() {
             if (!isPickingUp && stack.type != 0) {
                 isPickingUp = true;
                 blockPickedUp = stack;
-                UISprite_set_enabled(&itemPickedUp, true);
-                UISprite_set_texture(&itemPickedUp, blocktype_to_texture_path(blockPickedUp.type));
+                UISprite_set_texture(itemPickedUp, blocktype_to_texture_path(blockPickedUp.type));
                 inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, STACK_EMPTY);
                 if (hovered / NUM_SLOTS_X == 0)
                     UIHotbar_reload_slot(hovered % 9, nullptr, 0);
             } else if (isPickingUp) {
                 isPickingUp = stack.type != 0;
-                UISprite_set_enabled(&itemPickedUp, isPickingUp);
                 UIInventorySlot_set_texture(&slotSprites[hovered], blocktype_to_texture_path(blockPickedUp.type));
                 inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, blockPickedUp);
-                UISprite_set_texture(&itemPickedUp, blocktype_to_texture_path(stack.type));
+                UISprite_set_texture(itemPickedUp, blocktype_to_texture_path(stack.type));
                 blockPickedUp = stack;
             }
         }
@@ -139,16 +136,8 @@ void UIInventory_toggle() {
     enabled = !enabled;
     if (enabled) {
         glfwSetInputMode(window_get_handler(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        UISprite_set_enabled(&background, true);
-        for (int i = 0; i < NUM_SLOTS; i++) {
-            UISprite_set_enabled(&slotBackgrounds[i], true);
-        }
     } else {
         glfwSetInputMode(window_get_handler(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        UISprite_set_enabled(&background, false);
-        for (int i = 0; i < NUM_SLOTS; i++) {
-            UISprite_set_enabled(&slotBackgrounds[i], false);
-        }
     }
 }
 
