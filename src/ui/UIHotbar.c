@@ -2,7 +2,7 @@
 
 #include "Inventory.h"
 #include "Settings.h"
-#include "assets/ui/UIInventorySlot.h"
+#include "../../include/ui/UIInventorySlot.h"
 #include "managers/SettingsManager.h"
 #include "managers/WindowManager.h"
 #include "ui/UISprite.h"

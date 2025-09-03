@@ -77,9 +77,9 @@ add_executable(CVoxelEngine main.c
         src/managers/GlyphManager.c
         src/managers/GlyphManager.c
         include/managers/GlyphManager.h
-        assets/ui/UIInventorySlot.c
-        assets/ui/UIInventorySlot.c
-        assets/ui/UIInventorySlot.h
+        src/ui/UIInventorySlot.c
+        src/ui/UIInventorySlot.c
+        include/ui/UIInventorySlot.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype)

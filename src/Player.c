@@ -74,7 +74,7 @@ void player_init() {
     UIInventory_init();
     UIHotbar_init();
     crosshair = UISprite_init("assets/ui/crosshair.png", (vec2) {1920 / 2, 1080 / 2}, (vec2) {20, 20});
-    UIText_init(&fpsCounter, "FPS:", (vec2) {0, 50}, true);
+    fpsCounter = UIText_init("FPS:", (vec2) {0, 50}, true);
 }
 
 void player_eye_position(vec3 eye_pos) {
@@ -240,7 +240,7 @@ void player_update(float deltaTime) {
     vec2 mouseDelta;
     char fps[32];
     sprintf(fps, "FPS: %d", (int) (1 / deltaTime));
-    UIText_set_text(&fpsCounter, fps);
+    UIText_set_text(fpsCounter, fps);
     im_get_mouse_delta(mouseDelta);
     if (UIInventory_is_enabled()) {
         if (im_get_key_down(GLFW_KEY_E))
@@ -374,7 +374,7 @@ void player_draw(mat4 projection) {
     glBindVertexArray(0);
 
     UIManager_begin_draw();
-    UIText_draw(&fpsCounter);
+    UIText_draw(fpsCounter);
     UISprite_draw(crosshair);
     UIHotbar_draw();
     UIInventory_draw();

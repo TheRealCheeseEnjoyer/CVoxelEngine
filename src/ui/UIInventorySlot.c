@@ -1,4 +1,4 @@
-#include "UIInventorySlot.h"
+#include "../../include/ui/UIInventorySlot.h"
 
 #include <stdio.h>
 
@@ -6,14 +6,14 @@ void UIInventorySlot_init(UIInventorySlot *slot, const char *itemTexture, int am
     slot->itemSprite = UISprite_init(itemTexture, position, size);
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
-    UIText_init(&slot->amountText, amountStr, (vec2) {position[0], position[1] + size[1] / 2}, true);
+    slot->amountText = UIText_init(amountStr, (vec2) {position[0], position[1] + size[1] / 2}, true);
     slot->amount = amount;
 }
 
 void UIInventorySlot_set_amount(UIInventorySlot *slot, int amount) {
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
-    UIText_set_text(&slot->amountText, amountStr);
+    UIText_set_text(slot->amountText, amountStr);
 }
 
 void UIInventorySlot_set_texture(UIInventorySlot *slot, const char *itemTexture) {
@@ -30,5 +30,5 @@ void UIInventorySlot_get_size(UIInventorySlot *slot, vec2 size) {
 
 void UIInventorySlot_draw(UIInventorySlot *slot) {
     UISprite_draw(slot->itemSprite);
-    UIText_draw(&slot->amountText);
+    UIText_draw(slot->amountText);
 }

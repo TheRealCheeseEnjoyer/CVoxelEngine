@@ -15,13 +15,13 @@ typedef struct {
 static uisprite_t* sprites = nullptr;
 static int len, capacity;
 
-void init() {
+static void init() {
     sprites = (uisprite_t*)malloc(sizeof(uisprite_t) * INITIAL_SIZE);
     capacity = INITIAL_SIZE;
     len = 0;
 }
 
-void resize() {
+static void resize() {
     int newCapacity = capacity * RESIZE_FACTOR;
     void* newMem = (uisprite_t*)realloc(sprites, newCapacity * sizeof(uisprite_t));
     if (!newMem) {

@@ -4,7 +4,7 @@
 
 #include "managers/InputManager.h"
 #include "Inventory.h"
-#include "assets/ui/UIInventorySlot.h"
+#include "../../include/ui/UIInventorySlot.h"
 #include "managers/WindowManager.h"
 #include "ui/BlockStack.h"
 #include "ui/UIHotbar.h"
