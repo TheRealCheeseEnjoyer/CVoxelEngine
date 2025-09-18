@@ -1,8 +1,14 @@
 #include "ui/UISprite.h"
+
+#include <stdio.h>
+#include <string.h>
+
 #include "managers/ShaderManager.h"
 #include "managers/TextureManager.h"
 #include <cglm/affine.h>
 #include <glad/glad.h>
+
+#include "Vector.h"
 
 #define INITIAL_SIZE 32
 #define RESIZE_FACTOR 2
@@ -13,37 +19,19 @@ typedef struct {
 } uisprite_t;
 
 static uisprite_t* sprites = nullptr;
-static int len, capacity;
-
-static void init() {
-    sprites = (uisprite_t*)malloc(sizeof(uisprite_t) * INITIAL_SIZE);
-    capacity = INITIAL_SIZE;
-    len = 0;
-}
-
-static void resize() {
-    int newCapacity = capacity * RESIZE_FACTOR;
-    void* newMem = (uisprite_t*)realloc(sprites, newCapacity * sizeof(uisprite_t));
-    if (!newMem) {
-        exit(-1);
-    }
-
-    capacity = newCapacity;
-    sprites = newMem;
-}
 
 UISprite UISprite_init(const char *texture, vec2 position, vec2 size) {
     if (!sprites)
-        init();
-    if (len + 1 >= capacity)
-        resize();
+        sprites = vec_init(sizeof(uisprite_t));
 
-    glm_mat4_identity(sprites[len].transform);
-    glm_translate(sprites[len].transform, (vec3) {position[0] - size[0] / 2, position[1] - size[1] / 2, 0});
-    glm_scale(sprites[len].transform, (vec3) {size[0], size[1], 1});
-    sprites[len].texture = tm_get_texture_id(texture);
+    uisprite_t sprite;
 
-    return len++;
+    glm_mat4_identity(sprite.transform);
+    glm_translate(sprite.transform, (vec3) {position[0] - size[0] / 2, position[1] - size[1] / 2, 0});
+    glm_scale(sprite.transform, (vec3) {size[0], size[1], 1});
+    sprite.texture = tm_get_texture_id(texture);
+    vec_append(&sprites, &sprite);
+    return vec_size(sprites) - 1;
 }
 
 void UISprite_set_position(UISprite spriteIndex, vec2 position) {
