@@ -11,6 +11,7 @@ typedef struct {
     size_t itemSize;
     size_t size;
     size_t capacity;
+    size_t padding; // pad structure to be a multiple of 16 bytes
 } head;
 
 void* vec_init(size_t itemSize) {
