@@ -241,7 +241,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                     chunk->meshes[block->type] = vec_init(sizeof(Vertex));
                 }
 
-                Vector mesh = chunk->meshes[block->type];
+                Vertex* mesh = chunk->meshes[block->type];
                 ivec3 blockPosition = {x, y, z};
                 Block *tempBlock = chunk_get_block(chunk, x, y + 1, z);
                 Vertex vertices[2];
@@ -256,12 +256,12 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                         .position = {vertices[1].position[X], vertices[1].position[Y], vertices[0].position[Z]},
                         .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
                     };
-                    vec_append(mesh, &vertices[0]);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &vertices[1]);
+                    vec_append(&mesh, &vertices[0]);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y - 1, z);
@@ -276,12 +276,12 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                         .position = {vertices[0].position[X], vertices[0].position[Y], vertices[1].position[Z]},
                         .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
                     };
-                    vec_append(mesh, &vertices[0]);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &vertices[1]);
+                    vec_append(&mesh, &vertices[0]);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x + 1, y, z);
@@ -297,12 +297,12 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                         .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
                     };
 
-                    vec_append(mesh, &vertices[0]);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &vertices[1]);
+                    vec_append(&mesh, &vertices[0]);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x - 1, y, z);
@@ -318,12 +318,12 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                         .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
                     };
 
-                    vec_append(mesh, &vertices[0]);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &vertices[1]);
+                    vec_append(&mesh, &vertices[0]);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z + 1);
@@ -339,12 +339,12 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                         .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
                     };
 
-                    vec_append(mesh, &vertices[0]);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &vertices[1]);
+                    vec_append(&mesh, &vertices[0]);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z - 1);
@@ -360,13 +360,15 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                         .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
                     };
 
-                    vec_append(mesh, &vertices[0]);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v2);
-                    vec_append(mesh, &v1);
-                    vec_append(mesh, &vertices[1]);
+                    vec_append(&mesh, &vertices[0]);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v2);
+                    vec_append(&mesh, &v1);
+                    vec_append(&mesh, &vertices[1]);
                 }
+
+                chunk->meshes[block->type] = mesh;
             }
         }
     }
@@ -387,7 +389,7 @@ void chunk_load_mesh(Chunk *chunk) {
         glGenBuffers(1, &chunk->vbos[i]);
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i]);
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->meshes[i]) * sizeof(Vertex)),
-                     vec_get(chunk->meshes[i], 0), GL_STATIC_DRAW);
+                     chunk->meshes[i], GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
@@ -398,7 +400,7 @@ void chunk_reload_mesh(Chunk *chunk, BlockType type) {
     glBindVertexArray(chunk->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[type]);
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->meshes[type]) * sizeof(Vertex)),
-                 vec_get(chunk->meshes[type], 0), GL_STATIC_DRAW);
+                 chunk->meshes[type], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }

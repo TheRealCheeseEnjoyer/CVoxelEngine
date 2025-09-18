@@ -28,7 +28,7 @@ typedef struct chunk_t {
 
     Block *blocks;
     unsigned int vbos[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to vbo
-    Vector meshes[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to mesh
+    Vertex* meshes[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to mesh
 } Chunk;
 
 struct init_args {

@@ -16,7 +16,7 @@ struct rigidbody_t {
     bool enabled;
 };
 
-Vector rigidbodies;
+struct rigidbody_t* rigidbodies;
 
 Rigidbody rigidbody_register(vec3* position, vec3 size) {
     if (!rigidbodies)
@@ -26,46 +26,42 @@ Rigidbody rigidbody_register(vec3* position, vec3 size) {
     memcpy(rigidbody.size, size, sizeof(vec3));
     memset(rigidbody.velocity, 0, sizeof(vec3));
     rigidbody.enabled = true;
-    vec_append(rigidbodies, &rigidbody);
+    vec_append(&rigidbodies, &rigidbody);
     return vec_size(rigidbodies) - 1;
 }
 
 void rigidbody_update(float deltaTime) {
     for (int i = 0; i < vec_size(rigidbodies); i++) {
-        struct rigidbody_t* rigidbody = vec_get(rigidbodies, i);
-        if (!rigidbody->enabled) continue;
-        vec3 oldVelocity = {rigidbody->velocity[X], rigidbody->velocity[Y], rigidbody->velocity[Z]};
-        vec3 oldPosition = {(*rigidbody->position)[X], (*rigidbody->position)[Y], (*rigidbody->position)[Z]};
+        if (!rigidbodies[i].enabled) continue;
+        vec3 oldVelocity = {rigidbodies[i].velocity[X], rigidbodies[i].velocity[Y], rigidbodies[i].velocity[Z]};
+        vec3 oldPosition = {(*rigidbodies[i].position)[X], (*rigidbodies[i].position)[Y], (*rigidbodies[i].position)[Z]};
 
         glm_vec3_muladds(Gravity, deltaTime, oldVelocity);
         glm_vec3_muladds(oldVelocity, deltaTime, oldPosition);
         AABB aabb;
         vec3 halfSize;
-        glm_vec3_divs(rigidbody->size, 2, halfSize);
+        glm_vec3_divs(rigidbodies[i].size, 2, halfSize);
         glm_vec3_add(oldPosition, halfSize, aabb.max);
         glm_vec3_sub(oldPosition, halfSize, aabb.min);
         if (collisions_aabb_to_near_blocks(aabb)) {
-            memset(rigidbody->velocity, 0, sizeof(vec3));
+            memset(rigidbodies[i].velocity, 0, sizeof(vec3));
             continue;
         }
 
-        memcpy(rigidbody->velocity, oldVelocity, sizeof(vec3));
-        memcpy(*rigidbody->position, oldPosition, sizeof(vec3));
+        memcpy(rigidbodies[i].velocity, oldVelocity, sizeof(vec3));
+        memcpy(*rigidbodies[i].position, oldPosition, sizeof(vec3));
     }
 }
 
 void rigidbody_add_velocity(Rigidbody rigidbody, vec3 velocity) {
-    struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
-    glm_vec3_add(rb->velocity, velocity, rb->velocity);
+    glm_vec3_add(rigidbodies[rigidbody].velocity, velocity, rigidbodies[rigidbody].velocity);
 }
 
 void rigidbody_set_enabled(Rigidbody rigidbody, bool enabled) {
-    struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
-    rb->enabled = enabled;
+    rigidbodies[rigidbody].enabled = enabled;
 }
 
 void rigidbody_get_velocity(Rigidbody rigidbody, vec3 velocity) {
-    struct rigidbody_t* rb = vec_get(rigidbodies, rigidbody);
-    memcpy(velocity, rb->velocity, sizeof(vec3));
+    memcpy(velocity, rigidbodies[rigidbody].velocity, sizeof(vec3));
 }
 

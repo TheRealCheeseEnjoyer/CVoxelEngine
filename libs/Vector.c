@@ -1,112 +1,69 @@
 #include "Vector.h"
+
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #define DEFAULT_CAPACITY 16
-#define RESIZE_MULTIPLIER 2
+#define DEFAULT_MULTIPLIER 2
 
-struct vector_t {
-    void* data;
-    size_t typeSize;
-
+typedef struct {
+    size_t itemSize;
     size_t size;
     size_t capacity;
-};
+} head;
 
-/// Initialize a vector with default capacity
-/// @param typeSize The size in bytes of the object the vector holds
-/// @return A handle to the vector
-Vector vec_init(const size_t typeSize) {
-    return vec_init_c(typeSize, DEFAULT_CAPACITY);
+void* vec_init(size_t itemSize) {
+    return vec_init_cap(itemSize, DEFAULT_CAPACITY);
 }
 
-/// Initialize a vector with custom capacity
-/// @param typeSize The size in bytes of the object the vector holds
-/// @param capacity Custom initial capacity
-/// @return A handle to the vector
-Vector vec_init_c(const size_t typeSize, const size_t capacity) {
-    Vector v = malloc(sizeof(struct vector_t));
-    v->capacity = capacity;
-    v->size = 0;
-    v->typeSize = typeSize;
-    v->data = malloc(typeSize * capacity);
-    return v;
-}
-
-/// Resizes the vector to trim excess space
-/// @param v Handle to a vector
-void vec_shrink_to_fit(Vector v) {
-    void* newMem = realloc(v->data, v->size * v->typeSize);
-    if (!newMem) return;
-    v->data = newMem;
-    v->capacity = v->size;
-}
-
-/// Appends a shallow copy (memcpy) of the object to the end of the vector
-/// @param v A handle to the vector
-/// @param item The item to copy into the vector
-/// @return A pointer to the item's location
-void* vec_append(Vector v, void* item) {
-    if (v->size == v->capacity) {
-        v->capacity *= RESIZE_MULTIPLIER;
-        void* newData = realloc(v->data, v->capacity * v->typeSize);
-        if (!newData) {
-            return NULL;
-        }
-        v->data = newData;
-    }
-
-    void* newItemsPlace = v->data + v->size * v->typeSize;
-    memcpy(newItemsPlace, item, v->typeSize);
-    v->size++;
-    return newItemsPlace;
-}
-
-/// Get an item from the vector
-/// @param v A handle to the vector
-/// @param index Index of the object to get
-/// @return A pointer to the item's location, NULL if the index is out of bounds
-void* vec_get(Vector v, const size_t index) {
-    if (index >= v->size) {
+void* vec_init_cap(size_t itemSize, size_t capacity) {
+    head* memory = malloc(sizeof(head) + itemSize * capacity);
+    if (memory == NULL) {
         return NULL;
     }
 
-    return v->data + index * v->typeSize;
+    memory->itemSize = itemSize;
+    memory->size = 0;
+    memory->capacity = DEFAULT_CAPACITY;
+    return memory + 1;
 }
 
-/// Deletes an item from the vector
-/// @param v A handle to the vector
-/// @param index Index of the item to delete
-void vec_remove(Vector v, size_t index) {
-    void* target = vec_get(v, index);
-    if (target == NULL) return;
-    memmove(target, target + v->typeSize, (v->size - index - 1) * v->typeSize);
-    v->size--;
+int vec_append(void* vec, void* item) {
+    void** v = vec;
+    head* h = *v - sizeof(head);
+    if (h->size + 1 > h->capacity) {
+        size_t newCapacity = h->capacity * DEFAULT_MULTIPLIER;
+        head* newMemory = realloc(h, sizeof(head) + newCapacity * h->itemSize);
+        if (newMemory == NULL) {
+            printf("vec_append: realloc failed\n");
+            return 0;
+        }
+        h = newMemory;
+        h->capacity = newCapacity;
+        *v = h + 1;
+    }
+    memcpy(*v + h->itemSize * h->size, item, h->itemSize);
+    h->size += 1;
+    return 1;
 }
 
-/// Deletes all items from the vector
-/// @param v Handle to a vector
-void vec_clear(Vector v) {
-    v->size = 0;
+size_t vec_capacity(void *vec) {
+    head* h = vec - sizeof(head);
+    return h->capacity;
 }
 
-/// Get the size of the vector
-/// @param v Handle to a vector
-/// @return Size of the vector
-size_t vec_size(Vector v) {
-    return v->size;
+size_t vec_size(void *vec) {
+    head* h = vec - sizeof(head);
+    return h->size;
 }
 
-/// Get the capacity of the vector
-/// @param v Handle to a vector
-/// @return Capacity of the vector
-size_t vec_capacity(Vector v) {
-    return v->capacity;
+void vec_clear(void *vec) {
+    head* h = vec - sizeof(head);
+    h->size = 0;
 }
 
-/// Frees the vector
-/// @param v Handle to a vector
-void vec_free(Vector v) {
-    free(v->data);
-    free(v);
+void vec_free(void* memory) {
+    head* h = memory - sizeof(head);
+    free(h);
 }

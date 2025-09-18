@@ -19,8 +19,8 @@ typedef struct {
     bool wasPressed;
 } ButtonState;
 
-static Vector KeyStates;
-static Vector ButtonStates;
+static KeyState* KeyStates;
+static ButtonState* ButtonStates;
 static vec2 mousePos = {0, 0};
 static vec2 mouseDelta = {0, 0};
 static int mouseScrollDirection = 0;
@@ -36,13 +36,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 
 int is_key_registered(KeyCode key) {
     for (int i = 0; i < vec_size(KeyStates); i++) {
-        if (vec_get_as(KeyState, KeyStates, i).key == key) return i;
+        if (KeyStates[i].key == key) return i;
     }
     return KEY_NOT_REGISTERED;
 }
 int is_button_registered(ButtonCode button) {
     for (int i = 0; i < vec_size(ButtonStates); i++) {
-        if (vec_get_as(ButtonState, ButtonStates, i).button == button) return i;
+        if (ButtonStates[i].button == button) return i;
     }
     return BUTTON_NOT_REGISTERED;
 }
@@ -70,14 +70,15 @@ void im_register_key(KeyCode key) {
     if (is_key_registered(key) != KEY_NOT_REGISTERED) return;
 
     KeyState state = { key, false, false };
-    vec_append(KeyStates, &state);
+
+    vec_append(&KeyStates, &state);
 }
 
 bool im_get_key_down(KeyCode key) {
     int index = is_key_registered(key);
     if (index == KEY_NOT_REGISTERED) return false;
 
-    KeyState state = vec_get_as(KeyState, KeyStates, index);
+    KeyState state = KeyStates[index];
 
     return state.isPressed && !state.wasPressed;
 }
@@ -86,7 +87,7 @@ bool im_get_key(KeyCode key) {
     int index = is_key_registered(key);
     if (index == KEY_NOT_REGISTERED) return false;
 
-    KeyState state = vec_get_as(KeyState, KeyStates, index);
+    KeyState state = KeyStates[index];
     return state.isPressed;
 }
 
@@ -94,7 +95,7 @@ bool im_get_key_up(KeyCode key) {
     int index = is_key_registered(key);
     if (index == KEY_NOT_REGISTERED) return false;
 
-    KeyState state = vec_get_as(KeyState, KeyStates, index);
+    KeyState state = KeyStates[index];
     return !state.isPressed && state.wasPressed;
 }
 
@@ -107,27 +108,27 @@ void im_register_button(ButtonCode button) {
     if (is_button_registered(button) != BUTTON_NOT_REGISTERED) return;
 
     ButtonState state = { button, false, false };
-    vec_append(ButtonStates, &state);
+    vec_append(&ButtonStates, &state);
 }
 
 bool im_get_mouse_button_down(ButtonCode button) {
     int index = is_button_registered(button);
     if (index == BUTTON_NOT_REGISTERED) return false;
-    ButtonState state = vec_get_as(ButtonState, ButtonStates, index);
+    ButtonState state = ButtonStates[index];
     return state.isPressed && !state.wasPressed;
 }
 
 bool im_get_mouse_button(ButtonCode button) {
     int index = is_button_registered(button);
     if (index == BUTTON_NOT_REGISTERED) return false;
-    ButtonState state = vec_get_as(ButtonState, ButtonStates, index);
+    ButtonState state = ButtonStates[index];
     return state.isPressed;
 }
 
 bool im_get_mouse_button_up(ButtonCode button) {
     int index = is_button_registered(button);
     if (index == BUTTON_NOT_REGISTERED) return false;
-    ButtonState state = vec_get_as(ButtonState, ButtonStates, index);
+    ButtonState state = ButtonStates[index];
     return !state.isPressed && state.wasPressed;
 }
 
@@ -142,13 +143,11 @@ void im_get_mouse_position(vec2 position) {
 
 void im_update_input(GLFWwindow* window) {
     for (int i = 0; i < vec_size(KeyStates); i++) {
-        KeyState* state = vec_get(KeyStates, i);
-        state->isPressed = glfwGetKey(window, state->key) == GLFW_PRESS;
+        KeyStates[i].isPressed = glfwGetKey(window, KeyStates[i].key) == GLFW_PRESS;
     }
 
     for (int i = 0; i < vec_size(ButtonStates); i++) {
-        ButtonState* state = vec_get(ButtonStates, i);
-        state->isPressed = glfwGetMouseButton(window, state->button) == GLFW_PRESS;
+        ButtonStates[i].isPressed = glfwGetMouseButton(window, ButtonStates[i].button) == GLFW_PRESS;
     }
 
     double xPos, yPos;
@@ -161,15 +160,15 @@ void im_update_input(GLFWwindow* window) {
 
 void im_reset_input() {
     for (int i = 0; i < vec_size(KeyStates); i++) {
-        KeyState* state = vec_get(KeyStates, i);
-        state->wasPressed = state->isPressed;
-        state->isPressed = false;
+        KeyState state = KeyStates[i];
+        state.wasPressed = state.isPressed;
+        state.isPressed = false;
     }
 
     for (int i = 0; i < vec_size(ButtonStates); i++) {
-        ButtonState* state = vec_get(ButtonStates, i);
-        state->wasPressed = state->isPressed;
-        state->isPressed = false;
+        ButtonState state = ButtonStates[i];
+        state.wasPressed = state.isPressed;
+        state.isPressed = false;
     }
 
     mouseScrollDirection = 0;
