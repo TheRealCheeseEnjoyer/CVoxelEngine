@@ -160,15 +160,13 @@ void im_update_input(GLFWwindow* window) {
 
 void im_reset_input() {
     for (int i = 0; i < vec_size(KeyStates); i++) {
-        KeyState state = KeyStates[i];
-        state.wasPressed = state.isPressed;
-        state.isPressed = false;
+        KeyStates[i].wasPressed = KeyStates[i].isPressed;
+        KeyStates[i].isPressed = false;
     }
 
     for (int i = 0; i < vec_size(ButtonStates); i++) {
-        ButtonState state = ButtonStates[i];
-        state.wasPressed = state.isPressed;
-        state.isPressed = false;
+        ButtonStates[i].wasPressed = ButtonStates[i].isPressed;
+        ButtonStates[i].isPressed = false;
     }
 
     mouseScrollDirection = 0;

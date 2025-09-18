@@ -302,14 +302,14 @@ void player_update(float deltaTime) {
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
 
     destroyBlockCooldown += deltaTime;
-    if ((im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT)) && destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) && destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
         destroyBlockCooldown = 0;
         BlockType destroyedBlock = world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
         inventory_add_block(destroyedBlock);
     }
 
     placeBlockCooldown += deltaTime;
-    if ((im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT)) && placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) && placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
         placeBlockCooldown = 0;
         vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
         switch (faceLookedAt) {
