@@ -44,7 +44,8 @@ int vec_append(void* vec, void* item) {
         h->capacity = newCapacity;
         *v = h + 1;
     }
-    memcpy(*v + h->itemSize * h->size, item, h->itemSize);
+    if (item != NULL)
+        memcpy(*v + h->itemSize * h->size, item, h->itemSize);
     h->size += 1;
     return 1;
 }

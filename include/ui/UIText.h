@@ -6,7 +6,7 @@
 typedef unsigned int UIText;
 
 UIText UIText_init(const char *text, vec2 position, bool enabled);
-void UIText_set_position(UIText* ui_text, vec2 position);
+void UIText_set_position(UIText ui_text, vec2 position);
 void UIText_set_text(UIText ui_text, const char* text);
 void UIText_draw(UIText ui_text);
 

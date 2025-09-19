@@ -305,7 +305,8 @@ void player_update(float deltaTime) {
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) && destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
         destroyBlockCooldown = 0;
         BlockType destroyedBlock = world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
-        inventory_add_block(destroyedBlock);
+        BlockStack stack = {destroyedBlock, 1, 10};
+        inventory_add_block(stack);
     }
 
     placeBlockCooldown += deltaTime;

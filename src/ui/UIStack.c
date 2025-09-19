@@ -1,4 +1,6 @@
-#include "../../include/ui/UIInventorySlot.h"
+#include "ui/UIStack.h"
+#include "ui/UIText.h"
+#include "ui/UISprite.h"
 
 #include <stdio.h>
 
@@ -12,7 +14,7 @@ typedef struct {
 
 static uiinventoryslot_t* slots = nullptr;
 
-UIInventorySlot UIInventorySlot_init(const char *itemTexture, int amount, vec2 position, vec2 size) {
+UIStack UIStack_init(const char *itemTexture, int amount, vec2 position, vec2 size) {
     if (slots == nullptr) {
         slots = vec_init(sizeof(uiinventoryslot_t));
     }
@@ -26,25 +28,39 @@ UIInventorySlot UIInventorySlot_init(const char *itemTexture, int amount, vec2 p
     return vec_size(slots) - 1;
 }
 
-void UIInventorySlot_set_amount(UIInventorySlot slotIndex, int amount) {
+void UIStack_set_amount(UIStack slotIndex, int amount) {
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
     UIText_set_text(slots[slotIndex].amountText, amountStr);
 }
 
-void UIInventorySlot_set_texture(UIInventorySlot slotIndex, const char *itemTexture) {
+void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
+    UISprite_set_texture(slots[slotIndex].itemSprite, blocktype_to_texture_path(stack.type));
+    char amountStr[10];
+    sprintf(amountStr, "%d", stack.size);
+    UIText_set_text(slots[slotIndex].amountText, amountStr);
+}
+
+void UIStack_set_texture(UIStack slotIndex, const char *itemTexture) {
     UISprite_set_texture(slots[slotIndex].itemSprite, itemTexture);
 }
 
-void UIInventorySlot_get_position(UIInventorySlot slotIndex, vec2 position) {
+void UIStack_set_position(UIStack slotIndex, vec2 position) {
+    UISprite_set_position(slots[slotIndex].itemSprite, position);
+    vec2 size;
+    UISprite_get_size(slots[slotIndex].itemSprite, size);
+    UIText_set_position(slots[slotIndex].amountText, (vec2){position[0], position[1] + size[1] / 2});
+}
+
+void UIStack_get_position(UIStack slotIndex, vec2 position) {
     UISprite_get_position(slots[slotIndex].itemSprite, position);
 }
 
-void UIInventorySlot_get_size(UIInventorySlot slotIndex, vec2 size) {
+void UIStack_get_size(UIStack slotIndex, vec2 size) {
     UISprite_get_size(slots[slotIndex].itemSprite, size);
 }
 
-void UIInventorySlot_draw(UIInventorySlot slotIndex) {
+void UIStack_draw(UIStack slotIndex) {
     UISprite_draw(slots[slotIndex].itemSprite);
     UIText_draw(slots[slotIndex].amountText);
 }

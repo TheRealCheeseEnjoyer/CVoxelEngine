@@ -12,7 +12,7 @@
 void inventory_init();
 BlockStack inventory_get_stack_from_slot(int x, int y);
 void inventory_set_stack_in_slot(int x, int y, BlockStack type);
-void inventory_add_block(BlockType type);
+void inventory_add_block(BlockStack type);
 void inventory_use_block_from_hotbar();
 BlockType inventory_get_block_from_hotbar_slot(int i);
 
