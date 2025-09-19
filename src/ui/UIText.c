@@ -23,6 +23,7 @@ typedef struct {
 
 typedef struct {
     vec2 position;
+    vec3 color;
     UIChar* chars;
 } uitext_t;
 
@@ -36,6 +37,9 @@ UIText UIText_init(const char *text, vec2 position, bool enabled) {
     UIText id = vec_size(texts) - 1;
     texts[id].position[0] = position[0];
     texts[id].position[1] = position[1];
+    texts[id].color[0] = 0;
+    texts[id].color[1] = 0;
+    texts[id].color[2] = 0;
     texts[id].chars = vec_init(sizeof(UIChar));
     UIText_set_text(id, text);
     return id;
@@ -63,6 +67,12 @@ void UIText_set_position(UIText ui_text, vec2 position) {
     update_position(ui_text);
 }
 
+void UIText_set_color(UIText ui_text, vec3 color) {
+    texts[ui_text].color[0] = color[0];
+    texts[ui_text].color[1] = color[1];
+    texts[ui_text].color[2] = color[2];
+}
+
 void UIText_set_text(UIText textIndex, const char *text) {
     vec_clear(texts[textIndex].chars);
 
@@ -87,8 +97,7 @@ void UIText_set_text(UIText textIndex, const char *text) {
 
 void UIText_draw(UIText textIndex) {
     shader_set_int(sm_get_shader(SHADER_UI), "text", true);
-    vec3 color = {0, 0, 0};
-    shader_set_vec3(sm_get_shader(SHADER_UI), "textColor", &color);
+    shader_set_vec3(sm_get_shader(SHADER_UI), "textColor", &texts[textIndex].color);
     for (int i = 0; i < vec_size(texts[textIndex].chars); i++) {
         shader_set_mat4(sm_get_shader(SHADER_UI), "model", &texts[textIndex].chars[i].transform);
         glBindTexture(GL_TEXTURE_2D, texts[textIndex].chars[i].texture);

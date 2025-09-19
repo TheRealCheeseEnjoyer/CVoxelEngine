@@ -39,6 +39,10 @@ void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
     char amountStr[10];
     sprintf(amountStr, "%d", stack.size);
     UIText_set_text(slots[slotIndex].amountText, amountStr);
+    if (stack.size == stack.maxSize)
+        UIText_set_color(slots[slotIndex].amountText, (vec3){255, 0, 0});
+    else
+        UIText_set_color(slots[slotIndex].amountText, (vec3){0, 0, 0});
 }
 
 void UIStack_set_texture(UIStack slotIndex, const char *itemTexture) {
