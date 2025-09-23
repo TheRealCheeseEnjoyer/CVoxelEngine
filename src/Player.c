@@ -32,14 +32,14 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 #define YAW 0
 #define PITCH 1
 #define SENSITIVITY 0.1
-#define COOLDOWN_BLOCK_DESTRUCTION .5f
-#define COOLDOWN_BLOCK_PLACEMENT .3f
+#define COOLDOWN_BLOCK_DESTRUCTION .2f
+#define COOLDOWN_BLOCK_PLACEMENT .2f
 
 #define MAX_RANGE 4
 
 Controls *controls;
 
-vec3 jumpForce = {0, 6, 0};
+constexpr vec3 jumpForce = {0, 6, 0};
 // Player is always slightly levitating so a 2 block high aabb would not pass under 2 block high gaps
 constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
 vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
@@ -47,8 +47,8 @@ vec3 position = {0, 5, 0};
 vec3 front;
 vec3 up;
 vec3 right;
-float movementSpeed = 10;
-float fallSpeed = 2;
+float movementSpeed = 7;
+float fallSpeed = 4;
 BlockType selectedBlockType = BLOCK_GRASS;
 Rigidbody rigidbody;
 bool is_freecam_enabled = false;

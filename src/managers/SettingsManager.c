@@ -37,6 +37,8 @@ int load_window_settings(FILE* file) {
         } else if (strcmp(property, "title") == 0) {
             settings.window.title = calloc(strlen(value) + 1, sizeof(char));
             strcpy(settings.window.title, value);
+        } else if (strcmp(property, "fullscreen") == 0) {
+            settings.window.fullscreen = strcmp(value, "true") == 0;
         }
     }
     return 1;

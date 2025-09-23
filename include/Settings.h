@@ -6,6 +6,7 @@ typedef struct {
     char* title;
     int width;
     int height;
+    bool fullscreen;
 } WindowSettings;
 
 typedef struct {

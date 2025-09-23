@@ -52,7 +52,12 @@ GLFWwindow* window_create() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    window = glfwCreateWindow(settings->width, settings->height, settings->title, nullptr, nullptr);
+    GLFWmonitor* monitor = nullptr;
+    if (settings->fullscreen) {
+        monitor = glfwGetPrimaryMonitor();
+    }
+
+    window = glfwCreateWindow(settings->width, settings->height, settings->title, monitor, nullptr);
     if (window == nullptr) {
         fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
