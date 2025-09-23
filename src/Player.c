@@ -92,7 +92,7 @@ void player_get_aabb(vec3 pos, AABB *out) {
 
 bool player_is_grounded() {
     // Player is always levitating, so we check a bit down if there is a collision
-    vec3 pos = {position[X], position[Y] - 0.0001, position[Z]};
+    vec3 pos = {position[X], position[Y] - 0.01, position[Z]};
     for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
         for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
             vec3 blockPos = {round(pos[X] + x), round(pos[Y] - 1), round(pos[Z] + z)};
@@ -230,8 +230,10 @@ void normal_movement(vec2 input, float deltaTime) {
 
     vec3 velocity;
     rigidbody_get_velocity(rigidbody, velocity);
-    if (im_get_key(controls->jump) && player_is_grounded() && velocity[Y] == 0)
+
+    if (im_get_key(controls->jump) && player_is_grounded() && velocity[Y] == 0) {
         rigidbody_add_velocity(rigidbody, jumpForce);
+    }
 
     memcpy(position, newPos, sizeof(vec3));
 }
