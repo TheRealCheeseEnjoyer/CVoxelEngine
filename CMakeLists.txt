@@ -15,6 +15,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}
         include
         ${PROJECT_SOURCE_DIR}/libs
+        /usr/include/freetype2
 )
 
 add_executable(CVoxelEngine main.c
@@ -70,7 +71,6 @@ add_executable(CVoxelEngine main.c
         include/ui/BlockStack.h
         src/managers/SettingsManager.c
         include/managers/SettingsManager.h
-        ft2build.h
         src/ui/UIText.c
         include/ui/UIText.h
         include/ui/CharGlyph.h
@@ -81,4 +81,4 @@ add_executable(CVoxelEngine main.c
         include/ui/UIStack.h
 )
 
-target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype)
+target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16)
