@@ -1,6 +1,8 @@
 #include "World.h"
 
+#include <stdio.h>
 #include <string.h>
+#include <cglm/affine.h>
 
 #include "Chunk.h"
 #include "../include/managers/ShaderManager.h"
@@ -71,10 +73,54 @@ void world_init(vec3 initialPosition) {
 void world_draw(vec3 playerPos, mat4 projection, mat4 view) {
     shader_use(sm_get_shader(SHADER_DEFAULT));
     vec3 chunkPos = {playerPos[X] / CHUNK_SIZE_X, playerPos[Y] / CHUNK_SIZE_Y, playerPos[Z] / CHUNK_SIZE_Z};
+    vec3 lookDir = {-view[0][2], view[1][2], -view[2][2]};
+    vec3 upVector = {view[0][0], view[1][0], view[2][0]};
+    vec3 rightVector = {-view[0][1], view[1][1], -view[2][1]};
+    glm_vec3_normalize(lookDir);
+    float halfFov = atanf(1.f / projection[1][1]);
+    float aspectRatio = projection[1][1] / projection[0][0];
 
-    for (int x = fmax(0, chunkPos[X] - MAX_CHUNK_DRAW_DISTANCE); x < fmin(chunkPos[X] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_X); x++ ) {
+    vec3 topRightBoundDir = {lookDir[0], lookDir[1], lookDir[2]};
+    vec3 topLeftBoundDir = {lookDir[0], lookDir[1], lookDir[2]};
+
+    glm_vec3_rotate(topRightBoundDir, halfFov, upVector);
+    glm_vec3_rotate(topLeftBoundDir, -halfFov, upVector);
+
+    vec3 bottomRightBoundDir = {topRightBoundDir[0], topRightBoundDir[1], topRightBoundDir[2]};
+    vec3 bottomLeftBoundDir = {topLeftBoundDir[0], topLeftBoundDir[1], topLeftBoundDir[2]};
+
+    float verticalPixels = tanf( halfFov );
+    float horizontalPixels = aspectRatio * verticalPixels;
+    float halfHorizontalFOV = atanf( horizontalPixels );
+
+    glm_vec3_rotate(topRightBoundDir, halfHorizontalFOV, rightVector);
+    glm_vec3_rotate(bottomRightBoundDir, -halfHorizontalFOV, rightVector);
+    glm_vec3_rotate(topLeftBoundDir, halfHorizontalFOV, rightVector);
+    glm_vec3_rotate(bottomLeftBoundDir, -halfHorizontalFOV, rightVector);
+
+    vec3 topRightBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
+    vec3 bottomRightBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
+    vec3 topLeftBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
+    vec3 bottomLeftBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
+    vec3 frontBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
+    glm_vec3_muladds(topRightBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, topRightBound);
+    glm_vec3_muladds(bottomRightBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, bottomRightBound);
+    glm_vec3_muladds(topLeftBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, topLeftBound);
+    glm_vec3_muladds(bottomLeftBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, bottomLeftBound);
+    glm_vec3_muladds(lookDir, MAX_CHUNK_DRAW_DISTANCE + 3, frontBound);
+
+    int minX = fmin(fmin(fmin(fmin(fmin(frontBound[0], topRightBound[0]), bottomRightBound[0]), topLeftBound[0]), bottomLeftBound[0]), chunkPos[0]);
+    minX = fmax(minX, 0);
+    int minZ = fmin(fmin(fmin(fmin(fmin(frontBound[2], topRightBound[2]), bottomRightBound[2]), topLeftBound[2]), bottomLeftBound[2]), chunkPos[2]);
+    minZ = fmax(minZ, 0);
+    int maxX = fmax(fmax(fmax(fmax(fmax(frontBound[0], topRightBound[0]), bottomRightBound[0]), topLeftBound[0]), bottomLeftBound[0]), chunkPos[0]);
+    maxX = fmin(maxX, WORLD_SIZE_X - 1);
+    int maxZ = fmax(fmax(fmax(fmax(fmax(frontBound[2], topRightBound[2]), bottomRightBound[2]), topLeftBound[2]), bottomLeftBound[2]), chunkPos[2]);
+    maxZ = fmin(maxZ, WORLD_SIZE_Z - 1);
+
+    for (int x = minX; x <= maxX; x++ ) {
         for (int y = fmax(0, chunkPos[Y] - MAX_CHUNK_DRAW_DISTANCE); y < fmin(chunkPos[Y] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_Y); y++) {
-            for (int z = fmax(0, chunkPos[Z] - MAX_CHUNK_DRAW_DISTANCE); z < fmin(chunkPos[Z] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_Z); z++) {
+            for (int z = minZ; z <= maxZ; z++) {
                 if (glm_vec3_distance2(chunkPos, (vec3){x, y, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)
                     chunk_draw(get_chunk(x, y, z), projection, view);
             }

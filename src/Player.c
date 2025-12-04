@@ -27,7 +27,7 @@
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
 
-#define DEFAULT_YAW (90.0f)
+#define DEFAULT_YAW (-90.0f)
 #define DEFAULT_PITCH (0.0f)
 #define YAW 0
 #define PITCH 1
@@ -250,6 +250,7 @@ void player_update(float deltaTime) {
         UIInventory_update();
         return;
     }
+
     look_around(rotation, mouseDelta);
 
     vec2 input = {0, 0};
@@ -387,7 +388,5 @@ void player_draw(mat4 projection) {
 void player_get_view_matrix(mat4 outView) {
     vec3 eye;
     player_eye_position(eye);
-    vec3 center;
-    glm_vec3_add(eye, front, center);
-    glm_lookat(eye, center, up, outView);
+    glm_look(eye, front, up, outView);
 }
