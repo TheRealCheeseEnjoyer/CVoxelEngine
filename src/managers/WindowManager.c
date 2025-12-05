@@ -77,7 +77,7 @@ GLFWwindow* window_create() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    if (!debuggerIsAttached())
+    //if (!debuggerIsAttached())
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     return window;

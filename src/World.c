@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <cglm/affine.h>
+#include <GLFW/glfw3.h>
 
 #include "Chunk.h"
 #include "../include/managers/ShaderManager.h"
@@ -17,6 +18,12 @@
 
 Chunk* chunks;
 Block* blocks;
+
+void castVecToInt(vec3 vec) {
+    for (int i = 0; i < 3; i++) {
+        vec[i] = round(vec[i]);
+    }
+}
 
 Chunk* get_chunk(int x, int y, int z) {
     if (x < 0 || x >= WORLD_SIZE_X || y < 0 || y >= WORLD_SIZE_Y || z < 0 || z >= WORLD_SIZE_Z) return nullptr;
@@ -72,58 +79,73 @@ void world_init(vec3 initialPosition) {
 
 void world_draw(vec3 playerPos, mat4 projection, mat4 view) {
     shader_use(sm_get_shader(SHADER_DEFAULT));
-    vec3 chunkPos = {playerPos[X] / CHUNK_SIZE_X, playerPos[Y] / CHUNK_SIZE_Y, playerPos[Z] / CHUNK_SIZE_Z};
+    vec3 chunkPos = {(int)playerPos[X] / CHUNK_SIZE_X, (int)playerPos[Y] / CHUNK_SIZE_Y, (int)playerPos[Z] / CHUNK_SIZE_Z};
     vec3 lookDir = {-view[0][2], view[1][2], -view[2][2]};
-    vec3 upVector = {view[0][0], view[1][0], view[2][0]};
-    vec3 rightVector = {-view[0][1], view[1][1], -view[2][1]};
+    vec3 planarLookDir = {lookDir[0], 0, lookDir[2]};
+    vec3 rightVector = {view[0][0], view[1][0], view[2][0]};
+    vec3 upVector = {-view[0][1], view[1][1], -view[2][1]};
     glm_vec3_normalize(lookDir);
+    glm_vec3_normalize(planarLookDir);
     float halfFov = atanf(1.f / projection[1][1]);
-    float aspectRatio = projection[1][1] / projection[0][0];
+    float aspect = projection[1][1] / projection[0][0];
+    float verticalPixels = tanf(halfFov);
+    float horizontalPixels = aspect * verticalPixels;
+    float halfHorizontalFOV = atanf(horizontalPixels);
 
-    vec3 topRightBoundDir = {lookDir[0], lookDir[1], lookDir[2]};
-    vec3 topLeftBoundDir = {lookDir[0], lookDir[1], lookDir[2]};
+    vec3 boundsDir[4];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
+            boundsDir[i][j] = lookDir[j];
+        }
+    }
 
-    glm_vec3_rotate(topRightBoundDir, halfFov, upVector);
-    glm_vec3_rotate(topLeftBoundDir, -halfFov, upVector);
+    glm_vec3_rotate(boundsDir[0], halfFov, upVector);
+    glm_vec3_rotate(boundsDir[0], halfHorizontalFOV, rightVector);
+    glm_vec3_rotate(boundsDir[1], halfFov, upVector);
+    glm_vec3_rotate(boundsDir[1], -halfHorizontalFOV, rightVector);
+    glm_vec3_rotate(boundsDir[2], -halfFov, upVector);
+    glm_vec3_rotate(boundsDir[2], halfHorizontalFOV, rightVector);
+    glm_vec3_rotate(boundsDir[3], -halfFov, upVector);
+    glm_vec3_rotate(boundsDir[3], -halfHorizontalFOV, rightVector);
 
-    vec3 bottomRightBoundDir = {topRightBoundDir[0], topRightBoundDir[1], topRightBoundDir[2]};
-    vec3 bottomLeftBoundDir = {topLeftBoundDir[0], topLeftBoundDir[1], topLeftBoundDir[2]};
+    vec3 bounds[4];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
+            bounds[i][j] = chunkPos[j];
+        }
+    }
 
-    float verticalPixels = tanf( halfFov );
-    float horizontalPixels = aspectRatio * verticalPixels;
-    float halfHorizontalFOV = atanf( horizontalPixels );
+    for (int i = 0; i < 4; i++) {
+        glm_vec3_muladds(boundsDir[i], MAX_CHUNK_DRAW_DISTANCE + 1, bounds[i]);
+    }
 
-    glm_vec3_rotate(topRightBoundDir, halfHorizontalFOV, rightVector);
-    glm_vec3_rotate(bottomRightBoundDir, -halfHorizontalFOV, rightVector);
-    glm_vec3_rotate(topLeftBoundDir, halfHorizontalFOV, rightVector);
-    glm_vec3_rotate(bottomLeftBoundDir, -halfHorizontalFOV, rightVector);
-
-    vec3 topRightBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
-    vec3 bottomRightBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
-    vec3 topLeftBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
-    vec3 bottomLeftBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
     vec3 frontBound = {chunkPos[0], chunkPos[1], chunkPos[2]};
-    glm_vec3_muladds(topRightBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, topRightBound);
-    glm_vec3_muladds(bottomRightBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, bottomRightBound);
-    glm_vec3_muladds(topLeftBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, topLeftBound);
-    glm_vec3_muladds(bottomLeftBoundDir, MAX_CHUNK_DRAW_DISTANCE + 3, bottomLeftBound);
-    glm_vec3_muladds(lookDir, MAX_CHUNK_DRAW_DISTANCE + 3, frontBound);
+    if (planarLookDir[2] >= fabs(planarLookDir[0])) {
+        glm_vec3_muladds((vec3){0, 0, 1}, MAX_CHUNK_DRAW_DISTANCE, frontBound);
+    } else if (planarLookDir[2] <= -fabs(planarLookDir[0])) {
+        glm_vec3_muladds((vec3){0, 0, -1}, MAX_CHUNK_DRAW_DISTANCE, frontBound);
+    } else if (planarLookDir[0] >= fabs(planarLookDir[2])) {
+        glm_vec3_muladds((vec3){1, 0, 0}, MAX_CHUNK_DRAW_DISTANCE, frontBound);
+    } else if (planarLookDir[0] <= -fabs(planarLookDir[2])) {
+        glm_vec3_muladds((vec3){-1, 0, 0}, MAX_CHUNK_DRAW_DISTANCE, frontBound);
+    }
 
-    int minX = fmin(fmin(fmin(fmin(fmin(frontBound[0], topRightBound[0]), bottomRightBound[0]), topLeftBound[0]), bottomLeftBound[0]), chunkPos[0]);
+    int minX = fmin(fmin(fmin(fmin(fmin(chunkPos[0], frontBound[0]), bounds[0][0]), bounds[1][0]), bounds[2][0]), bounds[3][0]) - 1;
+    int maxX = fmax(fmax(fmax(fmax(fmax(chunkPos[0], frontBound[0]), bounds[0][0]), bounds[1][0]), bounds[2][0]), bounds[3][0]) + 1;
+
     minX = fmax(minX, 0);
-    int minZ = fmin(fmin(fmin(fmin(fmin(frontBound[2], topRightBound[2]), bottomRightBound[2]), topLeftBound[2]), bottomLeftBound[2]), chunkPos[2]);
-    minZ = fmax(minZ, 0);
-    int maxX = fmax(fmax(fmax(fmax(fmax(frontBound[0], topRightBound[0]), bottomRightBound[0]), topLeftBound[0]), bottomLeftBound[0]), chunkPos[0]);
     maxX = fmin(maxX, WORLD_SIZE_X - 1);
-    int maxZ = fmax(fmax(fmax(fmax(fmax(frontBound[2], topRightBound[2]), bottomRightBound[2]), topLeftBound[2]), bottomLeftBound[2]), chunkPos[2]);
+
+    int minZ = fmin(fmin(fmin(fmin(fmin(chunkPos[2], frontBound[2]), bounds[0][2]), bounds[1][2]), bounds[2][2]),bounds[3][2]) - 1;
+    int maxZ = fmax(fmax(fmax(fmax(fmax(chunkPos[2], frontBound[2]), bounds[0][2]), bounds[1][2]), bounds[2][2]),bounds[3][2]) + 1;
+
+    minZ = fmax(minZ, 0);
     maxZ = fmin(maxZ, WORLD_SIZE_Z - 1);
 
     for (int x = minX; x <= maxX; x++ ) {
-        for (int y = fmax(0, chunkPos[Y] - MAX_CHUNK_DRAW_DISTANCE); y < fmin(chunkPos[Y] + MAX_CHUNK_DRAW_DISTANCE, WORLD_SIZE_Y); y++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                if (glm_vec3_distance2(chunkPos, (vec3){x, y, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)
-                    chunk_draw(get_chunk(x, y, z), projection, view);
-            }
+        for (int z = minZ; z <= maxZ; z++) {
+            if (glm_vec3_distance2(chunkPos, (vec3){x, 0, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)
+                chunk_draw(get_chunk(x, 0, z), projection, view);
         }
     }
 

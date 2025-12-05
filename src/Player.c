@@ -27,7 +27,7 @@
 constexpr vec3 WorldUp = {0, 1, 0};
 constexpr vec3 cameraOffset = {0, .75f, 0};
 
-#define DEFAULT_YAW (-90.0f)
+#define DEFAULT_YAW (90.0f)
 #define DEFAULT_PITCH (0.0f)
 #define YAW 0
 #define PITCH 1
@@ -250,7 +250,7 @@ void player_update(float deltaTime) {
         UIInventory_update();
         return;
     }
-
+    // mouseDelta[0] = 0;
     look_around(rotation, mouseDelta);
 
     vec2 input = {0, 0};
