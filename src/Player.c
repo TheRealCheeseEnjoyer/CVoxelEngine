@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 
 #include <string.h>
+#include <unistd.h>
 #include <cglm/affine.h>
 #include <cglm/cam.h>
 #include <cglm/vec3.h>
@@ -17,7 +18,7 @@
 #include "Constants.h"
 #include "Inventory.h"
 #include "Rigidbody.h"
-#include "managers/SettingsManager.h"
+#include "Engine/Time.h"
 #include "managers/ShaderManager.h"
 #include "ui/UIHotbar.h"
 #include "ui/UIInventory.h"
@@ -37,34 +38,35 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 
 #define MAX_RANGE 4
 
-Controls *controls;
+struct controls_t* controls;
 
-constexpr vec3 jumpForce = {0, 6, 0};
-// Player is always slightly levitating so a 2 block high aabb would not pass under 2 block high gaps
-constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
-vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
-vec3 position = {500, 17, 500};
-vec3 front;
-vec3 up;
-vec3 right;
-float movementSpeed = 7;
-float fallSpeed = 4;
-BlockType selectedBlockType = 0;
-Rigidbody rigidbody;
-bool is_freecam_enabled = false;
+static constexpr vec3 jumpForce = {0, 10, 0};
+
+static constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
+static vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
+static vec3 position = {500, 17, 500};
+static vec3 front;
+static vec3 up;
+static vec3 right;
+static float movementSpeed = 7;
+static float fallSpeed = 4;
+static BlockType selectedBlockType = 0;
+static bool is_freecam_enabled = false;
 static unsigned int VAO, VBO;
-vec3 blockLookedAt = {-1, -1, -1};
-float destroyBlockCooldown = 1;
-float placeBlockCooldown = 1;
-UISprite crosshair;
-UIText fpsCounter;
+static vec3 blockLookedAt = {-1, -1, -1};
+static float destroyBlockCooldown = 1;
+static float placeBlockCooldown = 1;
+static UISprite crosshair;
+static UIText fpsCounter;
+
+static const vec3 Gravity = {0, -30.f, 0};
+static vec3 velocity = {0, 0, 0};
 
 void recalculate_vectors();
 
 void player_init() {
-    controls = settings_manager_get_controls();
+    controls = &Settings.controls;
     recalculate_vectors();
-    rigidbody = rigidbody_register(&position, aabbSize);
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glGenBuffers(1, &VBO);
@@ -73,15 +75,16 @@ void player_init() {
     glBindVertexArray(0);
     UIInventory_init();
     UIHotbar_init();
-    crosshair = UISprite_init("assets/ui/crosshair.png", (vec2) {1920 / 2, 1080 / 2}, (vec2) {20, 20});
-    fpsCounter = UIText_init("FPS:", (vec2) {0, 50}, true);
+    crosshair = UISprite_init("assets/ui/crosshair.png", (vec2){Settings.window.width / 2, Settings.window.height / 2},
+                              (vec2){20, 20});
+    fpsCounter = UIText_init("FPS:", (vec2){0, 50}, true);
 }
 
 void player_eye_position(vec3 eye_pos) {
     glm_vec3_add(position, cameraOffset, eye_pos);
 }
 
-void player_get_aabb(vec3 pos, AABB *out) {
+void player_get_aabb(vec3 pos, AABB* out) {
     out->max[X] = pos[X] + aabbSize[X] / 2;
     out->min[X] = pos[X] - aabbSize[X] / 2;
     out->max[Y] = pos[Y] + aabbSize[Y] / 2;
@@ -91,12 +94,11 @@ void player_get_aabb(vec3 pos, AABB *out) {
 }
 
 bool player_is_grounded() {
-    // Player is always levitating, so we check a bit down if there is a collision
-    vec3 pos = {position[X], position[Y] - 0.01, position[Z]};
+    vec3 pos = {position[X], position[Y] - .01f, position[Z]};
     for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
         for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
             vec3 blockPos = {round(pos[X] + x), round(pos[Y] - 1), round(pos[Z] + z)};
-            Block *block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+            Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
             if (block == nullptr || block->type == BLOCK_AIR)
                 continue;
 
@@ -120,7 +122,7 @@ bool player_is_colliding_with_near_blocks(vec3 pos) {
         for (int y = -ceil(aabbSize[Y] / 2); y <= ceil(aabbSize[Y] / 2); y++) {
             for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
                 vec3 blockPos = {round(pos[X] + x), round(pos[Y] + y), round(pos[Z] + z)};
-                Block *block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+                Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
                 if (block == nullptr || block->type == BLOCK_AIR)
                     continue;
 
@@ -167,7 +169,7 @@ void look_around(vec2 rotation, vec2 mouseDelta) {
         rotation[PITCH] = -89.0f;
 }
 
-void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation *faceHit) {
+void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation* faceHit) {
     vec3 currentBlock = {roundf(eye[X]), roundf(eye[Y]), roundf(eye[Z])};
     blockPos[X] = -1;
     blockPos[Y] = -1;
@@ -180,7 +182,7 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation *f
         for (int y = 0; y >= -MAX_RANGE && y <= MAX_RANGE; y += yDir) {
             for (int z = 0; z >= -MAX_RANGE && z <= MAX_RANGE; z += zDir) {
                 vec3 blockCoords = {currentBlock[X] + x, currentBlock[Y] + y, currentBlock[Z] + z};
-                Block *block = world_get_block_at(blockCoords[X], blockCoords[Y], blockCoords[Z]);
+                Block* block = world_get_block_at(blockCoords[X], blockCoords[Y], blockCoords[Z]);
                 if (block == nullptr || block->type == BLOCK_AIR) continue;
 
                 float distance;
@@ -200,8 +202,8 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation *f
     }
 }
 
-void freecam_movement(vec2 input, float deltaTime) {
-    float speed = movementSpeed * deltaTime;
+void freecam_movement(vec2 input) {
+    float speed = movementSpeed * Time.deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
     glm_vec3_scale(right, input[X] * speed, horizontalMovement);
     glm_vec3_scale(front, input[Y] * speed, forwardMovement);
@@ -210,8 +212,42 @@ void freecam_movement(vec2 input, float deltaTime) {
     glm_vec3_add(position, totalMovement, position);
 }
 
-void normal_movement(vec2 input, float deltaTime) {
-    float speed = movementSpeed * deltaTime;
+void player_physics_update() {
+    static float timeAccumulator = 1.0f;
+    timeAccumulator += Time.deltaTime;
+    // if (timeAccumulator < 1 / 60.f) {
+    //     glm_vec3_muladds(velocity, 1 / 60.f * Time.deltaTime, position);
+    //     return;
+    // }
+    timeAccumulator = 0;
+    vec3 oldVelocity = {velocity[0], velocity[1], velocity[2]};
+    vec3 oldPosition = {position[X], position[Y], position[Z]};
+
+    float dt = fminf(Time.deltaTime, 1.0f / 60.0f);
+
+    glm_vec3_muladds(Gravity, dt, oldVelocity);
+    glm_vec3_muladds(oldVelocity, dt, oldPosition);
+
+    AABB aabb;
+    vec3 halfSize;
+    glm_vec3_divs(aabbSize, 2, halfSize);
+    glm_vec3_add(oldPosition, halfSize, aabb.max);
+    glm_vec3_sub(oldPosition, halfSize, aabb.min);
+
+    if (player_is_colliding_with_near_blocks(oldPosition)) {
+        if (velocity[1] < 0)
+            position[1] = floor(oldPosition[1]) + .5f;
+
+        memset(velocity, 0, sizeof(vec3));
+        return;
+    }
+
+    memcpy(velocity, oldVelocity, sizeof(vec3));
+    memcpy(position, oldPosition, sizeof(vec3));
+}
+
+void normal_movement(vec2 input) {
+    float speed = movementSpeed * Time.deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
     vec3 forwardAxis = {front[X], 0, front[Z]};
     glm_normalize(forwardAxis);
@@ -228,20 +264,18 @@ void normal_movement(vec2 input, float deltaTime) {
     if (player_is_colliding_with_near_blocks(newPos))
         newPos[Z] = position[Z];
 
-    vec3 velocity;
-    rigidbody_get_velocity(rigidbody, velocity);
-
-    if (im_get_key(controls->jump) && player_is_grounded() && velocity[Y] == 0) {
-        rigidbody_add_velocity(rigidbody, jumpForce);
+    if (im_get_key(controls->jump) && player_is_grounded() && velocity[1] == 0) {
+        glm_vec3_add(velocity, jumpForce, velocity);
     }
 
     memcpy(position, newPos, sizeof(vec3));
+    player_physics_update();
 }
 
-void player_update(float deltaTime) {
+void player_update() {
     vec2 mouseDelta;
     char fps[32];
-    sprintf(fps, "FPS: %d", (int) (1 / deltaTime));
+    sprintf(fps, "FPS: %d", (int)(1 / Time.deltaTime));
     UIText_set_text(fpsCounter, fps);
     im_get_mouse_delta(mouseDelta);
     if (UIInventory_is_enabled()) {
@@ -250,7 +284,7 @@ void player_update(float deltaTime) {
         UIInventory_update();
         return;
     }
-    // mouseDelta[0] = 0;
+
     look_around(rotation, mouseDelta);
 
     vec2 input = {0, 0};
@@ -265,21 +299,29 @@ void player_update(float deltaTime) {
 
     if (im_get_key_down(controls->hotbar_1)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(0);
-    } else if (im_get_key_down(controls->hotbar_2)) {
+    }
+    else if (im_get_key_down(controls->hotbar_2)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(1);
-    } else if (im_get_key_down(controls->hotbar_3)) {
+    }
+    else if (im_get_key_down(controls->hotbar_3)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(2);
-    } else if (im_get_key_down(controls->hotbar_4)) {
+    }
+    else if (im_get_key_down(controls->hotbar_4)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(3);
-    } else if (im_get_key_down(controls->hotbar_5)) {
+    }
+    else if (im_get_key_down(controls->hotbar_5)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(4);
-    } else if (im_get_key_down(controls->hotbar_6)) {
+    }
+    else if (im_get_key_down(controls->hotbar_6)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(5);
-    } else if (im_get_key_down(controls->hotbar_7)) {
+    }
+    else if (im_get_key_down(controls->hotbar_7)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(6);
-    } else if (im_get_key_down(controls->hotbar_8)) {
+    }
+    else if (im_get_key_down(controls->hotbar_8)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(7);
-    } else if (im_get_key_down(controls->hotbar_9)) {
+    }
+    else if (im_get_key_down(controls->hotbar_9)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(8);
     }
 
@@ -289,14 +331,13 @@ void player_update(float deltaTime) {
         UIInventory_toggle();
 
     if (im_get_key_down(controls->freecam)) {
-        rigidbody_set_enabled(rigidbody, is_freecam_enabled);
         is_freecam_enabled = !is_freecam_enabled;
     }
 
     if (is_freecam_enabled)
-        freecam_movement(input, deltaTime);
+        freecam_movement(input);
     else
-        normal_movement(input, deltaTime);
+        normal_movement(input);
 
 
     vec3 eye;
@@ -304,37 +345,39 @@ void player_update(float deltaTime) {
     player_eye_position(eye);
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
 
-    destroyBlockCooldown += deltaTime;
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) && destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
+    destroyBlockCooldown += Time.deltaTime;
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) &&
+        destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
         destroyBlockCooldown = 0;
         BlockType destroyedBlock = world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
         BlockStack stack = {destroyedBlock, 1, 10};
         inventory_add_block(stack);
     }
 
-    placeBlockCooldown += deltaTime;
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) && placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
+    placeBlockCooldown += Time.deltaTime;
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) &&
+        placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
         placeBlockCooldown = 0;
         vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
         switch (faceLookedAt) {
-            case FACE_TOP:
-                newBlockPos[Y] += 1;
-                break;
-            case FACE_BOTTOM:
-                newBlockPos[Y] -= 1;
-                break;
-            case FACE_LEFT:
-                newBlockPos[X] += 1;
-                break;
-            case FACE_RIGHT:
-                newBlockPos[X] -= 1;
-                break;
-            case FACE_FRONT:
-                newBlockPos[Z] += 1;
-                break;
-            case FACE_BACK:
-                newBlockPos[Z] -= 1;
-                break;
+        case FACE_TOP:
+            newBlockPos[Y] += 1;
+            break;
+        case FACE_BOTTOM:
+            newBlockPos[Y] -= 1;
+            break;
+        case FACE_LEFT:
+            newBlockPos[X] += 1;
+            break;
+        case FACE_RIGHT:
+            newBlockPos[X] -= 1;
+            break;
+        case FACE_FRONT:
+            newBlockPos[Z] += 1;
+            break;
+        case FACE_BACK:
+            newBlockPos[Z] -= 1;
+            break;
         }
 
         if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos)) {

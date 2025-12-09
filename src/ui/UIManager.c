@@ -8,9 +8,6 @@
 #include "../../include/managers/InputManager.h"
 #include "../../include/managers/ShaderManager.h"
 #include "managers/GlyphManager.h"
-#include "managers/SettingsManager.h"
-#include "managers/WindowManager.h"
-#include "ui/UIInventory.h"
 
 static mat4 orthoMatrix;
 static Shader shader;
@@ -28,8 +25,8 @@ static float vertices[] = {
 
 
 void UIManager_init() {
-    vec2 screenSize;
-    window_get_size(screenSize);
+    vec2 screenSize = {Settings.window.width, Settings.window.height};
+
     glm_ortho(0.f, screenSize[0], screenSize[1], 0.f, -1.f, 1.f, orthoMatrix);
     shader = sm_get_shader(SHADER_UI);
     glyph_manager_init_glyphs("assets/fonts/COMIC.ttf");

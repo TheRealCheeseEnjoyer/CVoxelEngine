@@ -1,7 +1,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -14,55 +13,41 @@
 #include "include/Settings.h"
 #include "managers/ShaderManager.h"
 #include "Skybox.h"
-#include "managers/TextureManager.h"
-#include "libs/thpool.h"
-#include "include/managers/WindowManager.h"
 #include "World.h"
-#include "managers/SettingsManager.h"
+#include "Engine/Engine.h"
+#include "Engine/Time.h"
 #include "ui/UIManager.h"
 
 int main() {
-    Settings* settings = settings_manager_load();
-    thpool_init(16);
-    tm_init();
-    GLFWwindow* window = window_create();
+    engine_init();
 
-    im_init(window, (KeyCode*)&settings->controls, sizeof(settings->controls) / sizeof(KeyCode)); // Use struct as array
-    im_register_button(GLFW_MOUSE_BUTTON_LEFT);
-    im_register_button(GLFW_MOUSE_BUTTON_RIGHT);
-
-    vec3 startPos = {-3, 3, -3};
-    sm_init();
     double time = glfwGetTime();
-    world_init(startPos);
+    world_init();
     double timeElapsed = glfwGetTime() - time;
     printf("Generated %dx%dx%d chunks in %f seconds\n", WORLD_SIZE_X, WORLD_SIZE_Y, WORLD_SIZE_Z, timeElapsed);
     skybox_init("yellowcloud");
 
     mat4 projection, view;
-    glm_perspective(glm_rad(90), (float)settings->window.width / settings->window.height, 0.1f, 1000.0f, projection);
+    glm_perspective(glm_rad(90), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f, projection);
 
     UIManager_init();
     player_init();
 
-    float lastFrame = glfwGetTime();
     double totalFrameTimes = 0;
     int numFrames = 0;
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        im_update_input(window);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        float currentFrame = (float)glfwGetTime();
-        float deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+    engine_pre_main_loop();
+    while (engine_isRunning()) {
+        engine_main_loop_start();
 
-        rigidbody_update(deltaTime);
-
-        player_update(deltaTime);
-        player_get_view_matrix(view);
-        if (im_get_key_down(settings->controls.exit)) {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        if (im_get_key_down(Settings.controls.exit)) {
+            engine_terminate();
+            break;
         }
+        //rigidbody_update();
+
+        player_update();
+        player_get_view_matrix(view);
+
 
         vec3 eye, pos;
         player_eye_position(eye);
@@ -71,15 +56,11 @@ int main() {
         world_draw(pos, projection, view);
         player_draw(projection);
 
-        im_reset_input();
-        glfwSwapBuffers(window);
+        engine_main_loop_end();
         numFrames++;
-        totalFrameTimes += deltaTime;
+        totalFrameTimes += Time.deltaTime;
     }
     printf("avg FPS: %f\n", numFrames / totalFrameTimes);
     skybox_destroy();
-    thpool_destroy();
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 0;
 }

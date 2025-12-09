@@ -2,14 +2,14 @@
 #define SETTINGS_H
 #include "managers/InputManager.h"
 
-typedef struct {
-    char* title;
+struct windowSettings_t {
+    char title[64];
     int width;
     int height;
     bool fullscreen;
-} WindowSettings;
+};
 
-typedef struct {
+struct controls_t {
     KeyCode forward;
     KeyCode backward;
     KeyCode left;
@@ -29,11 +29,15 @@ typedef struct {
     KeyCode hotbar_7;
     KeyCode hotbar_8;
     KeyCode hotbar_9;
-} Controls;
+};
 
-typedef struct {
-    WindowSettings window;
-    Controls controls;
-} Settings;
+struct settings_t {
+    struct windowSettings_t window;
+    struct controls_t controls;
+};
+
+extern struct settings_t Settings;
+
+void settings_load();
 
 #endif

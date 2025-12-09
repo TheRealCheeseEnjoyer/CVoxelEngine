@@ -4,6 +4,7 @@
 
 #include "managers/InputManager.h"
 #include "Inventory.h"
+#include "Settings.h"
 #include "../../include/ui/UIStack.h"
 #include "managers/WindowManager.h"
 #include "ui/BlockStack.h"
@@ -44,8 +45,8 @@ int check_hovered_slot() {
 void UIInventory_init() {
     inventory_init();
     im_register_key(GLFW_KEY_Q);
-    vec2 screenSize;
-    window_get_size(screenSize);
+    vec2 screenSize = {Settings.window.width, Settings.window.height};
+
     background = UISprite_init("assets/ui/inventory_bg.png", (vec2){screenSize[0] / 2, screenSize[1] / 2}, (vec2){
                       (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
                       (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y

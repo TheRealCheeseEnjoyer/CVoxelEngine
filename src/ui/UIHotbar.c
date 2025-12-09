@@ -3,7 +3,6 @@
 #include "Inventory.h"
 #include "Settings.h"
 #include "../../include/ui/UIStack.h"
-#include "managers/SettingsManager.h"
 #include "managers/WindowManager.h"
 #include "ui/UISprite.h"
 
@@ -13,8 +12,10 @@ static UISprite background;
 static int currentIndex = 0;
 
 void UIHotbar_init() {
-    vec2 screenSize;
-    window_get_size(screenSize);
+    ivec2 screenSize = {
+        Settings.window.width,
+        Settings.window.height
+    };
     for (int i = 0; i < NUM_SLOTS_X; i++) {
         BlockStack stack = inventory_get_stack_from_slot(i, 0);
         sprites[i] = UIStack_init(blocktype_to_texture_path(stack.type), stack.size, (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90});
@@ -39,8 +40,7 @@ BlockType UIHotbar_move_selector_to_slot(int slotSelected) {
     }
 
     currentIndex = slotSelected;
-    vec2 screenSize;
-    window_get_size(screenSize);
+    vec2 screenSize = {Settings.window.width, Settings.window.height};
 
     UISprite_set_position(selector, (vec2){screenSize[0] / 2 + (currentIndex - 4) * 100, screenSize[1] - 100});
     return inventory_get_stack_from_slot(currentIndex, 0).type;

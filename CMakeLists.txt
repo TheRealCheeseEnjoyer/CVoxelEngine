@@ -69,8 +69,6 @@ add_executable(CVoxelEngine main.c
         src/ui/UIInventory.c
         include/ui/UIInventory.h
         include/ui/BlockStack.h
-        src/managers/SettingsManager.c
-        include/managers/SettingsManager.h
         src/ui/UIText.c
         include/ui/UIText.h
         include/ui/CharGlyph.h
@@ -79,6 +77,10 @@ add_executable(CVoxelEngine main.c
         include/managers/GlyphManager.h
         src/ui/UIStack.c
         include/ui/UIStack.h
+        include/Engine/Time.h
+        src/Engine/Engine.c
+        include/Engine/Engine.h
+        src/Engine/Settings.c
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16)
