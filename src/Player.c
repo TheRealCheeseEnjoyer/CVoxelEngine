@@ -235,7 +235,7 @@ void player_physics_update() {
     glm_vec3_sub(oldPosition, halfSize, aabb.min);
 
     if (player_is_colliding_with_near_blocks(oldPosition)) {
-        if (velocity[1] < 0)
+        if (velocity[1] < 0 && Time.deltaTime > 1 / 60.f)
             position[1] = floor(oldPosition[1]) + .5f;
 
         memset(velocity, 0, sizeof(vec3));
