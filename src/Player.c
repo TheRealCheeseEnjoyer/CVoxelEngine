@@ -4,7 +4,6 @@
 #include <glad/glad.h>
 
 #include <string.h>
-#include <unistd.h>
 #include <cglm/affine.h>
 #include <cglm/cam.h>
 #include <cglm/vec3.h>
@@ -13,11 +12,10 @@
 #include "FaceOrientation.h"
 #include "Block.h"
 #include "Collisions.h"
-#include "../include/managers/InputManager.h"
+#include "managers/InputManager.h"
 #include "World.h"
 #include "Constants.h"
 #include "Inventory.h"
-#include "Rigidbody.h"
 #include "Engine/Time.h"
 #include "managers/ShaderManager.h"
 #include "ui/UIHotbar.h"
@@ -95,9 +93,9 @@ void player_get_aabb(vec3 pos, AABB* out) {
 
 bool player_is_grounded() {
     vec3 pos = {position[X], position[Y] - .01f, position[Z]};
-    for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
-        for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
-            vec3 blockPos = {round(pos[X] + x), round(pos[Y] - 1), round(pos[Z] + z)};
+    for (int x = -ceilf(aabbSize[X] / 2); x <= ceilf(aabbSize[X] / 2); x++) {
+        for (int z = -ceilf(aabbSize[Z] / 2); z <= ceilf(aabbSize[Z] / 2); z++) {
+            vec3 blockPos = {roundf(pos[X] + x), roundf(pos[Y] - 1), roundf(pos[Z] + z)};
             Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
             if (block == nullptr || block->type == BLOCK_AIR)
                 continue;
@@ -213,13 +211,6 @@ void freecam_movement(vec2 input) {
 }
 
 void player_physics_update() {
-    static float timeAccumulator = 1.0f;
-    timeAccumulator += Time.deltaTime;
-    // if (timeAccumulator < 1 / 60.f) {
-    //     glm_vec3_muladds(velocity, 1 / 60.f * Time.deltaTime, position);
-    //     return;
-    // }
-    timeAccumulator = 0;
     vec3 oldVelocity = {velocity[0], velocity[1], velocity[2]};
     vec3 oldPosition = {position[X], position[Y], position[Z]};
 
@@ -236,7 +227,7 @@ void player_physics_update() {
 
     if (player_is_colliding_with_near_blocks(oldPosition)) {
         if (velocity[1] < 0 && Time.deltaTime > 1 / 60.f)
-            position[1] = floor(oldPosition[1]) + .5f;
+            position[1] = floorf(oldPosition[1]) + .5f;
 
         memset(velocity, 0, sizeof(vec3));
         return;
@@ -346,8 +337,8 @@ void player_update() {
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
 
     destroyBlockCooldown += Time.deltaTime;
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) &&
-        destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION) {
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || (im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) &&
+        destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION)) {
         destroyBlockCooldown = 0;
         BlockType destroyedBlock = world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
         BlockStack stack = {destroyedBlock, 1, 10};
@@ -355,8 +346,8 @@ void player_update() {
     }
 
     placeBlockCooldown += Time.deltaTime;
-    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) &&
-        placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT) {
+    if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || (im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) &&
+        placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT)) {
         placeBlockCooldown = 0;
         vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
         switch (faceLookedAt) {
@@ -381,7 +372,7 @@ void player_update() {
         }
 
         if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos)) {
-            bool success = world_place_block(newBlockPos[X], newBlockPos[Y], newBlockPos[Z], selectedBlockType);
+            bool success = world_place_block((int)newBlockPos[X], (int)newBlockPos[Y], (int)newBlockPos[Z], selectedBlockType);
             if (success) {
                 inventory_use_block_from_hotbar();
                 selectedBlockType = 0;
@@ -398,7 +389,7 @@ void player_position(vec3 pos) {
 
 void player_draw(mat4 projection) {
     glBindVertexArray(VAO);
-    Shader shader = sm_get_shader(SHADER_DEFAULT);
+    const Shader shader = sm_get_shader(SHADER_DEFAULT);
     shader_use(shader);
     mat4 bounds, view;
     glm_mat4_identity(bounds);

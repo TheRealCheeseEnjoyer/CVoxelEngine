@@ -38,7 +38,7 @@ void engine_main_loop_start() {
     glfwPollEvents();
     im_update_input(window);
     glClear(GL_DEPTH_BUFFER_BIT);
-    double currentTime = (float)glfwGetTime();
+    float currentTime = (float)glfwGetTime();
     Time.deltaTime = currentTime - Time.elapsedTime;
     Time.elapsedTime = currentTime;
 }
