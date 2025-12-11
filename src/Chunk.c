@@ -5,10 +5,12 @@
 #include <glad/glad.h>
 
 #include "PerlinNoise.h"
-#include "Constants.h"
+
 #include "managers/TextureManager.h"
 #include "FaceOrientation.h"
-#include "../include/managers/ShaderManager.h"
+#include "stb_image.h"
+#include "managers/ShaderManager.h"
+#include "libs/Vector.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
 
@@ -39,11 +41,11 @@ void chunk_init(struct init_args* args) {
     shader = sm_get_shader(SHADER_DEFAULT);
 
     glm_mat4_identity(args->chunk->model);
-    glm_translate(args->chunk->model, (vec3){args->position[X] * CHUNK_SIZE_X, args->position[Y] * CHUNK_SIZE_Y, args->position[Z] * CHUNK_SIZE_Z});
-    if (args->position[Y] != 0) return;
+    glm_translate(args->chunk->model, (vec3){args->position[0] * CHUNK_SIZE_X, args->position[1] * CHUNK_SIZE_Y, args->position[2] * CHUNK_SIZE_Z});
+    if (args->position[1] != 0) return;
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-            int height = perlin_perlin2d(x + args->chunk->position[X] * CHUNK_SIZE_X, z + args->chunk->position[Z] * CHUNK_SIZE_Z,
+            int height = perlin_perlin2d(x + args->chunk->position[0] * CHUNK_SIZE_X, z + args->chunk->position[2] * CHUNK_SIZE_Z,
                                          0.1f, 1)
                          * CHUNK_SIZE_Y;
             for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
@@ -99,7 +101,7 @@ Block *chunk_get_block(Chunk *chunk, int x, int y, int z) {
 void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], const FaceOrientation orientation,
                               char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z]) {
     int length = 0, width = 0;
-    ivec3 start = {startPos[X], startPos[Y], startPos[Z]};
+    ivec3 start = {startPos[0], startPos[1], startPos[2]};
     int startLengthDimension = 0, startWidthDimension = 0;
     int lengthLimit = 0, widthLimit = 0;
     int *lengthDimension = nullptr;
@@ -107,82 +109,82 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     int neighborDirection;
     int neighborDirectionIndex = 0;
     int *neighbor[3];
-    BlockType currentType = chunk_get_block(chunk, start[X], start[Y], start[Z])->type;
+    BlockType currentType = chunk_get_block(chunk, start[0], start[1], start[2])->type;
 
     switch (orientation) {
         case FACE_TOP:
         case FACE_BOTTOM:
-            lengthDimension = &start[X];
-            widthDimension = &start[Z];
-            startLengthDimension = start[X];
-            startWidthDimension = start[Z];
+            lengthDimension = &start[0];
+            widthDimension = &start[2];
+            startLengthDimension = start[0];
+            startWidthDimension = start[2];
             lengthLimit = CHUNK_SIZE_X;
             widthLimit = CHUNK_SIZE_Z;
-            neighborDirection = start[Y] + (orientation == FACE_TOP ? 1 : -1);
-            neighbor[X] = lengthDimension;
-            neighbor[Y] = &neighborDirection;
-            neighbor[Z] = widthDimension;
+            neighborDirection = start[1] + (orientation == FACE_TOP ? 1 : -1);
+            neighbor[0] = lengthDimension;
+            neighbor[1] = &neighborDirection;
+            neighbor[2] = widthDimension;
             neighborDirectionIndex = 1;
-            vertices[0].position[X] = start[X] - block_size[X] / 2;
-            vertices[0].position[Y] = start[Y] + (orientation == FACE_TOP ? block_size[Y] : -block_size[Y]) / 2;
-            vertices[0].position[Z] = start[Z] - block_size[Z] / 2;
-            vertices[1].position[Y] = start[Y] + (orientation == FACE_TOP ? block_size[Y] : -block_size[Y]) / 2;
-            vertices[0].texCoords[X] = (orientation == FACE_TOP ? 1 : -1);
-            vertices[0].texCoords[Y] = 0;
-            vertices[1].texCoords[X] = 0;
-            vertices[1].texCoords[Y] = 1;
+            vertices[0].position[0] = start[0] - block_size[0] / 2;
+            vertices[0].position[1] = start[1] + (orientation == FACE_TOP ? block_size[1] : -block_size[1]) / 2;
+            vertices[0].position[2] = start[2] - block_size[2] / 2;
+            vertices[1].position[1] = start[1] + (orientation == FACE_TOP ? block_size[1] : -block_size[1]) / 2;
+            vertices[0].texCoords[0] = (orientation == FACE_TOP ? 1 : -1);
+            vertices[0].texCoords[1] = 0;
+            vertices[1].texCoords[0] = 0;
+            vertices[1].texCoords[1] = 1;
             break;
         case FACE_LEFT:
         case FACE_RIGHT:
-            lengthDimension = &start[Z];
-            widthDimension = &start[Y];
-            startLengthDimension = start[Z];
-            startWidthDimension = start[Y];
+            lengthDimension = &start[2];
+            widthDimension = &start[1];
+            startLengthDimension = start[2];
+            startWidthDimension = start[1];
             lengthLimit = CHUNK_SIZE_Z;
             widthLimit = CHUNK_SIZE_Y;
-            neighborDirection = start[X] + (orientation == FACE_LEFT ? 1 : -1);
-            neighbor[X] = &neighborDirection;
-            neighbor[Y] = widthDimension;
-            neighbor[Z] = lengthDimension;
+            neighborDirection = start[0] + (orientation == FACE_LEFT ? 1 : -1);
+            neighbor[0] = &neighborDirection;
+            neighbor[1] = widthDimension;
+            neighbor[2] = lengthDimension;
             neighborDirectionIndex = 0;
-            vertices[0].position[X] = start[X] + (orientation == FACE_LEFT ? block_size[X] : -block_size[X]) / 2;
-            vertices[0].position[Y] = start[Y] - block_size[Y] / 2;
-            vertices[0].position[Z] = start[Z] - block_size[Z] / 2;
-            vertices[1].position[X] = start[X] + (orientation == FACE_LEFT ? block_size[X] : -block_size[X]) / 2;
-            vertices[0].texCoords[X] = (orientation == FACE_LEFT ? 1 : -1);
-            vertices[1].texCoords[X] = 0;
-            vertices[0].texCoords[Y] = 0;
-            vertices[1].texCoords[Y] = 1;
+            vertices[0].position[0] = start[0] + (orientation == FACE_LEFT ? block_size[0] : -block_size[0]) / 2;
+            vertices[0].position[1] = start[1] - block_size[1] / 2;
+            vertices[0].position[2] = start[2] - block_size[2] / 2;
+            vertices[1].position[0] = start[0] + (orientation == FACE_LEFT ? block_size[0] : -block_size[0]) / 2;
+            vertices[0].texCoords[0] = (orientation == FACE_LEFT ? 1 : -1);
+            vertices[1].texCoords[0] = 0;
+            vertices[0].texCoords[1] = 0;
+            vertices[1].texCoords[1] = 1;
             break;
         case FACE_FRONT:
         case FACE_BACK:
-            lengthDimension = &start[X];
-            widthDimension = &start[Y];
-            startLengthDimension = start[X];
-            startWidthDimension = start[Y];
+            lengthDimension = &start[0];
+            widthDimension = &start[1];
+            startLengthDimension = start[0];
+            startWidthDimension = start[1];
             lengthLimit = CHUNK_SIZE_X;
             widthLimit = CHUNK_SIZE_Y;
-            neighborDirection = start[Z] + (orientation == FACE_FRONT ? 1 : -1);
-            neighbor[X] = lengthDimension;
-            neighbor[Y] = widthDimension;
-            neighbor[Z] = &neighborDirection;
+            neighborDirection = start[2] + (orientation == FACE_FRONT ? 1 : -1);
+            neighbor[0] = lengthDimension;
+            neighbor[1] = widthDimension;
+            neighbor[2] = &neighborDirection;
             neighborDirectionIndex = 2;
-            vertices[0].position[X] = start[X] - block_size[X] / 2;
-            vertices[0].position[Y] = start[Y] - block_size[Y] / 2;
-            vertices[0].position[Z] = start[Z] + (orientation == FACE_FRONT ? block_size[Z] : -block_size[Z]) / 2;
-            vertices[1].position[Z] = start[Z] + (orientation == FACE_FRONT ? block_size[Z] : -block_size[Z]) / 2;
-            vertices[0].texCoords[X] = 0;
-            vertices[0].texCoords[Y] = 0;
-            vertices[1].texCoords[X] = 1;
-            vertices[1].texCoords[Y] = 1;
+            vertices[0].position[0] = start[0] - block_size[0] / 2;
+            vertices[0].position[1] = start[1] - block_size[1] / 2;
+            vertices[0].position[2] = start[2] + (orientation == FACE_FRONT ? block_size[2] : -block_size[2]) / 2;
+            vertices[1].position[2] = start[2] + (orientation == FACE_FRONT ? block_size[2] : -block_size[2]) / 2;
+            vertices[0].texCoords[0] = 0;
+            vertices[0].texCoords[1] = 0;
+            vertices[1].texCoords[0] = 1;
+            vertices[1].texCoords[1] = 1;
             break;
     }
 
     for (*lengthDimension += 1; *lengthDimension < lengthLimit; (*lengthDimension)++) {
-        if ((meshedFaces[start[X]][start[Y]][start[Z]] & orientation) == orientation ||
-            chunk_get_block(chunk, start[X], start[Y], start[Z]) == nullptr ||
-            chunk_get_block(chunk, start[X], start[Y], start[Z])->type != currentType ||
-            chunk_get_block(chunk, *neighbor[X], *neighbor[Y], *neighbor[Z]) != nullptr) {
+        if ((meshedFaces[start[0]][start[1]][start[2]] & orientation) == orientation ||
+            chunk_get_block(chunk, start[0], start[1], start[2]) == nullptr ||
+            chunk_get_block(chunk, start[0], start[1], start[2])->type != currentType ||
+            chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != nullptr) {
             break;
         }
 
@@ -193,11 +195,11 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         bool isWholeLineOk = true;
         for (*lengthDimension = startLengthDimension;
              *lengthDimension <= startLengthDimension + length; (*lengthDimension)++) {
-            if ((meshedFaces[start[X]][start[Y]][start[Z]] & orientation) == orientation ||
-                chunk_get_block(chunk, start[X], start[Y], start[Z]) == nullptr ||
-                chunk_get_block(chunk, start[X], start[Y], start[Z])->type != currentType ||
-                (chunk_get_block(chunk, *neighbor[X], *neighbor[Y], *neighbor[Z]) != nullptr &&
-                 chunk_get_block(chunk, *neighbor[X], *neighbor[Y], *neighbor[Z])->type != BLOCK_AIR)) {
+            if ((meshedFaces[start[0]][start[1]][start[2]] & orientation) == orientation ||
+                chunk_get_block(chunk, start[0], start[1], start[2]) == nullptr ||
+                chunk_get_block(chunk, start[0], start[1], start[2])->type != currentType ||
+                (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != nullptr &&
+                 chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2])->type != BLOCK_AIR)) {
                 isWholeLineOk = false;
                 break;
             }
@@ -212,7 +214,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     for (*widthDimension = startWidthDimension; *widthDimension <= startWidthDimension + width; (*widthDimension)++) {
         for (*lengthDimension = startLengthDimension; *lengthDimension <= startLengthDimension + length; (*
                  lengthDimension)++) {
-            meshedFaces[start[X]][start[Y]][start[Z]] ^= orientation;
+            meshedFaces[start[0]][start[1]][start[2]] ^= orientation;
         }
     }
 
@@ -221,10 +223,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         vertices[1].position[i] = *neighbor[i] - block_size[i] / 2;
     }
 
-    vertices[0].texCoords[X] *= length + 1;
-    vertices[0].texCoords[Y] *= width + 1;
-    vertices[1].texCoords[X] *= length + 1;
-    vertices[1].texCoords[Y] *= width + 1;
+    vertices[0].texCoords[0] *= length + 1;
+    vertices[0].texCoords[1] *= width + 1;
+    vertices[1].texCoords[0] *= length + 1;
+    vertices[1].texCoords[1] *= width + 1;
 }
 
 void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
@@ -245,16 +247,16 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 ivec3 blockPosition = {x, y, z};
                 Block *tempBlock = chunk_get_block(chunk, x, y + 1, z);
                 Vertex vertices[2];
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_TOP) !=
+                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_TOP) !=
                     FACE_TOP) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_TOP, meshedFaces);
                     Vertex v1 = {
-                        .position = {vertices[0].position[X], vertices[0].position[Y], vertices[1].position[Z]},
-                        .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
+                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
                     Vertex v2 = {
-                        .position = {vertices[1].position[X], vertices[1].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
+                        .position = {vertices[1].position[0], vertices[1].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
                     vec_append(&mesh, &vertices[0]);
                     vec_append(&mesh, &v1);
@@ -265,16 +267,16 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y - 1, z);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_BOTTOM) !=
+                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BOTTOM) !=
                     FACE_BOTTOM) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BOTTOM, meshedFaces);
                     Vertex v1 = {
-                        .position = {vertices[1].position[X], vertices[0].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
+                        .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
                     Vertex v2 = {
-                        .position = {vertices[0].position[X], vertices[0].position[Y], vertices[1].position[Z]},
-                        .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
+                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
                     vec_append(&mesh, &vertices[0]);
                     vec_append(&mesh, &v1);
@@ -285,16 +287,16 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x + 1, y, z);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_LEFT) !=
+                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_LEFT) !=
                     FACE_LEFT) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_LEFT, meshedFaces);
                     Vertex v1 = {
-                        .position = {vertices[0].position[X], vertices[1].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
                     Vertex v2 = {
-                        .position = {vertices[0].position[X], vertices[0].position[Y], vertices[1].position[Z]},
-                        .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
+                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
 
                     vec_append(&mesh, &vertices[0]);
@@ -306,16 +308,16 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x - 1, y, z);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_RIGHT) !=
+                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_RIGHT) !=
                     FACE_RIGHT) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_RIGHT, meshedFaces);
                     Vertex v1 = {
-                        .position = {vertices[0].position[X], vertices[0].position[Y], vertices[1].position[Z]},
-                        .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
+                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
                     Vertex v2 = {
-                        .position = {vertices[0].position[X], vertices[1].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
 
                     vec_append(&mesh, &vertices[0]);
@@ -327,16 +329,16 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z + 1);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_FRONT) !=
+                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_FRONT) !=
                     FACE_FRONT) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_FRONT, meshedFaces);
                     Vertex v1 = {
-                        .position = {vertices[1].position[X], vertices[0].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
+                        .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
                     Vertex v2 = {
-                        .position = {vertices[0].position[X], vertices[1].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
 
                     vec_append(&mesh, &vertices[0]);
@@ -348,16 +350,16 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z - 1);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_BACK) !=
+                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BACK) !=
                     FACE_BACK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BACK, meshedFaces);
                     Vertex v1 = {
-                        .position = {vertices[0].position[X], vertices[1].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[0].texCoords[X], vertices[1].texCoords[Y]}
+                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
                     Vertex v2 = {
-                        .position = {vertices[1].position[X], vertices[0].position[Y], vertices[0].position[Z]},
-                        .texCoords = {vertices[1].texCoords[X], vertices[0].texCoords[Y]}
+                        .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
+                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
 
                     vec_append(&mesh, &vertices[0]);
@@ -405,15 +407,13 @@ void chunk_reload_mesh(Chunk *chunk, BlockType type) {
     glBindVertexArray(0);
 }
 
-void chunk_draw(Chunk *chunk, mat4 projection, mat4 view) {
+void chunk_draw(Chunk *chunk) {
     glBindVertexArray(chunk->VAO);
     glActiveTexture(GL_TEXTURE0);
-    mat4 final;
-    glm_mat4_mul(projection, view, final);
-    glm_mat4_mul(final, chunk->model, final);
-    shader_set_mat4(shader, "finalMatrix", &final);
-    shader_set_int(shader, "TextureUnitId", 0);
 
+    shader_set_mat4(shader, "model", &chunk->model);
+    shader_set_int(shader, "TextureUnitId", 0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, tm_get_atlas());
     for (int i = 1; i < BLOCK_NUM_BLOCK_TYPES; i++) {
         if (chunk->meshes[i] == nullptr) continue;
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i]);
@@ -421,7 +421,7 @@ void chunk_draw(Chunk *chunk, mat4 projection, mat4 view) {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        glBindTexture(GL_TEXTURE_2D, tm_get_texture_id(blocktype_to_texture_path(i)));
+        shader_set_int(shader, "atlasIndex", blocktype_to_atlas_index(i));
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->meshes[i]));
     }

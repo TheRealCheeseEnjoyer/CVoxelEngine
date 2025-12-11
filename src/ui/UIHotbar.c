@@ -2,8 +2,7 @@
 
 #include "Inventory.h"
 #include "Settings.h"
-#include "../../include/ui/UIStack.h"
-#include "managers/WindowManager.h"
+#include "ui/UIStack.h"
 #include "ui/UISprite.h"
 
 static UIStack sprites[NUM_SLOTS_X];
@@ -18,7 +17,7 @@ void UIHotbar_init() {
     };
     for (int i = 0; i < NUM_SLOTS_X; i++) {
         BlockStack stack = inventory_get_stack_from_slot(i, 0);
-        sprites[i] = UIStack_init(blocktype_to_texture_path(stack.type), stack.size, (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90});
+        sprites[i] = UIStack_init(stack.type, stack.size, (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90});
     }
     background = UISprite_init("assets/ui/hotbar_bg.png", (vec2){screenSize[0] / 2, screenSize[1] - 100}, (vec2) {900, 100});
     selector = UISprite_init("assets/ui/hotbar_selector.png", (vec2){screenSize[0] / 2 - 4 * 100, screenSize[1] - 100}, (vec2){100, 100});

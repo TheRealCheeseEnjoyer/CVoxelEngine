@@ -6,7 +6,7 @@
 
 typedef unsigned int UIStack;
 
-UIStack UIStack_init(const char* itemTexture, int amount, vec2 position, vec2 size);
+UIStack UIStack_init(BlockType type, int amount, vec2 position, vec2 size);
 void UIStack_set_amount(UIStack uistack, int amount);
 void UIStack_set_stack(UIStack uistack, BlockStack stack);
 //void UIStack_set_texture(UIStack slot, const char* itemTexture);

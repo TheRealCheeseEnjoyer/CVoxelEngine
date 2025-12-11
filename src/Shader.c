@@ -7,7 +7,7 @@
 unsigned int read_file(const char* filePath, const char** output) {
     FILE* file = fopen(filePath, "r");
     if (!file) {
-        fprintf(stderr, "Error opening vertex shader file");
+        fprintf(stderr, "Error opening shader file %s\n", filePath);
         return 0;
     }
 

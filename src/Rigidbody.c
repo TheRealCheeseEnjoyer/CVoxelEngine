@@ -1,11 +1,9 @@
 #include "Rigidbody.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "AABB.h"
 #include "Collisions.h"
-#include "Constants.h"
 #include "Engine/Time.h"
 #include "libs/Vector.h"
 
@@ -36,9 +34,9 @@ void rigidbody_update() {
     for (int i = 0; i < vec_size(rigidbodies); i++) {
         if (!rigidbodies[i].enabled) continue;
 
-        vec3 oldVelocity = {rigidbodies[i].velocity[X], rigidbodies[i].velocity[Y], rigidbodies[i].velocity[Z]};
+        vec3 oldVelocity = {rigidbodies[i].velocity[0], rigidbodies[i].velocity[1], rigidbodies[i].velocity[2]};
         vec3 oldPosition = {
-            (*rigidbodies[i].position)[X], (*rigidbodies[i].position)[Y], (*rigidbodies[i].position)[Z]
+            (*rigidbodies[i].position)[0], (*rigidbodies[i].position)[1], (*rigidbodies[i].position)[2]
         };
 
         glm_vec3_muladds(Gravity, Time.deltaTime, oldVelocity);

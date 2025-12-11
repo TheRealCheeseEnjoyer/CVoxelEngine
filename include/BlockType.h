@@ -11,20 +11,20 @@ typedef enum {
     BLOCK_NUM_BLOCK_TYPES
 } BlockType;
 
-static const char* blocktype_to_texture_path(BlockType type) {
+static unsigned int blocktype_to_atlas_index(BlockType type) {
     switch (type) {
         case BLOCK_GRASS:
-            return "assets/grass.png";
+            return 0;
         case BLOCK_ROCK:
-            return "assets/rock.png";
+            return 2;
         case BLOCK_WATER:
-            return "assets/water.png";
+            return 3;
         case BLOCK_SAND:
-            return "assets/sand.png";
+            return 1;
         case BLOCK_WOOD:
-            return "assets/wood.png";
+            return 4;
     }
-    return "assets/missing.png";
+    return -1;
 }
 
 #endif

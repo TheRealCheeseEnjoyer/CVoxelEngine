@@ -14,7 +14,7 @@
 #include "Collisions.h"
 #include "managers/InputManager.h"
 #include "World.h"
-#include "Constants.h"
+#include "CommonVertices.h"
 #include "Inventory.h"
 #include "Engine/Time.h"
 #include "managers/ShaderManager.h"
@@ -39,8 +39,11 @@ constexpr vec3 cameraOffset = {0, .75f, 0};
 struct controls_t* controls;
 
 static constexpr vec3 jumpForce = {0, 10, 0};
-
 static constexpr vec3 aabbSize = {.5f, 1.99f, .5f};
+
+static mat4 projectionMatrix;
+static mat4 viewMatrix;
+
 static vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
 static vec3 position = {500, 17, 500};
 static vec3 front;
@@ -50,7 +53,7 @@ static float movementSpeed = 7;
 static float fallSpeed = 4;
 static BlockType selectedBlockType = 0;
 static bool is_freecam_enabled = false;
-static unsigned int VAO, VBO;
+static unsigned int vao, vbo;
 static vec3 blockLookedAt = {-1, -1, -1};
 static float destroyBlockCooldown = 1;
 static float placeBlockCooldown = 1;
@@ -60,43 +63,45 @@ static UIText fpsCounter;
 static const vec3 Gravity = {0, -30.f, 0};
 static vec3 velocity = {0, 0, 0};
 
-void recalculate_vectors();
+void recalculate_view();
 
 void player_init() {
     controls = &Settings.controls;
-    recalculate_vectors();
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(block_vertices), block_vertices, GL_STATIC_DRAW);
+    glm_perspective(glm_rad(90), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f,
+                    projectionMatrix);
+    recalculate_view();
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
     glBindVertexArray(0);
     UIInventory_init();
     UIHotbar_init();
     crosshair = UISprite_init("assets/ui/crosshair.png", (vec2){Settings.window.width / 2, Settings.window.height / 2},
                               (vec2){20, 20});
-    fpsCounter = UIText_init("FPS:", (vec2){0, 50}, true);
+    fpsCounter = UIText_init("FPS:", (vec2){20, 70});
 }
 
-void player_eye_position(vec3 eye_pos) {
+void player_get_eye_position(vec3 eye_pos) {
     glm_vec3_add(position, cameraOffset, eye_pos);
 }
 
 void player_get_aabb(vec3 pos, AABB* out) {
-    out->max[X] = pos[X] + aabbSize[X] / 2;
-    out->min[X] = pos[X] - aabbSize[X] / 2;
-    out->max[Y] = pos[Y] + aabbSize[Y] / 2;
-    out->min[Y] = pos[Y] - aabbSize[Y] / 2;
-    out->max[Z] = pos[Z] + aabbSize[Z] / 2;
-    out->min[Z] = pos[Z] - aabbSize[Z] / 2;
+    out->max[0] = pos[0] + aabbSize[0] / 2;
+    out->min[0] = pos[0] - aabbSize[0] / 2;
+    out->max[1] = pos[1] + aabbSize[1] / 2;
+    out->min[1] = pos[1] - aabbSize[1] / 2;
+    out->max[2] = pos[2] + aabbSize[2] / 2;
+    out->min[2] = pos[2] - aabbSize[2] / 2;
 }
 
 bool player_is_grounded() {
-    vec3 pos = {position[X], position[Y] - .01f, position[Z]};
-    for (int x = -ceilf(aabbSize[X] / 2); x <= ceilf(aabbSize[X] / 2); x++) {
-        for (int z = -ceilf(aabbSize[Z] / 2); z <= ceilf(aabbSize[Z] / 2); z++) {
-            vec3 blockPos = {roundf(pos[X] + x), roundf(pos[Y] - 1), roundf(pos[Z] + z)};
-            Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+    vec3 pos = {position[0], position[1] - .01f, position[2]};
+    for (int x = -ceilf(aabbSize[0] / 2); x <= ceilf(aabbSize[0] / 2); x++) {
+        for (int z = -ceilf(aabbSize[2] / 2); z <= ceilf(aabbSize[2] / 2); z++) {
+            vec3 blockPos = {roundf(pos[0] + x), roundf(pos[1] - 1), roundf(pos[2] + z)};
+            Block* block = world_get_block_at(blockPos[0], blockPos[1], blockPos[2]);
             if (block == nullptr || block->type == BLOCK_AIR)
                 continue;
 
@@ -116,11 +121,11 @@ bool player_is_grounded() {
 bool player_is_colliding_with_near_blocks(vec3 pos) {
     AABB player;
     player_get_aabb(pos, &player);
-    for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
-        for (int y = -ceil(aabbSize[Y] / 2); y <= ceil(aabbSize[Y] / 2); y++) {
-            for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
-                vec3 blockPos = {round(pos[X] + x), round(pos[Y] + y), round(pos[Z] + z)};
-                Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+    for (int x = -ceil(aabbSize[0] / 2); x <= ceil(aabbSize[0] / 2); x++) {
+        for (int y = -ceil(aabbSize[1] / 2); y <= ceil(aabbSize[1] / 2); y++) {
+            for (int z = -ceil(aabbSize[2] / 2); z <= ceil(aabbSize[2] / 2); z++) {
+                vec3 blockPos = {round(pos[0] + x), round(pos[1] + y), round(pos[2] + z)};
+                Block* block = world_get_block_at(blockPos[0], blockPos[1], blockPos[2]);
                 if (block == nullptr || block->type == BLOCK_AIR)
                     continue;
 
@@ -144,7 +149,7 @@ bool player_is_colliding_with_block(vec3 playerPos, vec3 blockPos) {
     return collisions_aabb_to_aabb(playerAABB, blockAABB);
 }
 
-void recalculate_vectors() {
+void recalculate_view() {
     front[0] = cosf(glm_rad(rotation[YAW])) * cosf(glm_rad(rotation[PITCH]));
     front[1] = sinf(glm_rad(rotation[PITCH]));
     front[2] = sinf(glm_rad(rotation[YAW])) * cosf(glm_rad(rotation[PITCH]));
@@ -155,6 +160,10 @@ void recalculate_vectors() {
 
     glm_cross(right, front, up);
     glm_normalize(up);
+
+    vec3 eye;
+    player_get_eye_position(eye);
+    glm_look(eye, front, up, viewMatrix);
 }
 
 void look_around(vec2 rotation, vec2 mouseDelta) {
@@ -168,19 +177,19 @@ void look_around(vec2 rotation, vec2 mouseDelta) {
 }
 
 void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation* faceHit) {
-    vec3 currentBlock = {roundf(eye[X]), roundf(eye[Y]), roundf(eye[Z])};
-    blockPos[X] = -1;
-    blockPos[Y] = -1;
-    blockPos[Z] = -1;
+    vec3 currentBlock = {roundf(eye[0]), roundf(eye[1]), roundf(eye[2])};
+    blockPos[0] = -1;
+    blockPos[1] = -1;
+    blockPos[2] = -1;
     float minDistance = INFINITY;
-    int xDir = (front[X] < 0 ? -1 : 1);
-    int yDir = (front[Y] < 0 ? -1 : 1);
-    int zDir = (front[Z] < 0 ? -1 : 1);
+    int xDir = (front[0] < 0 ? -1 : 1);
+    int yDir = (front[1] < 0 ? -1 : 1);
+    int zDir = (front[2] < 0 ? -1 : 1);
     for (int x = 0; x >= -MAX_RANGE && x <= MAX_RANGE; x += xDir) {
         for (int y = 0; y >= -MAX_RANGE && y <= MAX_RANGE; y += yDir) {
             for (int z = 0; z >= -MAX_RANGE && z <= MAX_RANGE; z += zDir) {
-                vec3 blockCoords = {currentBlock[X] + x, currentBlock[Y] + y, currentBlock[Z] + z};
-                Block* block = world_get_block_at(blockCoords[X], blockCoords[Y], blockCoords[Z]);
+                vec3 blockCoords = {currentBlock[0] + x, currentBlock[1] + y, currentBlock[2] + z};
+                Block* block = world_get_block_at(blockCoords[0], blockCoords[1], blockCoords[2]);
                 if (block == nullptr || block->type == BLOCK_AIR) continue;
 
                 float distance;
@@ -203,8 +212,8 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation* f
 void freecam_movement(vec2 input) {
     float speed = movementSpeed * Time.deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
-    glm_vec3_scale(right, input[X] * speed, horizontalMovement);
-    glm_vec3_scale(front, input[Y] * speed, forwardMovement);
+    glm_vec3_scale(right, input[0] * speed, horizontalMovement);
+    glm_vec3_scale(front, input[1] * speed, forwardMovement);
     glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
 
     glm_vec3_add(position, totalMovement, position);
@@ -212,7 +221,7 @@ void freecam_movement(vec2 input) {
 
 void player_physics_update() {
     vec3 oldVelocity = {velocity[0], velocity[1], velocity[2]};
-    vec3 oldPosition = {position[X], position[Y], position[Z]};
+    vec3 oldPosition = {position[0], position[1], position[2]};
 
     float dt = fminf(Time.deltaTime, 1.0f / 60.0f);
 
@@ -226,7 +235,7 @@ void player_physics_update() {
     glm_vec3_sub(oldPosition, halfSize, aabb.min);
 
     if (player_is_colliding_with_near_blocks(oldPosition)) {
-        if (velocity[1] < 0 && Time.deltaTime > 1 / 60.f)
+        if (velocity[1] < 0 && Time.deltaTime > 1 / 70.f)
             position[1] = floorf(oldPosition[1]) + .5f;
 
         memset(velocity, 0, sizeof(vec3));
@@ -240,20 +249,20 @@ void player_physics_update() {
 void normal_movement(vec2 input) {
     float speed = movementSpeed * Time.deltaTime;
     vec3 horizontalMovement, forwardMovement, totalMovement;
-    vec3 forwardAxis = {front[X], 0, front[Z]};
+    vec3 forwardAxis = {front[0], 0, front[2]};
     glm_normalize(forwardAxis);
-    glm_vec3_scale(right, input[X] * speed, horizontalMovement);
-    glm_vec3_scale(forwardAxis, input[Y] * speed, forwardMovement);
+    glm_vec3_scale(right, input[0] * speed, horizontalMovement);
+    glm_vec3_scale(forwardAxis, input[1] * speed, forwardMovement);
     glm_vec3_add(horizontalMovement, forwardMovement, totalMovement);
 
-    vec3 newPos = {position[X], position[Y], position[Z]};
-    newPos[X] += totalMovement[X];
+    vec3 newPos = {position[0], position[1], position[2]};
+    newPos[0] += totalMovement[0];
     if (player_is_colliding_with_near_blocks(newPos))
-        newPos[X] = position[X];
+        newPos[0] = position[0];
 
-    newPos[Z] += totalMovement[Z];
+    newPos[2] += totalMovement[2];
     if (player_is_colliding_with_near_blocks(newPos))
-        newPos[Z] = position[Z];
+        newPos[2] = position[2];
 
     if (im_get_key(controls->jump) && player_is_grounded() && velocity[1] == 0) {
         glm_vec3_add(velocity, jumpForce, velocity);
@@ -265,9 +274,21 @@ void normal_movement(vec2 input) {
 
 void player_update() {
     vec2 mouseDelta;
+    static int loopCounter = 0;
+    constexpr int avgFpsNum = 60;
+    static float deltaTimes[avgFpsNum];
+    loopCounter++;
+    loopCounter = loopCounter % avgFpsNum;
+    deltaTimes[loopCounter] = Time.deltaTime;
+    float avgFps = 0;
+    for (int i = 0; i < avgFpsNum; i++) {
+        avgFps += deltaTimes[i];
+    }
+    avgFps = avgFpsNum / avgFps;
     char fps[32];
-    sprintf(fps, "FPS: %d", (int)(1 / Time.deltaTime));
+    sprintf(fps, "FPS: %d", (int)(avgFps));
     UIText_set_text(fpsCounter, fps);
+
     im_get_mouse_delta(mouseDelta);
     if (UIInventory_is_enabled()) {
         if (im_get_key_down(GLFW_KEY_E))
@@ -280,13 +301,13 @@ void player_update() {
 
     vec2 input = {0, 0};
     if (im_get_key(controls->forward))
-        input[Y] += 1;
+        input[1] += 1;
     if (im_get_key(controls->backward))
-        input[Y] -= 1;
+        input[1] -= 1;
     if (im_get_key(controls->left))
-        input[X] -= 1;
+        input[0] -= 1;
     if (im_get_key(controls->right))
-        input[X] += 1;
+        input[0] += 1;
 
     if (im_get_key_down(controls->hotbar_1)) {
         selectedBlockType = UIHotbar_move_selector_to_slot(0);
@@ -333,14 +354,14 @@ void player_update() {
 
     vec3 eye;
     FaceOrientation faceLookedAt;
-    player_eye_position(eye);
+    player_get_eye_position(eye);
     get_block_looked_at(eye, front, blockLookedAt, &faceLookedAt);
 
     destroyBlockCooldown += Time.deltaTime;
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || (im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) &&
         destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION)) {
         destroyBlockCooldown = 0;
-        BlockType destroyedBlock = world_destroy_block(blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]);
+        BlockType destroyedBlock = world_destroy_block(blockLookedAt[0], blockLookedAt[1], blockLookedAt[2]);
         BlockStack stack = {destroyedBlock, 1, 10};
         inventory_add_block(stack);
     }
@@ -349,30 +370,31 @@ void player_update() {
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_RIGHT) || (im_get_mouse_button(GLFW_MOUSE_BUTTON_RIGHT) &&
         placeBlockCooldown >= COOLDOWN_BLOCK_PLACEMENT)) {
         placeBlockCooldown = 0;
-        vec3 newBlockPos = {blockLookedAt[X], blockLookedAt[Y], blockLookedAt[Z]};
+        vec3 newBlockPos = {blockLookedAt[0], blockLookedAt[1], blockLookedAt[2]};
         switch (faceLookedAt) {
         case FACE_TOP:
-            newBlockPos[Y] += 1;
+            newBlockPos[1] += 1;
             break;
         case FACE_BOTTOM:
-            newBlockPos[Y] -= 1;
+            newBlockPos[1] -= 1;
             break;
         case FACE_LEFT:
-            newBlockPos[X] += 1;
+            newBlockPos[0] += 1;
             break;
         case FACE_RIGHT:
-            newBlockPos[X] -= 1;
+            newBlockPos[0] -= 1;
             break;
         case FACE_FRONT:
-            newBlockPos[Z] += 1;
+            newBlockPos[2] += 1;
             break;
         case FACE_BACK:
-            newBlockPos[Z] -= 1;
+            newBlockPos[2] -= 1;
             break;
         }
 
         if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos)) {
-            bool success = world_place_block((int)newBlockPos[X], (int)newBlockPos[Y], (int)newBlockPos[Z], selectedBlockType);
+            bool success = world_place_block((int)newBlockPos[0], (int)newBlockPos[1], (int)newBlockPos[2],
+                                             selectedBlockType);
             if (success) {
                 inventory_use_block_from_hotbar();
                 selectedBlockType = 0;
@@ -380,15 +402,15 @@ void player_update() {
         }
     }
 
-    recalculate_vectors();
+    recalculate_view();
 }
 
-void player_position(vec3 pos) {
+void player_get_position(vec3 pos) {
     memcpy(pos, position, sizeof(vec3));
 }
 
-void player_draw(mat4 projection) {
-    glBindVertexArray(VAO);
+void player_draw() {
+    glBindVertexArray(vao);
     const Shader shader = sm_get_shader(SHADER_DEFAULT);
     shader_use(shader);
     mat4 bounds, view;
@@ -396,15 +418,14 @@ void player_draw(mat4 projection) {
     glm_translate(bounds, blockLookedAt);
     vec3 scale = {1.01f, 1.01f, 1.01f};
     glm_scale(bounds, scale);
-    player_get_view_matrix(view);
+    player_get_view(view);
     glm_mat4_scale(bounds, 1.01f);
-    mat4 finalMatrix;
-    glm_mat4_mul(projection, view, finalMatrix);
-    glm_mat4_mul(finalMatrix, bounds, finalMatrix);
-    shader_set_mat4(shader, "finalMatrix", &finalMatrix);
+
+    shader_set_mat4(shader, "model", &bounds);
     shader_set_int(shader, "TextureUnitId", 1);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glLineWidth(2.0f);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -419,8 +440,10 @@ void player_draw(mat4 projection) {
     UIManager_end_draw();
 }
 
-void player_get_view_matrix(mat4 outView) {
-    vec3 eye;
-    player_eye_position(eye);
-    glm_look(eye, front, up, outView);
+void player_get_view(mat4 outView) {
+    memcpy(outView, viewMatrix, sizeof(mat4));
+}
+
+void player_get_projection(mat4 outProjection) {
+    memcpy(outProjection, projectionMatrix, sizeof(mat4));
 }

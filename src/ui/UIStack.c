@@ -1,28 +1,28 @@
 #include "ui/UIStack.h"
 #include "ui/UIText.h"
-#include "ui/UISprite.h"
 
 #include <stdio.h>
 
+#include "UIItem.h"
 #include "Vector.h"
 
 typedef struct {
-    UISprite itemSprite;
+    UIItem uiItem;
     UIText amountText;
     int amount;
 } uiinventoryslot_t;
 
 static uiinventoryslot_t* slots = nullptr;
 
-UIStack UIStack_init(const char *itemTexture, int amount, vec2 position, vec2 size) {
+UIStack UIStack_init(BlockType type, int amount, vec2 position, vec2 size) {
     if (slots == nullptr) {
         slots = vec_init(sizeof(uiinventoryslot_t));
     }
     uiinventoryslot_t slot;
-    slot.itemSprite = UISprite_init(itemTexture, position, size);
+    slot.uiItem = UIItem_init(type, position, size);
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
-    slot.amountText = UIText_init(amountStr, (vec2) {position[0], position[1] + size[1] / 2}, true);
+    slot.amountText = UIText_init(amountStr, (vec2) {position[0] + 0.2 * size[0], position[1] + 0.7f * size[1]});
     slot.amount = amount;
     vec_append(&slots, &slot);
     return vec_size(slots) - 1;
@@ -35,7 +35,7 @@ void UIStack_set_amount(UIStack slotIndex, int amount) {
 }
 
 void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
-    UISprite_set_texture(slots[slotIndex].itemSprite, blocktype_to_texture_path(stack.type));
+    UIItem_set_type(slots[slotIndex].uiItem, stack.type);
     char amountStr[10];
     sprintf(amountStr, "%d", stack.size);
     UIText_set_text(slots[slotIndex].amountText, amountStr);
@@ -45,26 +45,26 @@ void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
         UIText_set_color(slots[slotIndex].amountText, (vec3){0, 0, 0});
 }
 
-void UIStack_set_texture(UIStack slotIndex, const char *itemTexture) {
-    UISprite_set_texture(slots[slotIndex].itemSprite, itemTexture);
+void UIStack_set_type(UIStack slotIndex, BlockType type) {
+    UIItem_set_type(slots[slotIndex].uiItem, type);
 }
 
 void UIStack_set_position(UIStack slotIndex, vec2 position) {
-    UISprite_set_position(slots[slotIndex].itemSprite, position);
+    UIItem_set_position(slots[slotIndex].uiItem, position);
     vec2 size;
-    UISprite_get_size(slots[slotIndex].itemSprite, size);
-    UIText_set_position(slots[slotIndex].amountText, (vec2){position[0], position[1] + size[1] / 2});
+    UIItem_get_size(slots[slotIndex].uiItem, size);
+    UIText_set_position(slots[slotIndex].amountText, (vec2){position[0] + size[0] / 4, position[1] + 0.7f * size[1]});
 }
 
 void UIStack_get_position(UIStack slotIndex, vec2 position) {
-    UISprite_get_position(slots[slotIndex].itemSprite, position);
+    UIItem_get_position(slots[slotIndex].uiItem, position);
 }
 
 void UIStack_get_size(UIStack slotIndex, vec2 size) {
-    UISprite_get_size(slots[slotIndex].itemSprite, size);
+    UIItem_get_size(slots[slotIndex].uiItem, size);
 }
 
 void UIStack_draw(UIStack slotIndex) {
-    UISprite_draw(slots[slotIndex].itemSprite);
+    UIItem_draw(slots[slotIndex].uiItem);
     UIText_draw(slots[slotIndex].amountText);
 }

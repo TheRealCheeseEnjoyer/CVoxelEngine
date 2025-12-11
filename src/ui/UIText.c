@@ -6,11 +6,13 @@
 #include <cglm/mat4.h>
 #include <glad/glad.h>
 
+#include "CommonVertices.h"
 #include "Shader.h"
 #include "Vector.h"
 #include "managers/GlyphManager.h"
 #include "managers/ShaderManager.h"
 #include "ui/CharGlyph.h"
+#include "ui/UIManager.h"
 
 #define INITIAL_SIZE 32
 #define RESIZE_FACTOR 2
@@ -28,10 +30,23 @@ typedef struct {
 } uitext_t;
 
 static uitext_t* texts = nullptr;
+static unsigned int vao, vbo;
 
-UIText UIText_init(const char *text, vec2 position, bool enabled) {
-    if (!texts)
+UIText UIText_init(const char *text, vec2 position) {
+    if (!texts) {
         texts = vec_init(sizeof(uitext_t));
+        glyph_manager_init_glyphs("assets/fonts/COMIC.ttf");
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), NULL);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+        glBindVertexArray(0);
+    }
 
     vec_append(&texts, nullptr);
     UIText id = vec_size(texts) - 1;
@@ -96,12 +111,17 @@ void UIText_set_text(UIText textIndex, const char *text) {
 }
 
 void UIText_draw(UIText textIndex) {
-    shader_set_int(sm_get_shader(SHADER_UI), "text", true);
-    shader_set_vec3(sm_get_shader(SHADER_UI), "textColor", &texts[textIndex].color);
+    shader_use(sm_get_shader(SHADER_UI_TEXT));
+    shader_set_vec3(sm_get_shader(SHADER_UI_TEXT), "textColor", &texts[textIndex].color);
+    shader_set_int(sm_get_shader(SHADER_UI_TEXT), "TextureUnitId", 0);
+    glBindVertexArray(vao);
+    mat4 orthoMatrix;
+    UIManager_get_ortho_matrix(orthoMatrix);
+    shader_set_mat4(sm_get_shader(SHADER_UI_TEXT), "ortho", &orthoMatrix);
     for (int i = 0; i < vec_size(texts[textIndex].chars); i++) {
-        shader_set_mat4(sm_get_shader(SHADER_UI), "model", &texts[textIndex].chars[i].transform);
+        shader_set_mat4(sm_get_shader(SHADER_UI_TEXT), "model", &texts[textIndex].chars[i].transform);
         glBindTexture(GL_TEXTURE_2D, texts[textIndex].chars[i].texture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
-    shader_set_int(sm_get_shader(SHADER_UI), "text", false);
+    glBindVertexArray(0);
 }

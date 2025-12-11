@@ -27,9 +27,6 @@ int main() {
     printf("Generated %dx%dx%d chunks in %f seconds\n", WORLD_SIZE_X, WORLD_SIZE_Y, WORLD_SIZE_Z, timeElapsed);
     skybox_init("yellowcloud");
 
-    mat4 projection, view;
-    glm_perspective(glm_rad(90), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f, projection);
-
     UIManager_init();
     player_init();
 
@@ -46,15 +43,10 @@ int main() {
         //rigidbody_update();
 
         player_update();
-        player_get_view_matrix(view);
 
-
-        vec3 eye, pos;
-        player_eye_position(eye);
-        player_position(pos);
-        skybox_draw(eye, projection, view);
-        world_draw(pos, projection, view);
-        player_draw(projection);
+        skybox_draw();
+        world_draw();
+        player_draw();
 
         engine_main_loop_end();
         numFrames++;

@@ -44,7 +44,6 @@ add_executable(CVoxelEngine main.c
         include/Collisions.h
         include/FaceOrientation.h
         src/Block.c
-        include/Constants.h
         src/Rigidbody.c
         include/Rigidbody.h
         src/PerlinNoise.c
@@ -81,6 +80,9 @@ add_executable(CVoxelEngine main.c
         src/Engine/Engine.c
         include/Engine/Engine.h
         src/Engine/Settings.c
+        src/ui/UIItem.c
+        src/ui/UIItem.h
+        include/CommonVertices.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16)

@@ -51,11 +51,11 @@ void UIInventory_init() {
                       (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
                       (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y
                   });
-    itemPickedUp = UIStack_init(nullptr, 0, (vec2){0, 0}, (vec2){90, 90});
+    itemPickedUp = UIStack_init(0, 0, (vec2){0, 0}, (vec2){90, 90});
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
             slotSprites[y * NUM_SLOTS_X + x] = UIStack_init(
-                                 blocktype_to_texture_path(inventory_get_stack_from_slot(x, y).type), 0,
+                                 blocktype_to_atlas_index(inventory_get_stack_from_slot(x, y).type), 0,
                                  (vec2){
                                      screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
                                          slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
@@ -120,7 +120,6 @@ void UIInventory_update() {
             } else if (isPickingUp) {
                 isPickingUp = stack.type != 0;
                 UIStack_set_stack(slotSprites[hovered], stack);
-                //UIStack_set_texture(slotSprites[hovered], blocktype_to_texture_path(blockPickedUp.type));
                 inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, stackPickedUp);
                 UIStack_set_stack(itemPickedUp, stack);
                 stackPickedUp = stack;
@@ -136,11 +135,8 @@ bool UIInventory_is_enabled() {
 
 void UIInventory_toggle() {
     enabled = !enabled;
-    if (enabled) {
-        glfwSetInputMode(window_get_handler(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    } else {
-        glfwSetInputMode(window_get_handler(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
+
+    glfwSetInputMode(window_get_handler(), GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
 void UIInventory_reload_slot(int x, int y, BlockStack stack) {
