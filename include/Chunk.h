@@ -2,7 +2,6 @@
 #define CHUNK_H
 
 #include "Block.h"
-#include "../libs/Vector.h"
 #include <cglm/mat4.h>
 
 #define CHUNK_SIZE_X 16
@@ -48,7 +47,7 @@ void chunk_init_mesh(Chunk* chunk);
 Block *chunk_get_block(Chunk *chunk, int x, int y, int z);
 void chunk_create_mesh(Chunk *chunk);
 void chunk_load_mesh(Chunk *chunk);
-void chunk_draw(Chunk *chunk, mat4 projection, mat4 view);
+void chunk_draw(Chunk *chunk);
 
 BlockType chunk_destroy_block(Chunk *chunk, int x, int y, int z);
 

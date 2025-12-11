@@ -4,6 +4,7 @@
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
+#include "Player.h"
 #include "Shader.h"
 #include "../include/managers/ShaderManager.h"
 #include "../libs/stb_image.h"
@@ -70,7 +71,7 @@ const char *suffixes[] = {
     LEFT_SUFFIX
 };
 
-static unsigned int VAO, VBO;
+static unsigned int vax, vbo;
 static unsigned int textureId;
 static Shader shader;
 
@@ -83,11 +84,11 @@ void skybox_init(const char *name) {
         strcat(faces[i], suffixes[i]);
     }
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    glGenVertexArrays(1, &vax);
+    glBindVertexArray(vax);
 
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);
@@ -123,14 +124,20 @@ void skybox_init(const char *name) {
         free(faces[i]);
 }
 
-void skybox_draw(vec3 eyePos, mat4 projection, mat4 view) {
+void skybox_draw() {
     glDepthFunc(GL_LEQUAL);
-    glBindVertexArray(VAO);
+    glBindVertexArray(vax);
+    vec3 eyePos;
+    player_get_eye_position(eyePos);
     mat4 model;
     glm_mat4_identity(model);
     glm_translate(model, eyePos);
     shader_use(shader);
     mat4 finalMatrix;
+    mat4 projection;
+    mat4 view;
+    player_get_projection(projection);
+    player_get_view(view);
     glm_mat4_mul(projection, view, finalMatrix);
     glm_mat4_mul(finalMatrix, model, finalMatrix);
 
@@ -143,6 +150,6 @@ void skybox_draw(vec3 eyePos, mat4 projection, mat4 view) {
 
 void skybox_destroy() {
     shader_delete(shader);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &vax);
+    glDeleteBuffers(1, &vbo);
 }

@@ -6,8 +6,8 @@
 #include <GLFW/glfw3.h>
 
 #include "Chunk.h"
-#include "../include/managers/ShaderManager.h"
-#include "Constants.h"
+#include "managers/ShaderManager.h"
+#include "Player.h"
 #include "thpool.h"
 
 #define CHUNK_COORDS_TO_INDEX(x, y, z) (x + y * WORLD_SIZE_X + z * WORLD_SIZE_X * WORLD_SIZE_Y)
@@ -71,9 +71,19 @@ void world_init() {
     }
 }
 
-void world_draw(vec3 playerPos, mat4 projection, mat4 view) {
+void world_draw() {
     shader_use(sm_get_shader(SHADER_DEFAULT));
-    vec3 chunkPos = {(int)playerPos[X] / CHUNK_SIZE_X, (int)playerPos[Y] / CHUNK_SIZE_Y, (int)playerPos[Z] / CHUNK_SIZE_Z};
+    vec3 playerPos;
+    mat4 projection;
+    mat4 view;
+    player_get_position(playerPos);
+    player_get_projection(projection);
+    player_get_view(view);
+
+    shader_set_mat4(sm_get_shader(SHADER_DEFAULT), "projection", &projection);
+    shader_set_mat4(sm_get_shader(SHADER_DEFAULT), "view", &view);
+
+    vec3 chunkPos = {(int)playerPos[0] / CHUNK_SIZE_X, (int)playerPos[1] / CHUNK_SIZE_Y, (int)playerPos[2] / CHUNK_SIZE_Z};
     vec3 lookDir = {-view[0][2], view[1][2], -view[2][2]};
     vec3 planarLookDir = {lookDir[0], 0, lookDir[2]};
     vec3 rightVector = {view[0][0], view[1][0], view[2][0]};
@@ -139,7 +149,7 @@ void world_draw(vec3 playerPos, mat4 projection, mat4 view) {
     for (int x = minX; x <= maxX; x++ ) {
         for (int z = minZ; z <= maxZ; z++) {
             if (glm_vec3_distance2(chunkPos, (vec3){x, 0, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)
-                chunk_draw(get_chunk(x, 0, z), projection, view);
+                chunk_draw(get_chunk(x, 0, z));
         }
     }
 

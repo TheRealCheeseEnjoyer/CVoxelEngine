@@ -9,7 +9,7 @@
 #define WORLD_SIZE_Z 100
 
 void world_init(void);
-void world_draw(vec3 playerPos, mat4 projection, mat4 view);
+void world_draw(void);
 Block* world_get_block_at(int x, int y, int z);
 
 BlockType world_destroy_block(int x, int y, int z);
