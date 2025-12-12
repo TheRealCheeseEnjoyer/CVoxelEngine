@@ -1,0 +1,33 @@
+{
+    "type": "object",
+    "properties": {
+        "blocks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "internal_name": {
+                        "type": "string"
+                    },
+                    "textures": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "internal_name",
+                    "textures"
+                ]
+            }
+        }
+    },
+    "required": [
+        "blocks"
+    ]
+}

@@ -29,10 +29,10 @@ add_executable(CVoxelEngine main.c
         include/World.h
         src/Chunk.c
         include/Chunk.h
-        include/Block.h
+        include/VoxelEngine/Block.h
         src/managers/TextureManager.c
         include/managers/TextureManager.h
-        include/BlockType.h
+        include/VoxelEngine/BlockId.h
         src/Shader.c
         include/Shader.h
         src/Player.c
@@ -83,6 +83,10 @@ add_executable(CVoxelEngine main.c
         src/ui/UIItem.c
         src/ui/UIItem.h
         include/CommonVertices.h
+        include/VoxelEngine/VoxelEngine.c
+        include/VoxelEngine/VoxelEngine.h
+        src/Engine/Utils.c
+        include/Engine/Utils.h
 )
 
-target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16)
+target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16 -ljson-c)

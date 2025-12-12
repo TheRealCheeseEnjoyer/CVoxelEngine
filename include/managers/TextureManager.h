@@ -3,6 +3,9 @@
 
 void tm_init();
 
+void tm_begin_atlas();
+unsigned int tm_add_texture_to_atlas(const char* texture);
+unsigned int tm_end_atlas();
 unsigned int tm_get_texture_id(const char* texture);
 unsigned int tm_get_atlas();
 

@@ -1,0 +1,12 @@
+{
+    "name": "Water",
+    "internal_name": "water",
+    "textures": [
+        "water.png",
+        "water.png",
+        "water.png",
+        "water.png",
+        "water.png",
+        "water.png"
+    ]
+}

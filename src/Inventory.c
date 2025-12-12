@@ -1,6 +1,5 @@
 #include "Inventory.h"
 #include <string.h>
-#include "BlockType.h"
 #include "ui/UIHotbar.h"
 #include "ui/UIInventory.h"
 #include "ui/BlockStack.h"

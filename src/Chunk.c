@@ -11,6 +11,7 @@
 #include "stb_image.h"
 #include "managers/ShaderManager.h"
 #include "libs/Vector.h"
+#include "VoxelEngine/Block.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
 
@@ -18,7 +19,7 @@ Shader shader = 0;
 
 int mod(int a, int b) { return (a % b + b) % b; }
 
-BlockType height_mapper(int y) {
+BlockId height_mapper(int y) {
     if (y == 0) return BLOCK_ROCK;
     if (y > 0 && y <= 3) return BLOCK_WATER;
     if (y > 3 && y <= 5) return BLOCK_SAND;
@@ -49,7 +50,7 @@ void chunk_init(struct init_args* args) {
                                          0.1f, 1)
                          * CHUNK_SIZE_Y;
             for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
-                args->blocks[COORDS_TO_INDEX(x, y, z)].type = height_mapper(y);
+                args->blocks[COORDS_TO_INDEX(x, y, z)] = height_mapper(y);
             }
         }
     }
@@ -61,41 +62,41 @@ void chunk_init_mesh(Chunk *chunk) {
     chunk_load_mesh(chunk);
 }
 
-Block *chunk_get_block(Chunk *chunk, int x, int y, int z) {
+BlockId chunk_get_block(Chunk *chunk, int x, int y, int z) {
     if (x < 0) {
         if (!chunk->east)
-            return nullptr;
+            return BLOCK_INVALID_ID;
         return chunk_get_block(chunk->east, mod(x, CHUNK_SIZE_X), y, z);
     }
 
     if (x >= CHUNK_SIZE_X) {
         if (!chunk->west)
-            return nullptr;
+            return BLOCK_INVALID_ID;
         return chunk_get_block(chunk->west, mod(x, CHUNK_SIZE_X), y, z);
     }
 
     if (z < 0) {
         if (!chunk->south)
-            return nullptr;
+            return BLOCK_INVALID_ID;
         return chunk_get_block(chunk->south, x, y, mod(z, CHUNK_SIZE_Z));
     }
 
     if (z >= CHUNK_SIZE_Z) {
         if (!chunk->north)
-            return nullptr;
+            return BLOCK_INVALID_ID;
         return chunk_get_block(chunk->north, x, y, mod(z, CHUNK_SIZE_Z));
     }
 
     if (y < 0) {
-        if (!chunk->below) return nullptr;
+        if (!chunk->below) return BLOCK_INVALID_ID;
         return chunk_get_block(chunk->below, x, mod(y, CHUNK_SIZE_Y), z);
     }
 
     if (y >= CHUNK_SIZE_Y) {
-        if (!chunk->above) return nullptr;
+        if (!chunk->above) return BLOCK_INVALID_ID;
         return chunk_get_block(chunk->above, x, mod(y, CHUNK_SIZE_Y), z);
     }
-    return &chunk->blocks[COORDS_TO_INDEX(x, y, z)];
+    return chunk->blocks[COORDS_TO_INDEX(x, y, z)];
 }
 
 void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], const FaceOrientation orientation,
@@ -109,7 +110,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     int neighborDirection;
     int neighborDirectionIndex = 0;
     int *neighbor[3];
-    BlockType currentType = chunk_get_block(chunk, start[0], start[1], start[2])->type;
+    BlockId currentType = chunk_get_block(chunk, start[0], start[1], start[2]);
 
     switch (orientation) {
         case FACE_TOP:
@@ -182,9 +183,9 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
 
     for (*lengthDimension += 1; *lengthDimension < lengthLimit; (*lengthDimension)++) {
         if ((meshedFaces[start[0]][start[1]][start[2]] & orientation) == orientation ||
-            chunk_get_block(chunk, start[0], start[1], start[2]) == nullptr ||
-            chunk_get_block(chunk, start[0], start[1], start[2])->type != currentType ||
-            chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != nullptr) {
+            chunk_get_block(chunk, start[0], start[1], start[2]) == BLOCK_INVALID_ID ||
+            chunk_get_block(chunk, start[0], start[1], start[2]) != currentType ||
+            chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID) {
             break;
         }
 
@@ -196,10 +197,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         for (*lengthDimension = startLengthDimension;
              *lengthDimension <= startLengthDimension + length; (*lengthDimension)++) {
             if ((meshedFaces[start[0]][start[1]][start[2]] & orientation) == orientation ||
-                chunk_get_block(chunk, start[0], start[1], start[2]) == nullptr ||
-                chunk_get_block(chunk, start[0], start[1], start[2])->type != currentType ||
-                (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != nullptr &&
-                 chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2])->type != BLOCK_AIR)) {
+                chunk_get_block(chunk, start[0], start[1], start[2]) == BLOCK_INVALID_ID ||
+                chunk_get_block(chunk, start[0], start[1], start[2]) != currentType ||
+                (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
+                 chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
                 isWholeLineOk = false;
                 break;
             }
@@ -229,25 +230,25 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     vertices[1].texCoords[1] *= width + 1;
 }
 
-void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
+void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
     char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z] = {0};
 
     for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
         for (int y = 0; y < CHUNK_SIZE_Y; ++y) {
             for (int x = 0; x < CHUNK_SIZE_X; ++x) {
-                Block *block = chunk_get_block(chunk, x, y, z);
-                if (block == nullptr || block->type == BLOCK_AIR || (targetType != 0 && block->type != targetType))
+                BlockId block = chunk_get_block(chunk, x, y, z);
+                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR || (targetType != 0 && block != targetType))
                     continue;
 
-                if (chunk->meshes[block->type] == nullptr) {
-                    chunk->meshes[block->type] = vec_init(sizeof(Vertex));
+                if (chunk->meshes[block] == nullptr) {
+                    chunk->meshes[block] = vec_init(sizeof(Vertex));
                 }
 
-                Vertex* mesh = chunk->meshes[block->type];
+                Vertex* mesh = chunk->meshes[block];
                 ivec3 blockPosition = {x, y, z};
-                Block *tempBlock = chunk_get_block(chunk, x, y + 1, z);
+                BlockId tempBlock = chunk_get_block(chunk, x, y + 1, z);
                 Vertex vertices[2];
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_TOP) !=
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_TOP) !=
                     FACE_TOP) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_TOP, meshedFaces);
                     Vertex v1 = {
@@ -267,7 +268,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y - 1, z);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BOTTOM) !=
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BOTTOM) !=
                     FACE_BOTTOM) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BOTTOM, meshedFaces);
                     Vertex v1 = {
@@ -287,7 +288,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x + 1, y, z);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_LEFT) !=
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_LEFT) !=
                     FACE_LEFT) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_LEFT, meshedFaces);
                     Vertex v1 = {
@@ -308,7 +309,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x - 1, y, z);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_RIGHT) !=
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_RIGHT) !=
                     FACE_RIGHT) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_RIGHT, meshedFaces);
                     Vertex v1 = {
@@ -329,7 +330,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z + 1);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_FRONT) !=
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_FRONT) !=
                     FACE_FRONT) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_FRONT, meshedFaces);
                     Vertex v1 = {
@@ -350,7 +351,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z - 1);
-                if ((tempBlock == nullptr || tempBlock->type == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BACK) !=
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BACK) !=
                     FACE_BACK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BACK, meshedFaces);
                     Vertex v1 = {
@@ -370,7 +371,7 @@ void chunk_update_mesh(Chunk *chunk, BlockType targetType) {
                     vec_append(&mesh, &vertices[1]);
                 }
 
-                chunk->meshes[block->type] = mesh;
+                chunk->meshes[block] = mesh;
             }
         }
     }
@@ -398,7 +399,7 @@ void chunk_load_mesh(Chunk *chunk) {
     glBindVertexArray(0);
 }
 
-void chunk_reload_mesh(Chunk *chunk, BlockType type) {
+void chunk_reload_mesh(Chunk *chunk, BlockId type) {
     glBindVertexArray(chunk->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[type]);
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->meshes[type]) * sizeof(Vertex)),
@@ -421,24 +422,24 @@ void chunk_draw(Chunk *chunk) {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        shader_set_int(shader, "atlasIndex", blocktype_to_atlas_index(i));
+        //shader_set_int(shader, "atlasIndex", BlockId_to_atlas_index(i));
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->meshes[i]));
     }
 }
 
 void chunk_block_updated_at(Chunk *chunk, int x, int y, int z) {
-    Block *block = chunk_get_block(chunk, x, y, z);
-    if (block == nullptr || block->type == BLOCK_AIR) return;
+    BlockId block = chunk_get_block(chunk, x, y, z);
+    if (block == BLOCK_INVALID_ID || block == BLOCK_AIR) return;
 
-    vec_clear(chunk->meshes[block->type]);
-    chunk_update_mesh(chunk, block->type);
-    chunk_reload_mesh(chunk, block->type);
+    vec_clear(chunk->meshes[block]);
+    chunk_update_mesh(chunk, block);
+    chunk_reload_mesh(chunk, block);
 }
 
-void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockType changedBlockType) {
-    BlockType neighborTypes[7] = {0};
-    neighborTypes[0] = changedBlockType;
+void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBlockId) {
+    BlockId neighborTypes[7] = {0};
+    neighborTypes[0] = changedBlockId;
     int lastIndex = 1;
 
     for (int offsetX = -1; offsetX <= 1; offsetX++) {
@@ -446,20 +447,20 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockType changed
             for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
                 if ((offsetX != 0 && offsetY != 0) || (offsetX != 0 && offsetZ != 0) || (offsetY != 0 && offsetZ != 0))
                     continue;
-                Block *block = chunk_get_block(chunk, x + offsetX, y + offsetY, z + offsetZ);
-                if (block == nullptr || block->type == BLOCK_AIR)
+                BlockId block = chunk_get_block(chunk, x + offsetX, y + offsetY, z + offsetZ);
+                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                     continue;
 
                 bool isAlreadyInArray = false;
                 for (int i = 0; i < lastIndex; i++) {
-                    if (neighborTypes[i] == block->type) {
+                    if (neighborTypes[i] == block) {
                         isAlreadyInArray = true;
                         break;
                     }
                 }
 
                 if (!isAlreadyInArray) {
-                    neighborTypes[lastIndex] = block->type;
+                    neighborTypes[lastIndex] = block;
                     lastIndex++;
                 }
             }
@@ -467,7 +468,7 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockType changed
     }
 
     for (int i = 0; i < lastIndex; i++) {
-        BlockType toUpdate = neighborTypes[i];
+        BlockId toUpdate = neighborTypes[i];
         if (chunk->meshes[toUpdate] != nullptr) {
             vec_clear(chunk->meshes[toUpdate]);
             chunk_update_mesh(chunk, toUpdate);
@@ -497,20 +498,20 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockType changed
     }
 }
 
-BlockType chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
-    Block *toDestroy = chunk_get_block(chunk, x, y, z);
-    BlockType oldType = toDestroy->type;
-    toDestroy->type = BLOCK_AIR;
+BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
+    BlockId toDestroy = chunk_get_block(chunk, x, y, z);
+    BlockId oldType = toDestroy;
+    toDestroy = BLOCK_AIR;
 
     chunk_register_changes(chunk, x, y, z, oldType);
     return oldType;
 }
 
-bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type) {
-    Block *block = chunk_get_block(chunk, x, y, z);
-    if (block == nullptr || block->type != BLOCK_AIR) return false;
+bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockId type) {
+    BlockId block = chunk_get_block(chunk, x, y, z);
+    if (block == BLOCK_INVALID_ID || block != BLOCK_AIR) return false;
 
-    block->type = type;
+    block = type;
     chunk_register_changes(chunk, x, y, z, type);
     return true;
 }

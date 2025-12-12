@@ -1,0 +1,12 @@
+{
+    "name": "Sand",
+    "internal_name": "sand",
+    "textures": [
+        "sand.png",
+        "sand.png",
+        "sand.png",
+        "sand.png",
+        "sand.png",
+        "sand.png"
+    ]
+}

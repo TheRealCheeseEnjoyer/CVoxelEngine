@@ -17,7 +17,7 @@
 #define MAX_CHUNK_DRAW_DISTANCE 12
 
 Chunk* chunks;
-Block* blocks;
+BlockId* blocks;
 
 Chunk* get_chunk(int x, int y, int z) {
     if (x < 0 || x >= WORLD_SIZE_X || y < 0 || y >= WORLD_SIZE_Y || z < 0 || z >= WORLD_SIZE_Z) return nullptr;
@@ -25,7 +25,7 @@ Chunk* get_chunk(int x, int y, int z) {
 }
 
 void world_init() {
-    blocks = calloc(CHUNK_SIZE * WORLD_NUM_CHUNKS, sizeof(Block));
+    blocks = calloc(CHUNK_SIZE * WORLD_NUM_CHUNKS, sizeof(BlockData));
     chunks = calloc(WORLD_NUM_CHUNKS, sizeof(Chunk));
 
     for (int z = 0; z < WORLD_SIZE_Z; z++) {
@@ -156,21 +156,21 @@ void world_draw() {
     shader_use(0);
 }
 
-Block * world_get_block_at(int x, int y, int z) {
+BlockId world_get_block_at(int x, int y, int z) {
     if (x < 0 || x >= WORLD_SIZE_X * CHUNK_SIZE_X || y < 0 || y >= WORLD_SIZE_Y * CHUNK_SIZE_Y || z < 0 || z >= WORLD_SIZE_Z * CHUNK_SIZE_Z)
-        return nullptr;
+        return BLOCK_INVALID_ID;
 
     return chunk_get_block(&chunks[GLOBAL_COORDS_TO_CHUNK_INDEX(x, y, z)], x % CHUNK_SIZE_X, y % CHUNK_SIZE_Y, z % CHUNK_SIZE_Z);
 }
 
-BlockType world_destroy_block(int x, int y, int z) {
+BlockId world_destroy_block(int x, int y, int z) {
     if (x < 0 || x >= WORLD_SIZE_X * CHUNK_SIZE_X || y < 0 || y >= WORLD_SIZE_Y * CHUNK_SIZE_Y || z < 0 || z >= WORLD_SIZE_Z * CHUNK_SIZE_Z)
         return 0;
 
     return chunk_destroy_block(&chunks[GLOBAL_COORDS_TO_CHUNK_INDEX(x, y, z)], x % CHUNK_SIZE_X, y % CHUNK_SIZE_Y, z % CHUNK_SIZE_Z);
 }
 
-bool world_place_block(int x, int y, int z, BlockType type) {
+bool world_place_block(int x, int y, int z, BlockId type) {
     if (x < 0 || x >= WORLD_SIZE_X * CHUNK_SIZE_X || y < 0 || y >= WORLD_SIZE_Y * CHUNK_SIZE_Y || z < 0 || z >= WORLD_SIZE_Z * CHUNK_SIZE_Z)
         return false;
 

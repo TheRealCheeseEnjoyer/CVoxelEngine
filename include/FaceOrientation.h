@@ -7,7 +7,8 @@ typedef enum {
     FACE_LEFT = 0b100,
     FACE_RIGHT = 0b1000,
     FACE_FRONT = 0b10000,
-    FACE_BACK = 0b100000
+    FACE_BACK = 0b100000,
+    FACE_NUM = 6
 } FaceOrientation;
 
 #endif

@@ -1,12 +1,11 @@
 #ifndef UISTACK_H
 #define UISTACK_H
 #include <cglm/vec2.h>
-
 #include "BlockStack.h"
 
 typedef unsigned int UIStack;
 
-UIStack UIStack_init(BlockType type, int amount, vec2 position, vec2 size);
+UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size);
 void UIStack_set_amount(UIStack uistack, int amount);
 void UIStack_set_stack(UIStack uistack, BlockStack stack);
 //void UIStack_set_texture(UIStack slot, const char* itemTexture);

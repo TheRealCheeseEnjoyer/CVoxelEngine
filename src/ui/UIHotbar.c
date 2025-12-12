@@ -31,7 +31,7 @@ void UIHotbar_reload_slot(int slotIndex, BlockStack stack) {
     UIStack_set_stack(sprites[slotIndex], stack);
 }
 
-BlockType UIHotbar_move_selector_to_slot(int slotSelected) {
+BlockId UIHotbar_move_selector_to_slot(int slotSelected) {
     if (slotSelected >= 9) {
         slotSelected = 0;
     } else if (slotSelected < 0) {

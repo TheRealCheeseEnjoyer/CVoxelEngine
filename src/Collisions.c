@@ -1,5 +1,5 @@
 #include "Collisions.h"
-#include "Block.h"
+#include "../include/VoxelEngine/Block.h"
 #include "World.h"
 
 #define X 0
@@ -85,8 +85,8 @@ bool collisions_aabb_to_near_blocks(AABB aabb) {
         for (int y = -ceil(aabbSize[Y] / 2); y <= ceil(aabbSize[Y] / 2); y++) {
             for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
                 vec3 blockPos = {round(pos[X] + x), round(pos[Y] + y), round(pos[Z] + z)};
-                Block* block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
-                if (block == nullptr || block->type == BLOCK_AIR)
+                BlockId block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
+                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                     continue;
 
                 AABB blockAABB;

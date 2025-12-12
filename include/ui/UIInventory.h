@@ -2,7 +2,6 @@
 #define UIINVENTORY_H
 
 #include "BlockStack.h"
-#include "BlockType.h"
 
 void UIInventory_init();
 void UIInventory_draw();

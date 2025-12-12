@@ -10,7 +10,7 @@
 
 #include "AABB.h"
 #include "FaceOrientation.h"
-#include "Block.h"
+#include "../include/VoxelEngine/Block.h"
 #include "Collisions.h"
 #include "managers/InputManager.h"
 #include "World.h"
@@ -51,7 +51,7 @@ static vec3 up;
 static vec3 right;
 static float movementSpeed = 7;
 static float fallSpeed = 4;
-static BlockType selectedBlockType = 0;
+static BlockId selectedBlock = 0;
 static bool is_freecam_enabled = false;
 static unsigned int vao, vbo;
 static vec3 blockLookedAt = {-1, -1, -1};
@@ -101,8 +101,8 @@ bool player_is_grounded() {
     for (int x = -ceilf(aabbSize[0] / 2); x <= ceilf(aabbSize[0] / 2); x++) {
         for (int z = -ceilf(aabbSize[2] / 2); z <= ceilf(aabbSize[2] / 2); z++) {
             vec3 blockPos = {roundf(pos[0] + x), roundf(pos[1] - 1), roundf(pos[2] + z)};
-            Block* block = world_get_block_at(blockPos[0], blockPos[1], blockPos[2]);
-            if (block == nullptr || block->type == BLOCK_AIR)
+            BlockId block = world_get_block_at(blockPos[0], blockPos[1], blockPos[2]);
+            if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                 continue;
 
             AABB blockAABB;
@@ -125,8 +125,8 @@ bool player_is_colliding_with_near_blocks(vec3 pos) {
         for (int y = -ceil(aabbSize[1] / 2); y <= ceil(aabbSize[1] / 2); y++) {
             for (int z = -ceil(aabbSize[2] / 2); z <= ceil(aabbSize[2] / 2); z++) {
                 vec3 blockPos = {round(pos[0] + x), round(pos[1] + y), round(pos[2] + z)};
-                Block* block = world_get_block_at(blockPos[0], blockPos[1], blockPos[2]);
-                if (block == nullptr || block->type == BLOCK_AIR)
+                BlockId block = world_get_block_at(blockPos[0], blockPos[1], blockPos[2]);
+                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                     continue;
 
                 AABB blockAABB;
@@ -189,8 +189,8 @@ void get_block_looked_at(vec3 eye, vec3 front, vec3 blockPos, FaceOrientation* f
         for (int y = 0; y >= -MAX_RANGE && y <= MAX_RANGE; y += yDir) {
             for (int z = 0; z >= -MAX_RANGE && z <= MAX_RANGE; z += zDir) {
                 vec3 blockCoords = {currentBlock[0] + x, currentBlock[1] + y, currentBlock[2] + z};
-                Block* block = world_get_block_at(blockCoords[0], blockCoords[1], blockCoords[2]);
-                if (block == nullptr || block->type == BLOCK_AIR) continue;
+                BlockId block = world_get_block_at(blockCoords[0], blockCoords[1], blockCoords[2]);
+                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR) continue;
 
                 float distance;
                 FaceOrientation face;
@@ -310,34 +310,34 @@ void player_update() {
         input[0] += 1;
 
     if (im_get_key_down(controls->hotbar_1)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(0);
+        selectedBlock = UIHotbar_move_selector_to_slot(0);
     }
     else if (im_get_key_down(controls->hotbar_2)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(1);
+        selectedBlock = UIHotbar_move_selector_to_slot(1);
     }
     else if (im_get_key_down(controls->hotbar_3)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(2);
+        selectedBlock = UIHotbar_move_selector_to_slot(2);
     }
     else if (im_get_key_down(controls->hotbar_4)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(3);
+        selectedBlock = UIHotbar_move_selector_to_slot(3);
     }
     else if (im_get_key_down(controls->hotbar_5)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(4);
+        selectedBlock = UIHotbar_move_selector_to_slot(4);
     }
     else if (im_get_key_down(controls->hotbar_6)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(5);
+        selectedBlock = UIHotbar_move_selector_to_slot(5);
     }
     else if (im_get_key_down(controls->hotbar_7)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(6);
+        selectedBlock = UIHotbar_move_selector_to_slot(6);
     }
     else if (im_get_key_down(controls->hotbar_8)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(7);
+        selectedBlock = UIHotbar_move_selector_to_slot(7);
     }
     else if (im_get_key_down(controls->hotbar_9)) {
-        selectedBlockType = UIHotbar_move_selector_to_slot(8);
+        selectedBlock = UIHotbar_move_selector_to_slot(8);
     }
 
-    selectedBlockType = UIHotbar_move_selector_to_slot(UIHotbar_get_current_index() - im_get_scroll_direction());
+    selectedBlock = UIHotbar_move_selector_to_slot(UIHotbar_get_current_index() - im_get_scroll_direction());
 
     if (im_get_key_down(GLFW_KEY_E))
         UIInventory_toggle();
@@ -361,7 +361,7 @@ void player_update() {
     if (im_get_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) || (im_get_mouse_button(GLFW_MOUSE_BUTTON_LEFT) &&
         destroyBlockCooldown >= COOLDOWN_BLOCK_DESTRUCTION)) {
         destroyBlockCooldown = 0;
-        BlockType destroyedBlock = world_destroy_block(blockLookedAt[0], blockLookedAt[1], blockLookedAt[2]);
+        BlockId destroyedBlock = world_destroy_block(blockLookedAt[0], blockLookedAt[1], blockLookedAt[2]);
         BlockStack stack = {destroyedBlock, 1, 10};
         inventory_add_block(stack);
     }
@@ -394,10 +394,10 @@ void player_update() {
 
         if (is_freecam_enabled || !player_is_colliding_with_block(position, newBlockPos)) {
             bool success = world_place_block((int)newBlockPos[0], (int)newBlockPos[1], (int)newBlockPos[2],
-                                             selectedBlockType);
+                                             selectedBlock);
             if (success) {
                 inventory_use_block_from_hotbar();
-                selectedBlockType = 0;
+                selectedBlock = 0;
             }
         }
     }

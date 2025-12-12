@@ -1,8 +1,9 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include "Block.h"
 #include <cglm/mat4.h>
+
+#include "VoxelEngine/BlockId.h"
 
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 16
@@ -25,7 +26,7 @@ typedef struct chunk_t {
     struct chunk_t *above;
     struct chunk_t *below;
 
-    Block *blocks;
+    BlockId* blocks;
     unsigned int vbos[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to vbo
     Vertex* meshes[BLOCK_NUM_BLOCK_TYPES]; // Maps BlockType to mesh
 } Chunk;
@@ -39,18 +40,18 @@ struct init_args {
     Chunk* west;
     Chunk* above;
     Chunk* below;
-    Block* blocks;
+    BlockId* blocks;
 };
 
 void chunk_init(struct init_args* args);
 void chunk_init_mesh(Chunk* chunk);
-Block *chunk_get_block(Chunk *chunk, int x, int y, int z);
+BlockId chunk_get_block(Chunk *chunk, int x, int y, int z);
 void chunk_create_mesh(Chunk *chunk);
 void chunk_load_mesh(Chunk *chunk);
 void chunk_draw(Chunk *chunk);
 
-BlockType chunk_destroy_block(Chunk *chunk, int x, int y, int z);
+BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z);
 
-bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockType type);
+bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockId type);
 
 #endif

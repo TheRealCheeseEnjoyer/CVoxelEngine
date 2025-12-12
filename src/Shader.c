@@ -4,26 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned int read_file(const char* filePath, const char** output) {
-    FILE* file = fopen(filePath, "r");
-    if (!file) {
-        fprintf(stderr, "Error opening shader file %s\n", filePath);
-        return 0;
-    }
-
-    fseek(file, 0, SEEK_END);
-    unsigned int length = ftell(file);
-    rewind(file);
-
-    *output = malloc(length * sizeof(char));
-    if (!*output) {
-        fprintf(stderr, "Error allocating memory. File %s not read.", filePath);
-        return 0;
-    }
-    fread(*output, length, sizeof(char), file);
-    fclose(file);
-    return length;
-}
+#include "Engine/Utils.h"
 
 void check_compile_errors(unsigned int shader, const char* type) {
     GLint success;
@@ -49,8 +30,8 @@ Shader shader_create(const char* vertexFilePath, const char* fragmentFilePath) {
     const char* vertexCode = nullptr;
     const char* fragmentCode = nullptr;
 
-    unsigned int vertexCodeLength = read_file(vertexFilePath, &vertexCode);
-    unsigned int fragmentCodeLength = read_file(fragmentFilePath, &fragmentCode);
+    unsigned int vertexCodeLength = utils_read_file(vertexFilePath, &vertexCode);
+    unsigned int fragmentCodeLength = utils_read_file(fragmentFilePath, &fragmentCode);
 
     if (vertexCodeLength == 0 || fragmentCodeLength == 0) {
         free(vertexCode);

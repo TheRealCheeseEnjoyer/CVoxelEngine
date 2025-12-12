@@ -14,7 +14,7 @@ typedef struct {
 
 static uiinventoryslot_t* slots = nullptr;
 
-UIStack UIStack_init(BlockType type, int amount, vec2 position, vec2 size) {
+UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size) {
     if (slots == nullptr) {
         slots = vec_init(sizeof(uiinventoryslot_t));
     }
@@ -45,7 +45,7 @@ void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
         UIText_set_color(slots[slotIndex].amountText, (vec3){0, 0, 0});
 }
 
-void UIStack_set_type(UIStack slotIndex, BlockType type) {
+void UIStack_set_type(UIStack slotIndex, BlockId type) {
     UIItem_set_type(slots[slotIndex].uiItem, type);
 }
 

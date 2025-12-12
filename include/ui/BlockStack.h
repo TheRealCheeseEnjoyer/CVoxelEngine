@@ -1,9 +1,9 @@
 #ifndef STACK_H
 #define STACK_H
-#include "BlockType.h"
+#include "VoxelEngine/BlockId.h"
 
 typedef struct {
-    BlockType type;
+    BlockId type;
     int size;
     int maxSize;
 } BlockStack;

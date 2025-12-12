@@ -2,11 +2,13 @@
 
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include "../../libs/stb_image.h"
+#include "stb_image.h"
 #include "hashmap.h"
 
-hashmap* textures;
-unsigned int atlas;
+static hashmap* textures;
+static hashmap* atlasTextures;
+static unsigned int atlasTextureIndex;
+static unsigned int atlas;
 
 void generateTexture(const char* name) {
     unsigned int texture;
@@ -87,6 +89,29 @@ void generateAtlas() {
 void tm_init() {
     textures = hashmap_init();
     generateAtlas();
+}
+
+void tm_begin_atlas() {
+    atlasTextures = hashmap_init();
+    atlasTextureIndex = 0;
+}
+
+unsigned int tm_add_texture_to_atlas(const char* texture) {
+    auto result = hashmap_get(atlasTextures, texture);
+    if (result == nullptr) {
+        hashmap_set(atlasTextures, texture, atlasTextureIndex);
+        return atlasTextureIndex++;
+    }
+
+    return result->value;
+}
+
+unsigned int tm_end_atlas() {
+    // TODO:
+    // merge all textures in big atlas
+    // delete hashmap
+    // generate atlas
+    // return atlas
 }
 
 void tm_destroy() {

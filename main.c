@@ -1,25 +1,20 @@
-#include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
-#include <unistd.h>
-#include <cglm/cam.h>
 
 #include "managers/InputManager.h"
 #include "Player.h"
-#include "Rigidbody.h"
 #include "include/Settings.h"
-#include "managers/ShaderManager.h"
 #include "Skybox.h"
 #include "World.h"
 #include "Engine/Engine.h"
 #include "Engine/Time.h"
 #include "ui/UIManager.h"
+#include "VoxelEngine/VoxelEngine.h"
 
 int main() {
     engine_init();
+    VoxelEngine_init();
 
     double time = glfwGetTime();
     world_init();

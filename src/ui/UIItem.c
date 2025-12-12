@@ -11,16 +11,17 @@
 #include "managers/ShaderManager.h"
 #include "managers/TextureManager.h"
 #include "ui/UIManager.h"
+#include "VoxelEngine/BlockId.h"
 
 struct ui_item {
     mat4 model;
-    BlockType type;
+    BlockId type;
 };
 
 static unsigned int vao, vbo;
 static struct ui_item* items = nullptr;
 
-UIItem UIItem_init(const BlockType type, vec2 position, vec2 size) {
+UIItem UIItem_init(const BlockId type, vec2 position, vec2 size) {
     if (items == nullptr) {
         items = vec_init(sizeof(struct ui_item));
         glGenVertexArrays(1, &vao);
@@ -48,7 +49,7 @@ UIItem UIItem_init(const BlockType type, vec2 position, vec2 size) {
     return vec_size(items) - 1;
 }
 
-void UIItem_set_type(const UIItem item, const BlockType type) {
+void UIItem_set_type(const UIItem item, const BlockId type) {
     items[item].type = type;
 }
 
@@ -88,7 +89,7 @@ void UIItem_draw(const UIItem item) {
     shader_set_int(sm_get_shader(SHADER_UI_3D), "atlas", 0);
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "model", &items[item].model);
 
-    shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", blocktype_to_atlas_index(items[item].type));
+    //shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", BlockId_to_atlas_index(items[item].type));
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }
