@@ -52,6 +52,6 @@ void chunk_draw(Chunk *chunk);
 
 BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z);
 
-bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockId type);
+void chunk_set_block(Chunk *chunk, int x, int y, int z, BlockId type);
 
 #endif

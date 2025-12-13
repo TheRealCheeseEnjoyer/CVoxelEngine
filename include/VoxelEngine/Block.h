@@ -8,8 +8,8 @@ constexpr vec3 block_size = {1, 1, 1};
 static constexpr int MaxNameLen = 12;
 
 typedef struct {
-    const char name[MaxNameLen];
-    const unsigned int sideTextures[FACE_NUM];
+    char name[MaxNameLen];
+    unsigned int sideTextures[FACE_NUM];
 } BlockData;
 
 void block_get_aabb(vec3 pos, AABB* out);

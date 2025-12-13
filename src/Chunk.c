@@ -1,5 +1,6 @@
 #include "../include/Chunk.h"
 
+#include <stdatomic.h>
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
@@ -12,6 +13,7 @@
 #include "managers/ShaderManager.h"
 #include "libs/Vector.h"
 #include "VoxelEngine/Block.h"
+#include "VoxelEngine/VoxelEngine.h"
 
 #define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
 
@@ -414,7 +416,7 @@ void chunk_draw(Chunk *chunk) {
 
     shader_set_mat4(shader, "model", &chunk->model);
     shader_set_int(shader, "TextureUnitId", 0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, tm_get_atlas());
+    glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     for (int i = 1; i < BLOCK_NUM_BLOCK_TYPES; i++) {
         if (chunk->meshes[i] == nullptr) continue;
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i]);
@@ -422,7 +424,8 @@ void chunk_draw(Chunk *chunk) {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        //shader_set_int(shader, "atlasIndex", BlockId_to_atlas_index(i));
+        BlockData data = VoxelEngine_get_block_data(i);
+        shader_set_int(shader, "atlasIndex", data.sideTextures[0]);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->meshes[i]));
     }
@@ -499,19 +502,14 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBl
 }
 
 BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
-    BlockId toDestroy = chunk_get_block(chunk, x, y, z);
-    BlockId oldType = toDestroy;
-    toDestroy = BLOCK_AIR;
+    BlockId oldType = chunk_get_block(chunk, x, y, z);
+    chunk_set_block(chunk, x, y, z, BLOCK_AIR);
 
     chunk_register_changes(chunk, x, y, z, oldType);
     return oldType;
 }
 
-bool chunk_place_block(Chunk *chunk, int x, int y, int z, BlockId type) {
-    BlockId block = chunk_get_block(chunk, x, y, z);
-    if (block == BLOCK_INVALID_ID || block != BLOCK_AIR) return false;
-
-    block = type;
+void chunk_set_block(Chunk *chunk, int x, int y, int z, BlockId type) {
+    chunk->blocks[COORDS_TO_INDEX(x, y, z)] = type;
     chunk_register_changes(chunk, x, y, z, type);
-    return true;
 }

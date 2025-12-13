@@ -12,6 +12,7 @@
 #include "managers/TextureManager.h"
 #include "ui/UIManager.h"
 #include "VoxelEngine/BlockId.h"
+#include "VoxelEngine/VoxelEngine.h"
 
 struct ui_item {
     mat4 model;
@@ -81,15 +82,16 @@ void UIItem_get_position(const UIItem item, vec2 position) {
 
 void UIItem_draw(const UIItem item) {
     glBindVertexArray(vao);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, tm_get_atlas());
+    glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     shader_use(sm_get_shader(SHADER_UI_3D));
     mat4 ortho;
     UIManager_get_ortho_matrix(ortho);
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "ortho", &ortho);
+    BlockData data = VoxelEngine_get_block_data(items[item].type);
     shader_set_int(sm_get_shader(SHADER_UI_3D), "atlas", 0);
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "model", &items[item].model);
 
-    //shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", BlockId_to_atlas_index(items[item].type));
+    shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", data.sideTextures[0]);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }

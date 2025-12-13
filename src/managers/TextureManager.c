@@ -1,14 +1,13 @@
-#include "../include/managers/TextureManager.h"
+#include "managers/TextureManager.h"
 
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "hashmap.h"
+#include "Vector.h"
 
 static hashmap* textures;
-static hashmap* atlasTextures;
-static unsigned int atlasTextureIndex;
-static unsigned int atlas;
+static char** atlasTextures;
 
 void generateTexture(const char* name) {
     unsigned int texture;
@@ -32,7 +31,7 @@ void generateTexture(const char* name) {
     hashmap_set(textures, name, texture);
 }
 
-void generateAtlas() {
+/*void generateAtlas() {
     glGenTextures(1, &atlas);
 
     glActiveTexture(GL_TEXTURE0);
@@ -84,34 +83,70 @@ void generateAtlas() {
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     stbi_image_free(data);
-}
+}*/
 
 void tm_init() {
     textures = hashmap_init();
-    generateAtlas();
+    //generateAtlas();
 }
 
 void tm_begin_atlas() {
-    atlasTextures = hashmap_init();
-    atlasTextureIndex = 0;
+    atlasTextures = vec_init(sizeof(char*));
 }
 
 unsigned int tm_add_texture_to_atlas(const char* texture) {
-    auto result = hashmap_get(atlasTextures, texture);
-    if (result == nullptr) {
-        hashmap_set(atlasTextures, texture, atlasTextureIndex);
-        return atlasTextureIndex++;
+    size_t index;
+    for (index = 0; index < vec_size(atlasTextures); index++) {
+        if (strcmp(atlasTextures[index], texture) == 0) return index;
     }
-
-    return result->value;
+    vec_append(&atlasTextures, &texture);
+    return index;
 }
 
 unsigned int tm_end_atlas() {
-    // TODO:
-    // merge all textures in big atlas
-    // delete hashmap
-    // generate atlas
-    // return atlas
+    unsigned int atlas;
+    glGenTextures(1, &atlas);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, atlas);
+
+    stbi_set_flip_vertically_on_load(false);
+    const size_t numTextures = vec_size(atlasTextures);
+    int width, height, nrChannels;
+
+    unsigned char* textureData[numTextures];
+    for (int i = 0; i < numTextures; i++) {
+        // suppose sizes are equal for every texture
+        textureData[i] = stbi_load(atlasTextures[i], &width, &height, &nrChannels, 4);
+    }
+
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA, width / 2, height / 2, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 2, GL_RGBA, width / 4, height / 4, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+
+    for (int i = 0; i < numTextures; i++) {
+        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+                        textureData[i]);
+        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 1, 0, 0, i, width / 2, height / 2, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+                        textureData[i]);
+        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 2, 0, 0, i, width / 4, height / 4, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+                        textureData[i]);
+        stbi_image_free(textureData[i]);
+    }
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_T,GL_REPEAT);
+
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    vec_free(atlasTextures);
+    return atlas;
 }
 
 void tm_destroy() {
@@ -126,8 +161,4 @@ unsigned int tm_get_texture_id(const char* name) {
     }
 
     return hashmap_get(textures, name)->value;
-}
-
-unsigned int tm_get_atlas() {
-    return atlas;
 }

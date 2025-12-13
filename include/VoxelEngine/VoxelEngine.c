@@ -7,6 +7,7 @@
 
 #include "Block.h"
 #include "BlockId.h"
+#include "managers/TextureManager.h"
 
 typedef struct {
     const char name[32];
@@ -23,6 +24,7 @@ static NameIdPair pairs[] = {
 };
 
 static BlockData blocksData[BLOCK_NUM_BLOCK_TYPES];
+static unsigned int blocksAtlas = 0;
 
 BlockId get_block_id(const char* name) {
     for (size_t i = 0; i < sizeof(pairs)/sizeof(NameIdPair); i++) {
@@ -43,7 +45,9 @@ void initialize_block_data() {
     json_object *blocks = json_object_object_get(root, "blocks");
     size_t num_blocks = json_object_array_length(blocks);
     static_assert(sizeof(pairs)/sizeof(NameIdPair) == BLOCK_NUM_BLOCK_TYPES && "HEY!!! You forgot to update the name to block id map!!!");
-    assert(num_blocks == BLOCK_NUM_BLOCK_TYPES && "HEY!!! You forgot to update the block id enum or blocks.json!!");
+    assert(num_blocks == BLOCK_NUM_BLOCK_TYPES && "OI LAD!!! You forgot to update the block id enum or blocks.json!!");
+
+    tm_begin_atlas();
     for (size_t i = 0; i < num_blocks; i++) {
         json_object *block = json_object_array_get_idx(blocks, i);
         json_object *name = json_object_object_get(block, "name");
@@ -55,11 +59,26 @@ void initialize_block_data() {
         }
 
         strncpy(blocksData[id].name, json_object_get_string(name), MaxNameLen);
+        json_object* textureArray = json_object_object_get(block, "textures");
+
+        for (int face = 0; face < json_object_array_length(textureArray); face++) {
+            json_object* textureFile = json_object_array_get_idx(textureArray, face);
+            blocksData[id].sideTextures[face] = tm_add_texture_to_atlas(json_object_get_string(textureFile));
+        }
     }
+    blocksAtlas = tm_end_atlas();
 
     json_object_put(root);
 }
 
 void VoxelEngine_init() {
     initialize_block_data();
+}
+
+BlockData VoxelEngine_get_block_data(BlockId id) {
+    return blocksData[id];
+}
+
+unsigned int VoxelEngine_get_atlas_id() {
+    return blocksAtlas;
 }

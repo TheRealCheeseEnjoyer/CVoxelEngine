@@ -9,60 +9,60 @@
             "name": "Grass",
             "internal_name": "grass",
             "textures": [
-                "grass.png",
-                "grass.png",
-                "grass.png",
-                "grass.png",
-                "grass.png",
-                "grass.png"
+                "assets/grass.png",
+                "assets/grass.png",
+                "assets/grass.png",
+                "assets/grass.png",
+                "assets/grass.png",
+                "assets/grass.png"
             ]
         },
         {
             "name": "Sand",
             "internal_name": "sand",
             "textures": [
-                "sand.png",
-                "sand.png",
-                "sand.png",
-                "sand.png",
-                "sand.png",
-                "sand.png"
+                "assets/sand.png",
+                "assets/sand.png",
+                "assets/sand.png",
+                "assets/sand.png",
+                "assets/sand.png",
+                "assets/sand.png"
             ]
         },
         {
             "name": "Water",
             "internal_name": "water",
             "textures": [
-                "water.png",
-                "water.png",
-                "water.png",
-                "water.png",
-                "water.png",
-                "water.png"
+                "assets/water.png",
+                "assets/water.png",
+                "assets/water.png",
+                "assets/water.png",
+                "assets/water.png",
+                "assets/water.png"
             ]
         },
         {
             "name": "Rock",
             "internal_name": "rock",
             "textures": [
-                "rock.png",
-                "rock.png",
-                "rock.png",
-                "rock.png",
-                "rock.png",
-                "rock.png"
+                "assets/rock.png",
+                "assets/rock.png",
+                "assets/rock.png",
+                "assets/rock.png",
+                "assets/rock.png",
+                "assets/rock.png"
             ]
         },
         {
             "name": "Wood",
             "internal_name": "wood",
             "textures": [
-                "wood.png",
-                "wood.png",
-                "wood.png",
-                "wood.png",
-                "wood.png",
-                "wood.png"
+                "assets/wood.png",
+                "assets/wood.png",
+                "assets/wood.png",
+                "assets/wood.png",
+                "assets/wood.png",
+                "assets/wood.png"
             ]
         }
     ]
