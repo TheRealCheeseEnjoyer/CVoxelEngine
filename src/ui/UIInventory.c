@@ -11,6 +11,7 @@
 #include "ui/UIHotbar.h"
 #include "ui/UISprite.h"
 #include "ui/UIText.h"
+#include "VoxelEngine/VoxelEngine.h"
 
 static constexpr vec2 slotBackgroundSize = {100, 100};
 static constexpr vec2 slotSpriteSize = {90, 90};
@@ -54,8 +55,8 @@ void UIInventory_init() {
     itemPickedUp = UIStack_init(0, 0, (vec2){0, 0}, (vec2){90, 90});
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
-            /*slotSprites[y * NUM_SLOTS_X + x] = UIStack_init(
-                                 blocktype_to_atlas_index(inventory_get_stack_from_slot(x, y).type), 0,
+            slotSprites[y * NUM_SLOTS_X + x] = UIStack_init(
+                                 VoxelEngine_get_block_data(inventory_get_stack_from_slot(x, y).type).sideTextures[0], 0,
                                  (vec2){
                                      screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
                                          slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
@@ -64,7 +65,7 @@ void UIInventory_init() {
                                          slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (
                                          slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
                                  },
-                                 (vec2){90, 90});*/
+                                 (vec2){90, 90});
             slotBackgrounds[y * NUM_SLOTS_X + x] = UISprite_init("assets/ui/hotbar_bg.png", (vec2){
                               screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
                                   slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
