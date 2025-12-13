@@ -54,6 +54,7 @@ void world_init() {
     for (int z = 0; z < WORLD_SIZE_X; z++) {
         for (int y = 0; y < WORLD_SIZE_Y; y++) {
             for (int x = 0; x < WORLD_SIZE_Z; x++) {
+                //chunk_create_mesh(get_chunk(x, y, z));
                 thpool_add_work((void*)chunk_create_mesh, get_chunk(x, y, z));
             }
         }

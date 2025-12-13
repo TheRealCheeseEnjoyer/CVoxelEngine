@@ -15,7 +15,7 @@
 #include "VoxelEngine/Block.h"
 #include "VoxelEngine/VoxelEngine.h"
 
-#define COORDS_TO_INDEX(x, y, z) x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y
+#define COORDS_TO_INDEX(x, y, z) (x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y)
 
 Shader shader = 0;
 
@@ -50,7 +50,7 @@ void chunk_init(struct init_args* args) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
             int height = perlin_perlin2d(x + args->chunk->position[0] * CHUNK_SIZE_X, z + args->chunk->position[2] * CHUNK_SIZE_Z,
                                          0.1f, 1)
-                         * CHUNK_SIZE_Y;
+                         * 16;
             for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
                 args->blocks[COORDS_TO_INDEX(x, y, z)] = height_mapper(y);
             }

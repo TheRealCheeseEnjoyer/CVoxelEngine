@@ -6,7 +6,7 @@
 #include "VoxelEngine/BlockId.h"
 
 #define CHUNK_SIZE_X 16
-#define CHUNK_SIZE_Y 16
+#define CHUNK_SIZE_Y 128
 #define CHUNK_SIZE_Z 16
 #define CHUNK_SIZE CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z
 
