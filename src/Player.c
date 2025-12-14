@@ -67,7 +67,7 @@ void recalculate_view();
 
 void player_init() {
     controls = &Settings.controls;
-    glm_perspective(glm_rad(90), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f,
+    glm_perspective(glm_rad(120), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f,
                     projectionMatrix);
     recalculate_view();
     glGenVertexArrays(1, &vao);

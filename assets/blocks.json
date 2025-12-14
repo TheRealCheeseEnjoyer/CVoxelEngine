@@ -1,69 +1,81 @@
 {
-    "blocks": [
-        {
-            "name": "Air",
-            "internal_name": "air",
-            "textures": []
-        },
-        {
-            "name": "Grass",
-            "internal_name": "grass",
-            "textures": [
-                "assets/img.png",
-                "assets/grass.png",
-                "assets/grass.png",
-                "assets/grass.png",
-                "assets/grass.png",
-                "assets/grass.png"
-            ]
-        },
-        {
-            "name": "Sand",
-            "internal_name": "sand",
-            "textures": [
-                "assets/sand.png",
-                "assets/sand.png",
-                "assets/sand.png",
-                "assets/sand.png",
-                "assets/sand.png",
-                "assets/sand.png"
-            ]
-        },
-        {
-            "name": "Water",
-            "internal_name": "water",
-            "textures": [
-                "assets/water.png",
-                "assets/water.png",
-                "assets/water.png",
-                "assets/water.png",
-                "assets/water.png",
-                "assets/water.png"
-            ]
-        },
-        {
-            "name": "Rock",
-            "internal_name": "rock",
-            "textures": [
-                "assets/rock.png",
-                "assets/rock.png",
-                "assets/rock.png",
-                "assets/rock.png",
-                "assets/rock.png",
-                "assets/rock.png"
-            ]
-        },
-        {
-            "name": "Wood",
-            "internal_name": "wood",
-            "textures": [
-                "assets/wood_top.png",
-                "assets/wood_top.png",
-                "assets/wood_side.png",
-                "assets/wood_side.png",
-                "assets/wood_side.png",
-                "assets/wood_side.png"
-            ]
-        }
-    ]
+  "blocks": [
+    {
+      "name": "Air",
+      "internal_name": "air",
+      "textures": []
+    },
+    {
+      "name": "Grass",
+      "internal_name": "grass",
+      "textures": [
+        "assets/grass_top.png",
+        "assets/dirt.png",
+        "assets/grass_side.png",
+        "assets/grass_side.png",
+        "assets/grass_side.png",
+        "assets/grass_side.png"
+      ]
+    },
+    {
+      "name": "Sand",
+      "internal_name": "sand",
+      "textures": [
+        "assets/sand.png",
+        "assets/sand.png",
+        "assets/sand.png",
+        "assets/sand.png",
+        "assets/sand.png",
+        "assets/sand.png"
+      ]
+    },
+    {
+      "name": "Water",
+      "internal_name": "water",
+      "textures": [
+        "assets/water.png",
+        "assets/water.png",
+        "assets/water.png",
+        "assets/water.png",
+        "assets/water.png",
+        "assets/water.png"
+      ]
+    },
+    {
+      "name": "Rock",
+      "internal_name": "rock",
+      "textures": [
+        "assets/rock.png",
+        "assets/rock.png",
+        "assets/rock.png",
+        "assets/rock.png",
+        "assets/rock.png",
+        "assets/rock.png"
+      ]
+    },
+    {
+      "name": "Wood",
+      "internal_name": "wood",
+      "textures": [
+        "assets/wood_top.png",
+        "assets/wood_top.png",
+        "assets/wood_side.png",
+        "assets/wood_side.png",
+        "assets/wood_side.png",
+        "assets/wood_side.png"
+      ]
+    },
+    {
+      "name": "Dirt",
+      "internal_name": "dirt",
+      "textures": [
+          "assets/dirt.png",
+          "assets/dirt.png",
+          "assets/dirt.png",
+          "assets/dirt.png",
+          "assets/dirt.png",
+          "assets/dirt.png"
+      ]
+    }
+  ]
 }

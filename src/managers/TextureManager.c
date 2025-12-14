@@ -110,7 +110,7 @@ unsigned int tm_end_atlas() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, atlas);
 
-    stbi_set_flip_vertically_on_load(false);
+    stbi_set_flip_vertically_on_load(true);
     const size_t numTextures = vec_size(atlasTextures);
     int width, height, nrChannels;
 
