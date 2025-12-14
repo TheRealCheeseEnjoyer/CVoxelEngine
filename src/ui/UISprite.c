@@ -1,15 +1,12 @@
 #include "ui/UISprite.h"
 
-#include <stdio.h>
-#include <string.h>
-
 #include "managers/ShaderManager.h"
 #include "managers/TextureManager.h"
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
 #include "CommonVertices.h"
-#include "Vector.h"
+#include "CVector/Vector.h"
 #include "ui/UIManager.h"
 
 #define INITIAL_SIZE 32

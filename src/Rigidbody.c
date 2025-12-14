@@ -5,7 +5,7 @@
 #include "AABB.h"
 #include "Collisions.h"
 #include "Engine/Time.h"
-#include "libs/Vector.h"
+#include "CVector/Vector.h"
 
 static vec3 Gravity = {0, -30.f, 0};
 

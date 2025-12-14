@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "Vector.h"
+#include "CVector/Vector.h"
 
 #define KEY_NOT_REGISTERED (-1)
 #define BUTTON_NOT_REGISTERED (-1)

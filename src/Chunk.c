@@ -1,17 +1,16 @@
 #include "../include/Chunk.h"
 
-#include <stdatomic.h>
+#include <iso646.h>
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
 #include "PerlinNoise.h"
 
-#include "managers/TextureManager.h"
 #include "FaceOrientation.h"
 #include "stb_image.h"
 #include "managers/ShaderManager.h"
-#include "libs/Vector.h"
+#include "libs/CVector/Vector.h"
 #include "VoxelEngine/Block.h"
 #include "VoxelEngine/VoxelEngine.h"
 
@@ -28,7 +27,7 @@ BlockId height_mapper(int y) {
     return BLOCK_GRASS;
 }
 
-void chunk_init(struct init_args* args) {
+void chunk_init(struct init_args *args) {
     args->chunk->blocks = args->blocks;
     args->chunk->north = args->north;
     args->chunk->east = args->east;
@@ -37,18 +36,22 @@ void chunk_init(struct init_args* args) {
     args->chunk->above = args->above;
     args->chunk->below = args->below;
 
-    memset(args->chunk->vbos, 0, sizeof(args->chunk->vbos));
-    memset(args->chunk->meshes, 0, sizeof(args->chunk->meshes));
+    args->chunk->vbos = vec_init_size(sizeof(*args->chunk->vbos), VoxelEngine_get_atlas_num_textures());
+
     memcpy(args->chunk->position, args->position, sizeof(ivec3));
 
     shader = sm_get_shader(SHADER_DEFAULT);
 
     glm_mat4_identity(args->chunk->model);
-    glm_translate(args->chunk->model, (vec3){args->position[0] * CHUNK_SIZE_X, args->position[1] * CHUNK_SIZE_Y, args->position[2] * CHUNK_SIZE_Z});
+    glm_translate(args->chunk->model, (vec3){
+                      args->position[0] * CHUNK_SIZE_X, args->position[1] * CHUNK_SIZE_Y,
+                      args->position[2] * CHUNK_SIZE_Z
+                  });
     if (args->position[1] != 0) return;
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-            int height = perlin_perlin2d(x + args->chunk->position[0] * CHUNK_SIZE_X, z + args->chunk->position[2] * CHUNK_SIZE_Z,
+            int height = perlin_perlin2d(x + args->chunk->position[0] * CHUNK_SIZE_X,
+                                         z + args->chunk->position[2] * CHUNK_SIZE_Z,
                                          0.1f, 1)
                          * 16;
             for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
@@ -61,7 +64,7 @@ void chunk_init(struct init_args* args) {
 
 void chunk_init_mesh(Chunk *chunk) {
     chunk_create_mesh(chunk);
-    chunk_load_mesh(chunk);
+    chunk_load_all_mesh(chunk);
 }
 
 BlockId chunk_get_block(Chunk *chunk, int x, int y, int z) {
@@ -112,7 +115,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     int neighborDirection;
     int neighborDirectionIndex = 0;
     int *neighbor[3];
-    BlockId currentType = chunk_get_block(chunk, start[0], start[1], start[2]);
+    FaceOrientation orientationMask = FaceOrientation_to_mask(orientation);
+
+    unsigned int currentTexture = VoxelEngine_get_block_data(chunk_get_block(chunk, start[0], start[1], start[2])).
+            sideTextures[orientation];
 
     switch (orientation) {
         case FACE_TOP:
@@ -184,10 +190,14 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     }
 
     for (*lengthDimension += 1; *lengthDimension < lengthLimit; (*lengthDimension)++) {
-        if ((meshedFaces[start[0]][start[1]][start[2]] & orientation) == orientation ||
-            chunk_get_block(chunk, start[0], start[1], start[2]) == BLOCK_INVALID_ID ||
-            chunk_get_block(chunk, start[0], start[1], start[2]) != currentType ||
-            chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID) {
+        BlockId block = chunk_get_block(chunk, start[0], start[1], start[2]);
+        BlockData data = VoxelEngine_get_block_data(block);
+        if ((meshedFaces[start[0]][start[1]][start[2]] & orientationMask) == orientationMask ||
+            block == BLOCK_INVALID_ID ||
+            block == BLOCK_AIR ||
+            data.sideTextures[orientation] != currentTexture ||
+            (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
+             chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
             break;
         }
 
@@ -198,9 +208,12 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         bool isWholeLineOk = true;
         for (*lengthDimension = startLengthDimension;
              *lengthDimension <= startLengthDimension + length; (*lengthDimension)++) {
-            if ((meshedFaces[start[0]][start[1]][start[2]] & orientation) == orientation ||
-                chunk_get_block(chunk, start[0], start[1], start[2]) == BLOCK_INVALID_ID ||
-                chunk_get_block(chunk, start[0], start[1], start[2]) != currentType ||
+            BlockId block = chunk_get_block(chunk, start[0], start[1], start[2]);
+            BlockData data = VoxelEngine_get_block_data(block);
+            if ((meshedFaces[start[0]][start[1]][start[2]] & orientationMask) == orientationMask ||
+                block == BLOCK_INVALID_ID ||
+                block == BLOCK_AIR ||
+                data.sideTextures[orientation] != currentTexture ||
                 (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
                  chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
                 isWholeLineOk = false;
@@ -217,7 +230,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     for (*widthDimension = startWidthDimension; *widthDimension <= startWidthDimension + width; (*widthDimension)++) {
         for (*lengthDimension = startLengthDimension; *lengthDimension <= startLengthDimension + length; (*
                  lengthDimension)++) {
-            meshedFaces[start[0]][start[1]][start[2]] ^= orientation;
+            meshedFaces[start[0]][start[1]][start[2]] ^= orientationMask;
         }
     }
 
@@ -232,26 +245,30 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     vertices[1].texCoords[1] *= width + 1;
 }
 
-void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
+void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
     char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z] = {0};
 
     for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
         for (int y = 0; y < CHUNK_SIZE_Y; ++y) {
             for (int x = 0; x < CHUNK_SIZE_X; ++x) {
                 BlockId block = chunk_get_block(chunk, x, y, z);
-                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR || (targetType != 0 && block != targetType))
+                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                     continue;
 
-                if (chunk->meshes[block] == nullptr) {
-                    chunk->meshes[block] = vec_init(sizeof(Vertex));
+                BlockData data = VoxelEngine_get_block_data(block);
+
+                for (unsigned int i = 0; i < FACE_NUM; i++) {
+                    if (chunk->vbos[data.sideTextures[i]].mesh == nullptr) {
+                        chunk->vbos[data.sideTextures[i]].mesh = vec_init(sizeof(Vertex));
+                    }
                 }
 
-                Vertex* mesh = chunk->meshes[block];
                 ivec3 blockPosition = {x, y, z};
                 BlockId tempBlock = chunk_get_block(chunk, x, y + 1, z);
                 Vertex vertices[2];
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_TOP) !=
-                    FACE_TOP) {
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_TOP_MASK)
+                    !=
+                    FACE_TOP_MASK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_TOP, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
@@ -261,17 +278,18 @@ void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
                         .position = {vertices[1].position[0], vertices[1].position[1], vertices[0].position[2]},
                         .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
-                    vec_append(&mesh, &vertices[0]);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y - 1, z);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BOTTOM) !=
-                    FACE_BOTTOM) {
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (
+                        meshedFaces[x][y][z] & FACE_BOTTOM_MASK) !=
+                    FACE_BOTTOM_MASK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BOTTOM, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
@@ -281,17 +299,18 @@ void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
                         .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
                         .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
-                    vec_append(&mesh, &vertices[0]);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x + 1, y, z);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_LEFT) !=
-                    FACE_LEFT) {
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_LEFT_MASK)
+                    !=
+                    FACE_LEFT_MASK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_LEFT, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
@@ -302,17 +321,18 @@ void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
                         .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
 
-                    vec_append(&mesh, &vertices[0]);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x - 1, y, z);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_RIGHT) !=
-                    FACE_RIGHT) {
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (
+                        meshedFaces[x][y][z] & FACE_RIGHT_MASK) !=
+                    FACE_RIGHT_MASK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_RIGHT, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
@@ -323,17 +343,18 @@ void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
                         .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
 
-                    vec_append(&mesh, &vertices[0]);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z + 1);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_FRONT) !=
-                    FACE_FRONT) {
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (
+                        meshedFaces[x][y][z] & FACE_FRONT_MASK) !=
+                    FACE_FRONT_MASK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_FRONT, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
@@ -344,17 +365,18 @@ void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
                         .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
 
-                    vec_append(&mesh, &vertices[0]);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z - 1);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[0][1][2] & FACE_BACK) !=
-                    FACE_BACK) {
+                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_BACK_MASK)
+                    !=
+                    FACE_BACK_MASK) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BACK, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
@@ -365,47 +387,47 @@ void chunk_update_mesh(Chunk *chunk, BlockId targetType) {
                         .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
 
-                    vec_append(&mesh, &vertices[0]);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v2);
-                    vec_append(&mesh, &v1);
-                    vec_append(&mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v2);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v1);
+                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &vertices[1]);
                 }
-
-                chunk->meshes[block] = mesh;
             }
         }
     }
 }
 
 void chunk_create_mesh(Chunk *chunk) {
-    chunk_update_mesh(chunk, BLOCK_AIR);
+    chunk_update_mesh(chunk, 0);
 }
 
-void chunk_load_mesh(Chunk *chunk) {
+void chunk_load_all_mesh(Chunk *chunk) {
     if (chunk->VAO == 0)
         glGenVertexArrays(1, &chunk->VAO);
 
     glBindVertexArray(chunk->VAO);
 
-    for (int i = 0; i < BLOCK_NUM_BLOCK_TYPES; i++) {
-        if (chunk->meshes[i] == nullptr || chunk->vbos[i] != 0) continue;
-        glGenBuffers(1, &chunk->vbos[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i]);
-        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->meshes[i]) * sizeof(Vertex)),
-                     chunk->meshes[i], GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    for (size_t i = 0; i < vec_size(chunk->vbos); i++) {
+        if (chunk->vbos[i].mesh == nullptr) continue;
+        glGenBuffers(1, &chunk->vbos[i].vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i].vbo);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->vbos[i].mesh) * sizeof(Vertex)),
+                     chunk->vbos[i].mesh, GL_STATIC_DRAW);
     }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
 }
 
-void chunk_reload_mesh(Chunk *chunk, BlockId type) {
+void chunk_load_mesh(Chunk *chunk, unsigned int type) {
     glBindVertexArray(chunk->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[type]);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->meshes[type]) * sizeof(Vertex)),
-                 chunk->meshes[type], GL_STATIC_DRAW);
+    if (chunk->vbos[type].vbo == 0)
+        glGenBuffers(1, &chunk->vbos[type].vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[type].vbo);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->vbos[type].mesh) * sizeof(Vertex)),
+                 chunk->vbos[type].mesh, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
@@ -417,69 +439,122 @@ void chunk_draw(Chunk *chunk) {
     shader_set_mat4(shader, "model", &chunk->model);
     shader_set_int(shader, "TextureUnitId", 0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
-    for (int i = 1; i < BLOCK_NUM_BLOCK_TYPES; i++) {
-        if (chunk->meshes[i] == nullptr) continue;
-        glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i]);
+    for (size_t i = 0; i < vec_size(chunk->vbos); i++) {
+        if (chunk->vbos[i].vbo == 0) continue;
+        glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i].vbo);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        BlockData data = VoxelEngine_get_block_data(i);
-        shader_set_int(shader, "atlasIndex", data.sideTextures[0]);
+        shader_set_int(shader, "atlasIndex", i);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->meshes[i]));
+        glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->vbos[i].mesh));
     }
 }
 
 void chunk_block_updated_at(Chunk *chunk, int x, int y, int z) {
     BlockId block = chunk_get_block(chunk, x, y, z);
     if (block == BLOCK_INVALID_ID || block == BLOCK_AIR) return;
+    BlockData data = VoxelEngine_get_block_data(block);
 
-    vec_clear(chunk->meshes[block]);
-    chunk_update_mesh(chunk, block);
-    chunk_reload_mesh(chunk, block);
+    int uniqueTextures[FACE_NUM] = {-1, -1, -1, -1, -1, -1};
+    int uniqueTexturesNum = 0;
+
+    for (int i = 0; i < FACE_NUM; i++) {
+        bool found = false;
+        for (int j = 0; j <= uniqueTexturesNum; j++) {
+            if (uniqueTextures[j] == data.sideTextures[i]) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            uniqueTextures[uniqueTexturesNum] = data.sideTextures[i];
+            uniqueTexturesNum++;
+        }
+    }
+
+    for (int i = 0; i < uniqueTexturesNum; i++) {
+        if (chunk->vbos[uniqueTextures[i]].mesh != nullptr)
+            vec_clear(chunk->vbos[uniqueTextures[i]].mesh);
+        chunk_update_mesh(chunk, uniqueTextures[i]);
+        chunk_load_mesh(chunk, uniqueTextures[i]);
+    }
 }
 
 void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBlockId) {
-    BlockId neighborTypes[7] = {0};
-    neighborTypes[0] = changedBlockId;
-    int lastIndex = 1;
+    unsigned int neighborTextures[FACE_NUM * 2] = {0}; // 6 faces for the block + 1 face for each adjacent block
+    int lastIndex = 0;
 
-    for (int offsetX = -1; offsetX <= 1; offsetX++) {
-        for (int offsetY = -1; offsetY <= 1; offsetY++) {
-            for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
-                if ((offsetX != 0 && offsetY != 0) || (offsetX != 0 && offsetZ != 0) || (offsetY != 0 && offsetZ != 0))
-                    continue;
-                BlockId block = chunk_get_block(chunk, x + offsetX, y + offsetY, z + offsetZ);
-                if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
-                    continue;
+    BlockData data = VoxelEngine_get_block_data(changedBlockId);
 
-                bool isAlreadyInArray = false;
-                for (int i = 0; i < lastIndex; i++) {
-                    if (neighborTypes[i] == block) {
-                        isAlreadyInArray = true;
-                        break;
-                    }
-                }
-
-                if (!isAlreadyInArray) {
-                    neighborTypes[lastIndex] = block;
-                    lastIndex++;
-                }
+    for (int i = 0; i < FACE_NUM; i++) {
+        bool isAlreadyInArray = false;
+        for (int j = 0; j < lastIndex; j++) {
+            if (neighborTextures[j] == data.sideTextures[i]) {
+                isAlreadyInArray = true;
+                break;
             }
+        }
+
+        if (!isAlreadyInArray) {
+            neighborTextures[lastIndex++] = data.sideTextures[i];
+        }
+
+        unsigned int neighborTexture = 0;;
+        FaceOrientation neighborFaceOrientation = 0;
+        BlockId neighborBlock = BLOCK_INVALID_ID;
+        switch (i) {
+            case FACE_TOP:
+                neighborBlock = chunk_get_block(chunk, x, y + 1, z);
+                neighborFaceOrientation = FACE_BOTTOM;
+                break;
+            case FACE_BOTTOM:
+                neighborBlock = chunk_get_block(chunk, x, y - 1, z);
+                neighborFaceOrientation = FACE_TOP;
+                break;
+            case FACE_LEFT:
+                neighborBlock = chunk_get_block(chunk, x + 1, y, z);
+                neighborFaceOrientation = FACE_RIGHT;
+                break;
+            case FACE_RIGHT:
+                neighborBlock = chunk_get_block(chunk, x - 1, y, z);
+                neighborFaceOrientation = FACE_LEFT;
+            case FACE_FRONT:
+                neighborBlock = chunk_get_block(chunk, x, y, z + 1);
+                neighborFaceOrientation = FACE_BACK;
+                break;
+            case FACE_BACK:
+                neighborBlock = chunk_get_block(chunk, x, y, z - 1);
+                neighborFaceOrientation = FACE_FRONT;
+                break;
+        }
+
+        if (neighborBlock == BLOCK_INVALID_ID || neighborBlock == BLOCK_AIR)
+            continue;
+
+        neighborTexture = VoxelEngine_get_block_data(neighborBlock).sideTextures[neighborFaceOrientation];
+
+        isAlreadyInArray = false;
+        for (int j = 0; j < lastIndex; j++) {
+            if (neighborTextures[j] == neighborTexture) {
+                isAlreadyInArray = true;
+                break;
+            }
+        }
+
+        if (!isAlreadyInArray) {
+            neighborTextures[lastIndex++] = neighborTexture;
         }
     }
 
     for (int i = 0; i < lastIndex; i++) {
-        BlockId toUpdate = neighborTypes[i];
-        if (chunk->meshes[toUpdate] != nullptr) {
-            vec_clear(chunk->meshes[toUpdate]);
-            chunk_update_mesh(chunk, toUpdate);
-            chunk_reload_mesh(chunk, toUpdate);
-        } else {
-            chunk_update_mesh(chunk, toUpdate);
-            chunk_load_mesh(chunk);
-        }
+        unsigned int toUpdate = neighborTextures[i];
+        if (chunk->vbos[toUpdate].mesh != nullptr)
+            vec_clear(chunk->vbos[toUpdate].mesh);
+        chunk_update_mesh(chunk, toUpdate);
+        chunk_load_mesh(chunk, toUpdate);
     }
 
     if (x == CHUNK_SIZE_X - 1 && chunk->west != nullptr) {

@@ -23,8 +23,6 @@ add_executable(CVoxelEngine main.c
         include/Settings.h
         src/managers/InputManager.c
         include/managers/InputManager.h
-        libs/Vector.h
-        libs/Vector.c
         src/World.c
         include/World.h
         src/Chunk.c
@@ -87,6 +85,7 @@ add_executable(CVoxelEngine main.c
         include/VoxelEngine/VoxelEngine.h
         src/Engine/Utils.c
         include/Engine/Utils.h
+        libs/CVector/Vector.c
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16 -ljson-c)

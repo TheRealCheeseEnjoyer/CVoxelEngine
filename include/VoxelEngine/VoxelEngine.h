@@ -6,5 +6,6 @@
 void VoxelEngine_init();
 BlockData VoxelEngine_get_block_data(BlockId id);
 unsigned int VoxelEngine_get_atlas_id();
+unsigned int VoxelEngine_get_atlas_num_textures();
 
 #endif

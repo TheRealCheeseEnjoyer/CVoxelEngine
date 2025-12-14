@@ -25,6 +25,7 @@ static NameIdPair pairs[] = {
 
 static BlockData blocksData[BLOCK_NUM_BLOCK_TYPES];
 static unsigned int blocksAtlas = 0;
+static unsigned int blocksAtlasTextureNum = 0;
 
 BlockId get_block_id(const char* name) {
     for (size_t i = 0; i < sizeof(pairs)/sizeof(NameIdPair); i++) {
@@ -63,7 +64,10 @@ void initialize_block_data() {
 
         for (int face = 0; face < json_object_array_length(textureArray); face++) {
             json_object* textureFile = json_object_array_get_idx(textureArray, face);
-            blocksData[id].sideTextures[face] = tm_add_texture_to_atlas(json_object_get_string(textureFile));
+            unsigned int atlasTextureIndex = tm_add_texture_to_atlas(json_object_get_string(textureFile));
+            blocksData[id].sideTextures[face] = atlasTextureIndex;
+            if (atlasTextureIndex >= blocksAtlasTextureNum)
+                blocksAtlasTextureNum = atlasTextureIndex + 1; // the last atlas index is valid so the size is that + 1
         }
     }
     blocksAtlas = tm_end_atlas();
@@ -81,4 +85,8 @@ BlockData VoxelEngine_get_block_data(BlockId id) {
 
 unsigned int VoxelEngine_get_atlas_id() {
     return blocksAtlas;
+}
+
+unsigned int VoxelEngine_get_atlas_num_textures() {
+    return blocksAtlasTextureNum;
 }

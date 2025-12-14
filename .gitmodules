@@ -1,0 +1,3 @@
+[submodule "libs/CVector"]
+	path = libs/CVector
+	url = git@github.com:TheRealCheeseEnjoyer/CVector.git

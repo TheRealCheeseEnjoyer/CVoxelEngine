@@ -4,7 +4,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "hashmap.h"
-#include "Vector.h"
+#include "CVector/Vector.h"
 
 static hashmap* textures;
 static char** atlasTextures;

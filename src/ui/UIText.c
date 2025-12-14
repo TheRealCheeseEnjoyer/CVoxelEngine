@@ -8,7 +8,7 @@
 
 #include "CommonVertices.h"
 #include "Shader.h"
-#include "Vector.h"
+#include "CVector/Vector.h"
 #include "managers/GlyphManager.h"
 #include "managers/ShaderManager.h"
 #include "ui/CharGlyph.h"
@@ -48,7 +48,7 @@ UIText UIText_init(const char *text, vec2 position) {
         glBindVertexArray(0);
     }
 
-    vec_append(&texts, nullptr);
+    vec_append_empty(&texts);
     UIText id = vec_size(texts) - 1;
     texts[id].position[0] = position[0];
     texts[id].position[1] = position[1];
