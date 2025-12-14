@@ -20,6 +20,7 @@ static NameIdPair pairs[] = {
     {"sand", BLOCK_SAND},
     {"rock", BLOCK_ROCK},
     {"wood", BLOCK_WOOD},
+    {"dirt", BLOCK_DIRT},
     {"water", BLOCK_WATER}
 };
 
