@@ -56,7 +56,8 @@ void UIInventory_init() {
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
             slotSprites[y * NUM_SLOTS_X + x] = UIStack_init(
-                                 VoxelEngine_get_block_data(inventory_get_stack_from_slot(x, y).type).sideTextures[0], 0,
+                g_blockData[inventory_get_stack_from_slot(x, y).type].sideTextures[0],
+                                 0,
                                  (vec2){
                                      screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
                                          slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (

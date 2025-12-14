@@ -86,11 +86,11 @@ void UIItem_draw(const UIItem item) {
     mat4 ortho;
     UIManager_get_ortho_matrix(ortho);
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "ortho", &ortho);
-    BlockData data = VoxelEngine_get_block_data(items[item].type);
+
     shader_set_int(sm_get_shader(SHADER_UI_3D), "atlas", 0);
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "model", &items[item].model);
 
-    shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", data.sideTextures[0]);
+    shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", g_blockData[items[item].type].sideTextures[0]);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }

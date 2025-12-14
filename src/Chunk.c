@@ -117,8 +117,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     int *neighbor[3];
     FaceOrientation orientationMask = FaceOrientation_to_mask(orientation);
 
-    unsigned int currentTexture = VoxelEngine_get_block_data(chunk_get_block(chunk, start[0], start[1], start[2])).
-            sideTextures[orientation];
+    unsigned int currentTexture = g_blockData[chunk_get_block(chunk, start[0], start[1], start[2])].sideTextures[orientation];
 
     switch (orientation) {
         case FACE_TOP:
@@ -191,11 +190,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
 
     for (*lengthDimension += 1; *lengthDimension < lengthLimit; (*lengthDimension)++) {
         BlockId block = chunk_get_block(chunk, start[0], start[1], start[2]);
-        BlockData data = VoxelEngine_get_block_data(block);
         if ((meshedFaces[start[0]][start[1]][start[2]] & orientationMask) == orientationMask ||
             block == BLOCK_INVALID_ID ||
             block == BLOCK_AIR ||
-            data.sideTextures[orientation] != currentTexture ||
+            g_blockData[block].sideTextures[orientation] != currentTexture ||
             (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
              chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
             break;
@@ -209,11 +207,10 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         for (*lengthDimension = startLengthDimension;
              *lengthDimension <= startLengthDimension + length; (*lengthDimension)++) {
             BlockId block = chunk_get_block(chunk, start[0], start[1], start[2]);
-            BlockData data = VoxelEngine_get_block_data(block);
             if ((meshedFaces[start[0]][start[1]][start[2]] & orientationMask) == orientationMask ||
                 block == BLOCK_INVALID_ID ||
                 block == BLOCK_AIR ||
-                data.sideTextures[orientation] != currentTexture ||
+                g_blockData[block].sideTextures[orientation] != currentTexture ||
                 (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
                  chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
                 isWholeLineOk = false;
@@ -255,11 +252,9 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                     continue;
 
-                BlockData data = VoxelEngine_get_block_data(block);
-
                 for (unsigned int i = 0; i < FACE_NUM; i++) {
-                    if (chunk->vbos[data.sideTextures[i]].mesh == nullptr) {
-                        chunk->vbos[data.sideTextures[i]].mesh = vec_init(sizeof(Vertex));
+                    if (chunk->vbos[g_blockData[block].sideTextures[i]].mesh == nullptr) {
+                        chunk->vbos[g_blockData[block].sideTextures[i]].mesh = vec_init(sizeof(Vertex));
                     }
                 }
 
@@ -278,12 +273,12 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                         .position = {vertices[1].position[0], vertices[1].position[1], vertices[0].position[2]},
                         .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &vertices[0]);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_TOP]].mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_TOP]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_TOP]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_TOP]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_TOP]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_TOP]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_TOP]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y - 1, z);
@@ -299,12 +294,12 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                         .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
                         .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &vertices[0]);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BOTTOM]].mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BOTTOM]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BOTTOM]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BOTTOM]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BOTTOM]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BOTTOM]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BOTTOM]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x + 1, y, z);
@@ -321,12 +316,12 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                         .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
 
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &vertices[0]);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_LEFT]].mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_LEFT]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_LEFT]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_LEFT]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_LEFT]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_LEFT]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_LEFT]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x - 1, y, z);
@@ -343,12 +338,12 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                         .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
 
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &vertices[0]);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_RIGHT]].mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_RIGHT]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_RIGHT]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_RIGHT]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_RIGHT]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_RIGHT]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_RIGHT]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z + 1);
@@ -365,12 +360,12 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                         .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1]}
                     };
 
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &vertices[0]);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_FRONT]].mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_FRONT]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_FRONT]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_FRONT]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_FRONT]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_FRONT]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_FRONT]].mesh, &vertices[1]);
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z - 1);
@@ -387,12 +382,12 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                         .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1]}
                     };
 
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &vertices[0]);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v2);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &v1);
-                    vec_append(&chunk->vbos[data.sideTextures[FACE_BACK]].mesh, &vertices[1]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BACK]].mesh, &vertices[0]);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BACK]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BACK]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BACK]].mesh, &v2);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BACK]].mesh, &v1);
+                    vec_append(&chunk->vbos[g_blockData[block].sideTextures[FACE_BACK]].mesh, &vertices[1]);
                 }
             }
         }
@@ -455,7 +450,6 @@ void chunk_draw(Chunk *chunk) {
 void chunk_block_updated_at(Chunk *chunk, int x, int y, int z) {
     BlockId block = chunk_get_block(chunk, x, y, z);
     if (block == BLOCK_INVALID_ID || block == BLOCK_AIR) return;
-    BlockData data = VoxelEngine_get_block_data(block);
 
     int uniqueTextures[FACE_NUM] = {-1, -1, -1, -1, -1, -1};
     int uniqueTexturesNum = 0;
@@ -463,14 +457,14 @@ void chunk_block_updated_at(Chunk *chunk, int x, int y, int z) {
     for (int i = 0; i < FACE_NUM; i++) {
         bool found = false;
         for (int j = 0; j <= uniqueTexturesNum; j++) {
-            if (uniqueTextures[j] == data.sideTextures[i]) {
+            if (uniqueTextures[j] == g_blockData[block].sideTextures[i]) {
                 found = true;
                 break;
             }
         }
 
         if (!found) {
-            uniqueTextures[uniqueTexturesNum] = data.sideTextures[i];
+            uniqueTextures[uniqueTexturesNum] = g_blockData[block].sideTextures[i];
             uniqueTexturesNum++;
         }
     }
@@ -487,19 +481,17 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBl
     unsigned int neighborTextures[FACE_NUM * 2] = {0}; // 6 faces for the block + 1 face for each adjacent block
     int lastIndex = 0;
 
-    BlockData data = VoxelEngine_get_block_data(changedBlockId);
-
     for (int i = 0; i < FACE_NUM; i++) {
         bool isAlreadyInArray = false;
         for (int j = 0; j < lastIndex; j++) {
-            if (neighborTextures[j] == data.sideTextures[i]) {
+            if (neighborTextures[j] == g_blockData[changedBlockId].sideTextures[i]) {
                 isAlreadyInArray = true;
                 break;
             }
         }
 
         if (!isAlreadyInArray) {
-            neighborTextures[lastIndex++] = data.sideTextures[i];
+            neighborTextures[lastIndex++] = g_blockData[changedBlockId].sideTextures[i];
         }
 
         unsigned int neighborTexture = 0;;
@@ -534,7 +526,7 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBl
         if (neighborBlock == BLOCK_INVALID_ID || neighborBlock == BLOCK_AIR)
             continue;
 
-        neighborTexture = VoxelEngine_get_block_data(neighborBlock).sideTextures[neighborFaceOrientation];
+        neighborTexture = g_blockData[neighborBlock].sideTextures[neighborFaceOrientation];
 
         isAlreadyInArray = false;
         for (int j = 0; j < lastIndex; j++) {
