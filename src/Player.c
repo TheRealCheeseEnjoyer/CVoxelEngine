@@ -9,6 +9,7 @@
 #include <cglm/vec3.h>
 
 #include "AABB.h"
+#include "Chunk.h"
 #include "FaceOrientation.h"
 #include "../include/VoxelEngine/Block.h"
 #include "Collisions.h"
@@ -59,6 +60,8 @@ static float destroyBlockCooldown = 1;
 static float placeBlockCooldown = 1;
 static UISprite crosshair;
 static UIText fpsCounter;
+static UIText posText;
+static UIText chunkCoords;
 
 static const vec3 Gravity = {0, -30.f, 0};
 static vec3 velocity = {0, 0, 0};
@@ -81,6 +84,8 @@ void player_init() {
     crosshair = UISprite_init("assets/ui/crosshair.png", (vec2){Settings.window.width / 2, Settings.window.height / 2},
                               (vec2){20, 20});
     fpsCounter = UIText_init("FPS:", (vec2){20, 70});
+    posText = UIText_init("position:", (vec2){1000, 70});
+    chunkCoords = UIText_init("blockCoords:", (vec2){20, 200});
 }
 
 void player_get_eye_position(vec3 eye_pos) {
@@ -289,6 +294,12 @@ void player_update() {
     sprintf(fps, "FPS: %d", (int)(avgFps));
     UIText_set_text(fpsCounter, fps);
 
+    char pos[32];
+    sprintf(pos, "Player x: %d y: %d z: %d", (int)position[0], (int)position[1], (int)position[2]);
+    UIText_set_text(posText, pos);
+    sprintf(pos, "Chunk x: %d y: %d z: %d", (int)position[0] / CHUNK_SIZE_X, (int)position[1] / CHUNK_SIZE_Y, (int)position[2] / CHUNK_SIZE_Z);
+    UIText_set_text(chunkCoords, pos);
+
     im_get_mouse_delta(mouseDelta);
     if (UIInventory_is_enabled()) {
         if (im_get_key_down(GLFW_KEY_E))
@@ -434,6 +445,8 @@ void player_draw() {
 
     UIManager_begin_draw();
     UIText_draw(fpsCounter);
+    UIText_draw(posText);
+    UIText_draw(chunkCoords);
     UISprite_draw(crosshair);
     UIHotbar_draw();
     UIInventory_draw();

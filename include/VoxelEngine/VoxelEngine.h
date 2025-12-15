@@ -6,6 +6,7 @@
 extern BlockData g_blockData[BLOCK_NUM_BLOCK_TYPES];
 
 void VoxelEngine_init();
+BlockId VoxelEngine_get_block_id(const char* name);
 unsigned int VoxelEngine_get_atlas_id();
 unsigned int VoxelEngine_get_atlas_num_textures();
 

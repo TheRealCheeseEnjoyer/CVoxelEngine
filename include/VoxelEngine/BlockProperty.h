@@ -1,0 +1,8 @@
+#ifndef CVOXELENGINE_BLOCKPROPERTIES_H
+#define CVOXELENGINE_BLOCKPROPERTIES_H
+
+typedef enum {
+    PROPERTY_TRANSPARENCY = 0b1
+} BlockProperty;
+
+#endif

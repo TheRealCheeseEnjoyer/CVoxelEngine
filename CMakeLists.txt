@@ -86,6 +86,9 @@ add_executable(CVoxelEngine main.c
         src/Engine/Utils.c
         include/Engine/Utils.h
         libs/CVector/Vector.c
+        include/Structure.h
+        src/Structure.c
+        include/VoxelEngine/BlockProperty.h
 )
 
 target_link_libraries(CVoxelEngine -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lpthread -lfreetype -I/usr/include/freetype2 -I/usr/include/libpng16 -ljson-c)

@@ -1,0 +1,25 @@
+{
+    "name": "tree",
+    "blocks": [
+        {
+            "position": [0, 0, 0],
+            "block": "wood"
+        },
+        {
+            "position": [0, 1, 0],
+            "block": "wood"
+        },
+        {
+            "position": [0, 2, 0],
+            "block": "wood"
+        },
+        {
+            "position": [0, 3, 0],
+            "block": "wood"
+        },
+        {
+            "position": [0, 4, 0],
+            "block": "wood"
+        }
+    ]
+}

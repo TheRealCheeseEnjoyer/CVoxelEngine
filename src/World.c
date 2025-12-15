@@ -42,8 +42,8 @@ void world_init() {
                     args->above = get_chunk(x, y + 1, z);
                     args->below = get_chunk(x, y - 1, z);
                     args->blocks = &blocks[CHUNK_COORDS_TO_INDEX(x, y, z) * CHUNK_SIZE];
-                thpool_add_work((void*)chunk_init, args);
-                //chunk_init(args);
+                //thpool_add_work((void*)chunk_init, args);
+                chunk_init(args);
             }
         }
     }
@@ -70,6 +70,8 @@ void world_init() {
             }
         }
     }
+
+    thpool_destroy();
 }
 
 void world_draw() {
@@ -147,12 +149,14 @@ void world_draw() {
     minZ = fmax(minZ, 0);
     maxZ = fmin(maxZ, WORLD_SIZE_Z - 1);
 
+    glDisable(GL_BLEND);
     for (int x = minX; x <= maxX; x++ ) {
         for (int z = minZ; z <= maxZ; z++) {
             if (glm_vec3_distance2(chunkPos, (vec3){x, 0, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)
                 chunk_draw(get_chunk(x, 0, z));
         }
     }
+    glEnable(GL_BLEND);
 
     shader_use(0);
 }

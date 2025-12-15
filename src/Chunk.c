@@ -1,6 +1,5 @@
 #include "../include/Chunk.h"
 
-#include <iso646.h>
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
@@ -9,12 +8,13 @@
 
 #include "FaceOrientation.h"
 #include "stb_image.h"
+#include "Structure.h"
 #include "managers/ShaderManager.h"
 #include "libs/CVector/Vector.h"
 #include "VoxelEngine/Block.h"
 #include "VoxelEngine/VoxelEngine.h"
 
-#define COORDS_TO_INDEX(x, y, z) (x + y * CHUNK_SIZE_X + z * CHUNK_SIZE_X * CHUNK_SIZE_Y)
+#define COORDS_TO_INDEX(x, y, z) ((x) + (y) * CHUNK_SIZE_X + (z) * CHUNK_SIZE_X * CHUNK_SIZE_Y)
 
 Shader shader = 0;
 
@@ -25,6 +25,17 @@ BlockId height_mapper(int y) {
     if (y > 0 && y <= 3) return BLOCK_WATER;
     if (y > 3 && y <= 5) return BLOCK_SAND;
     return BLOCK_GRASS;
+}
+
+void chunk_load_structure(Chunk *chunk, int x, int y, int z, StructureId structure) {
+    StructureData data = structure_get_data(structure);
+    for (int i = 0; i < data.numBlocks; i++) {
+        ivec3 newBlockPos = {x + data.positions[i][0], y + data.positions[i][1], z + data.positions[i][2]};
+        if (newBlockPos[0] > CHUNK_SIZE_X - 1 || newBlockPos[0] < 0 || newBlockPos[1] > CHUNK_SIZE_Y - 1 || newBlockPos[1] < 0 || newBlockPos[2] > CHUNK_SIZE_Z - 1 || newBlockPos[2] < 0)
+            continue;
+        chunk->blocks[COORDS_TO_INDEX(newBlockPos[0], newBlockPos[1], newBlockPos[2])] =
+                data.blocks[i];
+    }
 }
 
 void chunk_init(struct init_args *args) {
@@ -54,8 +65,14 @@ void chunk_init(struct init_args *args) {
                                          z + args->chunk->position[2] * CHUNK_SIZE_Z,
                                          0.1f, 1)
                          * 16;
-            for (int y = 0; y <= fmaxf(3, fminf(height, CHUNK_SIZE_Y)); y++) {
-                args->blocks[COORDS_TO_INDEX(x, y, z)] = height_mapper(y);
+            height = fmaxf(3, height);
+            for (int y = 0; y <= fminf(height, CHUNK_SIZE_Y); y++) {
+                args->chunk->blocks[COORDS_TO_INDEX(x, y, z)] = height_mapper(y);
+            }
+
+            if ((float)rand() / RAND_MAX < .005f && args->chunk->blocks[COORDS_TO_INDEX(x, height, z)] == BLOCK_GRASS) {
+                args->chunk->blocks[COORDS_TO_INDEX(x, height, z)] = BLOCK_DIRT;
+                chunk_load_structure(args->chunk, x, height + 1, z, STRUCTURE_TREE);
             }
         }
     }
@@ -117,7 +134,8 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     int *neighbor[3];
     FaceOrientation orientationMask = FaceOrientation_to_mask(orientation);
 
-    unsigned int currentTexture = g_blockData[chunk_get_block(chunk, start[0], start[1], start[2])].sideTextures[orientation];
+    unsigned int currentTexture = g_blockData[chunk_get_block(chunk, start[0], start[1], start[2])].sideTextures[
+        orientation];
 
     switch (orientation) {
         case FACE_TOP:
@@ -193,9 +211,9 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         if ((meshedFaces[start[0]][start[1]][start[2]] & orientationMask) == orientationMask ||
             block == BLOCK_INVALID_ID ||
             block == BLOCK_AIR ||
-            g_blockData[block].sideTextures[orientation] != currentTexture ||
             (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
-             chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
+             (g_blockData[chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2])].properties & PROPERTY_TRANSPARENCY) == 0) ||
+             g_blockData[block].sideTextures[orientation] != currentTexture) {
             break;
         }
 
@@ -207,12 +225,13 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
         for (*lengthDimension = startLengthDimension;
              *lengthDimension <= startLengthDimension + length; (*lengthDimension)++) {
             BlockId block = chunk_get_block(chunk, start[0], start[1], start[2]);
+            BlockId neighborBlock = chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]);
             if ((meshedFaces[start[0]][start[1]][start[2]] & orientationMask) == orientationMask ||
                 block == BLOCK_INVALID_ID ||
                 block == BLOCK_AIR ||
                 g_blockData[block].sideTextures[orientation] != currentTexture ||
-                (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
-                 chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_AIR)) {
+                (neighborBlock != BLOCK_INVALID_ID &&
+                 (g_blockData[neighborBlock].properties & PROPERTY_TRANSPARENCY) == 0)) {
                 isWholeLineOk = false;
                 break;
             }
@@ -242,7 +261,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     vertices[1].texCoords[1] *= width + 1;
 }
 
-void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
+void chunk_update_mesh(Chunk *chunk, int targetTexture) {
     char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z] = {0};
 
     for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
@@ -261,9 +280,8 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 ivec3 blockPosition = {x, y, z};
                 BlockId tempBlock = chunk_get_block(chunk, x, y + 1, z);
                 Vertex vertices[2];
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_TOP_MASK)
-                    !=
-                    FACE_TOP_MASK) {
+                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (meshedFaces[x][y][z] & FACE_TOP_MASK)
+                    != FACE_TOP_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_TOP] == targetTexture)) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_TOP, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
@@ -282,9 +300,9 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y - 1, z);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (
+                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (
                         meshedFaces[x][y][z] & FACE_BOTTOM_MASK) !=
-                    FACE_BOTTOM_MASK) {
+                    FACE_BOTTOM_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_BOTTOM] == targetTexture)) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BOTTOM, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
@@ -303,9 +321,9 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x + 1, y, z);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_LEFT_MASK)
+                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (meshedFaces[x][y][z] & FACE_LEFT_MASK)
                     !=
-                    FACE_LEFT_MASK) {
+                    FACE_LEFT_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_LEFT] == targetTexture)) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_LEFT, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
@@ -325,9 +343,9 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x - 1, y, z);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (
+                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (
                         meshedFaces[x][y][z] & FACE_RIGHT_MASK) !=
-                    FACE_RIGHT_MASK) {
+                    FACE_RIGHT_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_RIGHT] == targetTexture)) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_RIGHT, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
@@ -347,9 +365,9 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z + 1);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (
+                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (
                         meshedFaces[x][y][z] & FACE_FRONT_MASK) !=
-                    FACE_FRONT_MASK) {
+                    FACE_FRONT_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_FRONT] == targetTexture)) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_FRONT, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
@@ -369,9 +387,9 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
                 }
 
                 tempBlock = chunk_get_block(chunk, x, y, z - 1);
-                if ((tempBlock == BLOCK_INVALID_ID || tempBlock == BLOCK_AIR) && (meshedFaces[x][y][z] & FACE_BACK_MASK)
+                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (meshedFaces[x][y][z] & FACE_BACK_MASK)
                     !=
-                    FACE_BACK_MASK) {
+                    FACE_BACK_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_BACK] == targetTexture)) {
                     chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BACK, meshedFaces);
                     Vertex v1 = {
                         .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
@@ -395,7 +413,7 @@ void chunk_update_mesh(Chunk *chunk, unsigned int targetTexture) {
 }
 
 void chunk_create_mesh(Chunk *chunk) {
-    chunk_update_mesh(chunk, 0);
+    chunk_update_mesh(chunk, -1);
 }
 
 void chunk_load_all_mesh(Chunk *chunk) {
@@ -442,7 +460,6 @@ void chunk_draw(Chunk *chunk) {
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         shader_set_int(shader, "atlasIndex", i);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->vbos[i].mesh));
     }
 }
@@ -513,6 +530,7 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBl
             case FACE_RIGHT:
                 neighborBlock = chunk_get_block(chunk, x - 1, y, z);
                 neighborFaceOrientation = FACE_LEFT;
+                break;
             case FACE_FRONT:
                 neighborBlock = chunk_get_block(chunk, x, y, z + 1);
                 neighborFaceOrientation = FACE_BACK;

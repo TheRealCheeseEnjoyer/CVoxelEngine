@@ -1,5 +1,6 @@
 #include "Engine/Engine.h"
 
+#include <time.h>
 #include <glad/glad.h>
 
 #include "Engine/Time.h"
@@ -14,6 +15,7 @@ static GLFWwindow* window;
 struct time_t Time = {};
 
 void engine_init() {
+    srand(0);
     settings_load();
     thpool_init(16);
     window = window_create();
@@ -50,7 +52,7 @@ void engine_main_loop_end() {
 
 void engine_terminate() {
     im_destroy();
-    thpool_destroy();
+    //thpool_destroy();
 
     glfwSetWindowShouldClose(window, GLFW_TRUE);
     glfwDestroyWindow(window);

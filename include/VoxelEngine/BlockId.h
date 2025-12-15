@@ -9,6 +9,7 @@ typedef enum {
     BLOCK_SAND,
     BLOCK_WOOD,
     BLOCK_DIRT,
+    BLOCK_LEAVES,
     BLOCK_NUM_BLOCK_TYPES,
     BLOCK_INVALID_ID
 } BlockId;

@@ -7,6 +7,7 @@
 
 #include "Block.h"
 #include "BlockId.h"
+#include "Structure.h"
 #include "managers/TextureManager.h"
 
 typedef struct {
@@ -21,14 +22,15 @@ static NameIdPair pairs[] = {
     {"rock", BLOCK_ROCK},
     {"wood", BLOCK_WOOD},
     {"dirt", BLOCK_DIRT},
-    {"water", BLOCK_WATER}
+    {"water", BLOCK_WATER},
+    {"leaves", BLOCK_LEAVES}
 };
 
 BlockData g_blockData[BLOCK_NUM_BLOCK_TYPES] = {};
 static unsigned int blocksAtlas = 0;
 static unsigned int blocksAtlasTextureNum = 0;
 
-BlockId get_block_id(const char* name) {
+BlockId VoxelEngine_get_block_id(const char* name) {
     for (size_t i = 0; i < sizeof(pairs)/sizeof(NameIdPair); i++) {
         if (strcmp(name, pairs[i].name) == 0) {
             return pairs[i].id;
@@ -54,7 +56,7 @@ void initialize_block_data() {
         json_object *block = json_object_array_get_idx(blocks, i);
         json_object *name = json_object_object_get(block, "name");
         json_object* internal_name = json_object_object_get(block, "internal_name");
-        BlockId id = get_block_id(json_object_get_string(internal_name));
+        BlockId id = VoxelEngine_get_block_id(json_object_get_string(internal_name));
         if (id == BLOCK_INVALID_ID) {
             fprintf(stderr, "Block id for %s not found\n", json_object_get_string(internal_name));
             continue;
@@ -70,6 +72,11 @@ void initialize_block_data() {
             if (atlasTextureIndex >= blocksAtlasTextureNum)
                 blocksAtlasTextureNum = atlasTextureIndex + 1; // the last atlas index is valid so the size is that + 1
         }
+
+        json_object *property = json_object_object_get(block, "transparency");
+        if (json_object_get_boolean(property) == true) {
+            g_blockData[id].properties ^= PROPERTY_TRANSPARENCY;
+        }
     }
     blocksAtlas = tm_end_atlas();
 
@@ -78,6 +85,7 @@ void initialize_block_data() {
 
 void VoxelEngine_init() {
     initialize_block_data();
+    structure_init();
 }
 
 unsigned int VoxelEngine_get_atlas_id() {
