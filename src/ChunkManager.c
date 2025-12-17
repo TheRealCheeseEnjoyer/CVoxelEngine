@@ -8,6 +8,7 @@
 #include "Player.h"
 #include "thpool.h"
 #include "VoxelEngine/Block.h"
+#include "VoxelEngine/VoxelEngine.h"
 
 #define CHUNK_COORDS_TO_INDEX(x, z) ((x) + (z) * WORLD_SIZE_X)
 #define GLOBAL_COORDS_TO_CHUNK_INDEX(x, y, z) (CHUNK_COORDS_TO_INDEX((x) / CHUNK_SIZE_X, (z) / CHUNK_SIZE_Z))
@@ -138,6 +139,7 @@ void ChunkManager_draw_chunks() {
     maxZ = fmin(maxZ, WORLD_SIZE_Z - 1);
 
     glDisable(GL_BLEND);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     for (int x = minX; x <= maxX; x++ ) {
         for (int z = minZ; z <= maxZ; z++) {
             if (glm_vec3_distance2(chunkPos, (vec3){x, 0, z}) < MAX_CHUNK_DRAW_DISTANCE * MAX_CHUNK_DRAW_DISTANCE)

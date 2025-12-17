@@ -450,7 +450,6 @@ void chunk_draw(Chunk *chunk) {
 
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, chunk->model[0]);
 
-    glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     for (size_t i = 0; i < vec_size(chunk->vbos); i++) {
         if (chunk->vbos[i].vbo == 0 || vec_size(chunk->vbos[i].mesh) == 0) continue;
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i].vbo);
