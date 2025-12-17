@@ -1,12 +1,13 @@
 #include <stdio.h>
 #define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "managers/InputManager.h"
 #include "Player.h"
 #include "include/Settings.h"
 #include "Skybox.h"
-#include "World.h"
+#include "ChunkManager.h"
 #include "Engine/Engine.h"
 #include "Engine/Time.h"
 #include "ui/UIManager.h"
@@ -15,9 +16,8 @@
 int main() {
     engine_init();
     VoxelEngine_init();
-
     double time = glfwGetTime();
-    world_init();
+    ChunkManager_init();
     double timeElapsed = glfwGetTime() - time;
     printf("Generated %dx%dx%d chunks in %f seconds\n", WORLD_SIZE_X, WORLD_SIZE_Y, WORLD_SIZE_Z, timeElapsed);
     skybox_init("yellowcloud");
@@ -40,8 +40,10 @@ int main() {
         player_update();
 
         skybox_draw();
-        world_draw();
+        ChunkManager_draw_chunks();
         player_draw();
+
+        UIManager_draw();
 
         engine_main_loop_end();
         numFrames++;

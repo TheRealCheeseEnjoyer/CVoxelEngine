@@ -1,6 +1,6 @@
 #include "Collisions.h"
 #include "../include/VoxelEngine/Block.h"
-#include "World.h"
+#include "ChunkManager.h"
 
 #define X 0
 #define Y 1

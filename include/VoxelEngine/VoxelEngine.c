@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <glad/glad.h>
 #include <json-c/json.h>
 
 #include "Block.h"
@@ -78,8 +79,8 @@ void initialize_block_data() {
             g_blockData[id].properties ^= PROPERTY_TRANSPARENCY;
         }
     }
-    blocksAtlas = tm_end_atlas();
 
+    blocksAtlas = tm_end_atlas();
     json_object_put(root);
 }
 

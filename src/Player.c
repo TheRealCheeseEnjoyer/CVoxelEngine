@@ -14,7 +14,7 @@
 #include "../include/VoxelEngine/Block.h"
 #include "Collisions.h"
 #include "managers/InputManager.h"
-#include "World.h"
+#include "ChunkManager.h"
 #include "CommonVertices.h"
 #include "Inventory.h"
 #include "Engine/Time.h"
@@ -79,13 +79,14 @@ void player_init() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
     glBindVertexArray(0);
+
     UIInventory_init();
     UIHotbar_init();
     crosshair = UISprite_init("assets/ui/crosshair.png", (vec2){Settings.window.width / 2, Settings.window.height / 2},
-                              (vec2){20, 20});
-    fpsCounter = UIText_init("FPS:", (vec2){20, 70});
-    posText = UIText_init("position:", (vec2){1000, 70});
-    chunkCoords = UIText_init("blockCoords:", (vec2){20, 200});
+                              (vec2){20, 20}, true);
+    fpsCounter = UIText_init("FPS:", (vec2){20, 70}, true);
+    posText = UIText_init("position:", (vec2){600, 70}, true);
+    chunkCoords = UIText_init("blockCoords:", (vec2){20, 200}, true);
 }
 
 void player_get_eye_position(vec3 eye_pos) {
@@ -300,14 +301,16 @@ void player_update() {
     sprintf(pos, "Chunk x: %d y: %d z: %d", (int)position[0] / CHUNK_SIZE_X, (int)position[1] / CHUNK_SIZE_Y, (int)position[2] / CHUNK_SIZE_Z);
     UIText_set_text(chunkCoords, pos);
 
-    im_get_mouse_delta(mouseDelta);
+    if (im_get_key_down(GLFW_KEY_E)) {
+        UIInventory_toggle();
+        UISprite_set_enabled(crosshair, !UIInventory_is_enabled());
+    }
     if (UIInventory_is_enabled()) {
-        if (im_get_key_down(GLFW_KEY_E))
-            UIInventory_toggle();
         UIInventory_update();
         return;
     }
 
+    im_get_mouse_delta(mouseDelta);
     look_around(rotation, mouseDelta);
 
     vec2 input = {0, 0};
@@ -349,9 +352,6 @@ void player_update() {
     }
 
     selectedBlock = UIHotbar_move_selector_to_slot(UIHotbar_get_current_index() - im_get_scroll_direction());
-
-    if (im_get_key_down(GLFW_KEY_E))
-        UIInventory_toggle();
 
     if (im_get_key_down(controls->freecam)) {
         is_freecam_enabled = !is_freecam_enabled;
@@ -433,24 +433,14 @@ void player_draw() {
     glm_mat4_scale(bounds, 1.01f);
 
     shader_set_mat4(shader, "model", &bounds);
-    shader_set_int(shader, "TextureUnitId", 1);
+    shader_set_int(shader, "TextureUnitId", 2);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(2.0f);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindVertexArray(0);
-
-    UIManager_begin_draw();
-    UIText_draw(fpsCounter);
-    UIText_draw(posText);
-    UIText_draw(chunkCoords);
-    UISprite_draw(crosshair);
-    UIHotbar_draw();
-    UIInventory_draw();
-    UIManager_end_draw();
 }
 
 void player_get_view(mat4 outView) {

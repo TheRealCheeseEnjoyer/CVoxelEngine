@@ -22,7 +22,7 @@ UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size) {
     slot.uiItem = UIItem_init(type, position, size);
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
-    slot.amountText = UIText_init(amountStr, (vec2) {position[0] + 0.2 * size[0], position[1] + 0.7f * size[1]});
+    slot.amountText = UIText_init(amountStr, (vec2) {position[0] + 0.2 * size[0], position[1] + 0.7f * size[1]}, false);
     slot.amount = amount;
     vec_append(&slots, &slot);
     return vec_size(slots) - 1;
@@ -66,5 +66,5 @@ void UIStack_get_size(UIStack slotIndex, vec2 size) {
 
 void UIStack_draw(UIStack slotIndex) {
     UIItem_draw(slots[slotIndex].uiItem);
-    UIText_draw(slots[slotIndex].amountText);
+    UIText_draw();
 }

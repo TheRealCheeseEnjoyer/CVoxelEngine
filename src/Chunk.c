@@ -4,6 +4,7 @@
 #include <cglm/affine.h>
 #include <glad/glad.h>
 
+#include "ChunkManager.h"
 #include "PerlinNoise.h"
 
 #include "FaceOrientation.h"
@@ -16,7 +17,9 @@
 
 #define COORDS_TO_INDEX(x, y, z) ((x) + (y) * CHUNK_SIZE_X + (z) * CHUNK_SIZE_X * CHUNK_SIZE_Y)
 
-Shader shader = 0;
+static Shader shader = 0;
+static int atlasIndexLocation;
+static int modelLocation;
 
 int mod(int a, int b) { return (a % b + b) % b; }
 
@@ -39,19 +42,18 @@ void chunk_load_structure(Chunk *chunk, int x, int y, int z, StructureId structu
 }
 
 void chunk_init(struct init_args *args) {
-    args->chunk->blocks = args->blocks;
-    args->chunk->north = args->north;
-    args->chunk->east = args->east;
-    args->chunk->south = args->south;
-    args->chunk->west = args->west;
-    args->chunk->above = args->above;
-    args->chunk->below = args->below;
+    args->chunk->north = ChunkManager_get_chunk(args->position[0], args->position[2] + 1);
+    args->chunk->east = ChunkManager_get_chunk(args->position[0] - 1, args->position[2]);
+    args->chunk->south = ChunkManager_get_chunk(args->position[0], args->position[2] - 1);
+    args->chunk->west = ChunkManager_get_chunk(args->position[0] + 1, args->position[2]);
 
     args->chunk->vbos = vec_init_size(sizeof(*args->chunk->vbos), VoxelEngine_get_atlas_num_textures());
 
     memcpy(args->chunk->position, args->position, sizeof(ivec3));
 
     shader = sm_get_shader(SHADER_DEFAULT);
+    atlasIndexLocation = glGetUniformLocation(shader, "atlasIndex");
+    modelLocation = glGetUniformLocation(shader, "model");
 
     glm_mat4_identity(args->chunk->model);
     glm_translate(args->chunk->model, (vec3){
@@ -109,15 +111,10 @@ BlockId chunk_get_block(Chunk *chunk, int x, int y, int z) {
         return chunk_get_block(chunk->north, x, y, mod(z, CHUNK_SIZE_Z));
     }
 
-    if (y < 0) {
-        if (!chunk->below) return BLOCK_INVALID_ID;
-        return chunk_get_block(chunk->below, x, mod(y, CHUNK_SIZE_Y), z);
+    if (y < 0 || y >= CHUNK_SIZE_Y) {
+        return BLOCK_INVALID_ID;
     }
 
-    if (y >= CHUNK_SIZE_Y) {
-        if (!chunk->above) return BLOCK_INVALID_ID;
-        return chunk_get_block(chunk->above, x, mod(y, CHUNK_SIZE_Y), z);
-    }
     return chunk->blocks[COORDS_TO_INDEX(x, y, z)];
 }
 
@@ -428,6 +425,8 @@ void chunk_load_all_mesh(Chunk *chunk) {
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i].vbo);
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (vec_size(chunk->vbos[i].mesh) * sizeof(Vertex)),
                      chunk->vbos[i].mesh, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -449,17 +448,15 @@ void chunk_draw(Chunk *chunk) {
     glBindVertexArray(chunk->VAO);
     glActiveTexture(GL_TEXTURE0);
 
-    shader_set_mat4(shader, "model", &chunk->model);
-    shader_set_int(shader, "TextureUnitId", 0);
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, chunk->model[0]);
+
     glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     for (size_t i = 0; i < vec_size(chunk->vbos); i++) {
-        if (chunk->vbos[i].vbo == 0) continue;
+        if (chunk->vbos[i].vbo == 0 || vec_size(chunk->vbos[i].mesh) == 0) continue;
         glBindBuffer(GL_ARRAY_BUFFER, chunk->vbos[i].vbo);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        shader_set_int(shader, "atlasIndex", i);
+        glUniform1i(atlasIndexLocation, i);
         glDrawArrays(GL_TRIANGLES, 0, (int) vec_size(chunk->vbos[i].mesh));
     }
 }
@@ -577,12 +574,6 @@ void chunk_register_changes(Chunk *chunk, int x, int y, int z, BlockId changedBl
         chunk_block_updated_at(chunk->south, x, y, CHUNK_SIZE_Z - 1);
     } else if (z == CHUNK_SIZE_Z - 1 && chunk->north != nullptr) {
         chunk_block_updated_at(chunk->north, x, y, 0);
-    }
-
-    if (y == 0 && chunk->below != nullptr) {
-        chunk_block_updated_at(chunk->below, x, CHUNK_SIZE_Y - 1, z);
-    } else if (y == CHUNK_SIZE_Y - 1 && chunk->above != nullptr) {
-        chunk_block_updated_at(chunk->above, x, 0, z);
     }
 }
 

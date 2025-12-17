@@ -11,6 +11,23 @@ static float quadVertices[] = {
     .5f, .5f, 1, 1, 1
 };
 
+static float quadVertices_strip[] = {
+    -.5f, .5f, 1, 0, 1,
+    .5f, .5f, 1, 1, 1,
+    -.5f, -.5f, 1, 0, 0,
+    .5f, -.5f, 1, 1, 0
+};
+
+static float quadVertices_no_uv[] = {
+    -.5f, .5f, 1,
+    .5f, .5f, 1,
+    -.5f, -.5f, 1,
+
+    .5f, -.5f, 1,
+    -.5f, -.5f, 1,
+    .5f, .5f, 1
+};
+
 static float cubeVertices[] = {
     0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
     0.5f, -0.5f, -0.5f, 1.0f, 0.0f,

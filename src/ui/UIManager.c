@@ -1,17 +1,15 @@
 #include "ui/UIManager.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <cglm/cam.h>
 #include <glad/glad.h>
 
 #include "Settings.h"
 #include "../../include/managers/InputManager.h"
-#include "../../include/managers/ShaderManager.h"
-#include "managers/GlyphManager.h"
-#include "CommonVertices.h"
+#include "ui/UIText.h"
 
 static mat4 orthoMatrix;
+static int activeTextureIndex = 1;
 
 void UIManager_init() {
     glm_ortho(0.f, Settings.window.width, Settings.window.height, 0.f, -1.f, 1.f, orthoMatrix);
@@ -19,6 +17,10 @@ void UIManager_init() {
 
 void UIManager_get_ortho_matrix(mat4 outMat) {
     memcpy(outMat, orthoMatrix, sizeof(mat4));
+}
+
+int UIManager_get_active_texture_id() {
+    return activeTextureIndex;
 }
 
 int UIManager_check_hovered(UISprite *sprite, int size) {
@@ -39,10 +41,11 @@ int UIManager_check_hovered(UISprite *sprite, int size) {
     return -1;
 }
 
-void UIManager_begin_draw() {
+void UIManager_draw() {
     glDisable(GL_DEPTH_TEST);
-}
 
-void UIManager_end_draw() {
+    UISprite_draw();
+    UIText_draw();
+
     glEnable(GL_DEPTH_TEST);
 }

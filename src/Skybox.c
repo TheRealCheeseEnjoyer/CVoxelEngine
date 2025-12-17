@@ -94,7 +94,7 @@ void skybox_init(const char *name) {
     glEnableVertexAttribArray(0);
 
     glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
     int width, height, nrChannels;
     for (unsigned int i = 0; i < 6; i++) {

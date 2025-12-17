@@ -1,10 +1,16 @@
 #version 330 core
 
 out vec4 FragColor;
-in vec2 TexCoord;
 
-uniform sampler2D TextureUnitId;
+in VS_OUT {
+    vec2 TexCoord;
+    flat int index;
+} fs_in;
+
+uniform sampler2DArray TextureUnitId;
+uniform bool enabled[128];
 
 void main() {
-    FragColor = texture(TextureUnitId, TexCoord);
+    if (!enabled[fs_in.index]) discard;
+    FragColor = texture(TextureUnitId, vec3(fs_in.TexCoord, fs_in.index));
 }

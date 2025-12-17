@@ -8,7 +8,7 @@ const char* files[SHADER_NUM_TYPES][2] = {
     {BASE_PATH "default.vsh", BASE_PATH "default.fsh"},
     {BASE_PATH "skybox.vsh", BASE_PATH "skybox.fsh"},
     {BASE_PATH "ui_default.vsh", BASE_PATH "ui_default.fsh"},
-    {BASE_PATH "ui_default.vsh", BASE_PATH "ui_text.fsh"},
+    {BASE_PATH "ui_text.vsh", BASE_PATH "ui_text.fsh"},
     {BASE_PATH "ui_default.vsh", BASE_PATH "ui_3d.fsh"}
 };
 

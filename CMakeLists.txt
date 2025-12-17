@@ -23,8 +23,8 @@ add_executable(CVoxelEngine main.c
         include/Settings.h
         src/managers/InputManager.c
         include/managers/InputManager.h
-        src/World.c
-        include/World.h
+        src/ChunkManager.c
+        include/ChunkManager.h
         src/Chunk.c
         include/Chunk.h
         include/VoxelEngine/Block.h

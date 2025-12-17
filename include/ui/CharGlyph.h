@@ -3,7 +3,7 @@
 #include <cglm/types.h>
 
 typedef struct {
-    unsigned int texture;
+    int character;
     vec2 size;
     vec2 bearing;
     unsigned int advance;

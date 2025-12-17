@@ -49,9 +49,9 @@ void UIInventory_init() {
     vec2 screenSize = {Settings.window.width, Settings.window.height};
 
     background = UISprite_init("assets/ui/inventory_bg.png", (vec2){screenSize[0] / 2, screenSize[1] / 2}, (vec2){
-                      (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
-                      (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y
-                  });
+                                   (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
+                                   (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y
+                               }, false);
     itemPickedUp = UIStack_init(0, 0, (vec2){0, 0}, (vec2){90, 90});
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
@@ -68,14 +68,14 @@ void UIInventory_init() {
                                  },
                                  (vec2){90, 90});
             slotBackgrounds[y * NUM_SLOTS_X + x] = UISprite_init("assets/ui/hotbar_bg.png", (vec2){
-                              screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
-                                  slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
-                                  slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
-                              screenSize[1] / 2 - (y - NUM_SLOTS_Y / 2.f) * (
-                                  slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (
-                                  slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
-                          },
-                          slotBackgroundSize);
+                                                                     screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
+                                                                         slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
+                                                                         slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
+                                                                     screenSize[1] / 2 - (y - NUM_SLOTS_Y / 2.f) * (
+                                                                         slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (
+                                                                         slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
+                                                                 },
+                                                                 slotBackgroundSize, false);
         }
     }
 }
@@ -83,9 +83,9 @@ void UIInventory_init() {
 void UIInventory_draw() {
     if (!enabled) return;
 
-    UISprite_draw(background);
+    UISprite_draw();
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
-        UISprite_draw(slotBackgrounds[i]);
+        UISprite_draw();
         if (inventory_get_stack_from_slot(i % NUM_SLOTS_X, i / NUM_SLOTS_X).type != 0)
             UIStack_draw(slotSprites[i]);
     }
@@ -137,6 +137,11 @@ bool UIInventory_is_enabled() {
 
 void UIInventory_toggle() {
     enabled = !enabled;
+
+    UISprite_set_enabled(background, enabled);
+    for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
+        UISprite_set_enabled(slotSprites[i], enabled);
+    }
 
     glfwSetInputMode(window_get_handler(), GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }

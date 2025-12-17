@@ -8,7 +8,7 @@
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 128
 #define CHUNK_SIZE_Z 16
-#define CHUNK_SIZE CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z
+#define CHUNK_BLOCK_NUM CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z
 
 typedef struct {
     vec3 position;
@@ -29,26 +29,18 @@ typedef struct chunk_t {
     struct chunk_t *south;
     struct chunk_t *east;
     struct chunk_t *west;
-    struct chunk_t *above;
-    struct chunk_t *below;
 
-    BlockId* blocks;
+    BlockId blocks[CHUNK_BLOCK_NUM];
     VboData* vbos;
 } Chunk;
 
 struct init_args {
     Chunk* chunk;
     ivec3 position;
-    Chunk* north;
-    Chunk* south;
-    Chunk* east;
-    Chunk* west;
-    Chunk* above;
-    Chunk* below;
-    BlockId* blocks;
 };
 
 void chunk_init(struct init_args* args);
+
 void chunk_init_mesh(Chunk* chunk);
 BlockId chunk_get_block(Chunk *chunk, int x, int y, int z);
 void chunk_create_mesh(Chunk *chunk);
