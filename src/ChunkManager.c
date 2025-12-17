@@ -1,5 +1,6 @@
 #include "ChunkManager.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <GLFW/glfw3.h>
 
@@ -139,6 +140,7 @@ void ChunkManager_draw_chunks() {
     maxZ = fmin(maxZ, WORLD_SIZE_Z - 1);
 
     glDisable(GL_BLEND);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     for (int x = minX; x <= maxX; x++ ) {
         for (int z = minZ; z <= maxZ; z++) {
