@@ -6,21 +6,19 @@
 #include <glad/glad.h>
 
 #include "CommonVertices.h"
-#include "CVector/Vector.h"
+#include "hashmap.h"
 #include "ui/UIManager.h"
-#include "VoxelEngine/VoxelEngine.h"
-
-#define INITIAL_SIZE 32
-#define RESIZE_FACTOR 2JQ
 
 static constexpr int MaxSpriteNum = 128;
 
 typedef struct {
     unsigned int vao, vbo;
+    int incrementalAtlasIndex;
     int atlasId;
     int spriteNum;
+    hashmap* textToIndex;
+    int textMap[MaxSpriteNum];
     mat4 transform[MaxSpriteNum];
-    unsigned int texture[MaxSpriteNum];
     int enabled[MaxSpriteNum];
 } uisprites_t;
 
@@ -49,13 +47,23 @@ UISprite UISprite_init(const char *texture, vec2 position, vec2 size, bool enabl
         UIManager_get_ortho_matrix(ortho);
         shader_set_mat4(sm_get_shader(SHADER_UI), "ortho", &ortho);
         shader_use(0);
+
+        sprites.textToIndex = hashmap_init();
     }
 
     sprites.enabled[sprites.spriteNum] = enabled;
     glm_mat4_identity(sprites.transform[sprites.spriteNum]);
     glm_translate(sprites.transform[sprites.spriteNum], (vec3) {position[0], position[1], 0});
     glm_scale(sprites.transform[sprites.spriteNum], (vec3) {size[0], size[1], 1});
-    tm_dynamic_atlas_add_texture(sprites.atlasId, texture, sprites.spriteNum);
+    hashmap_item* item = hashmap_get(sprites.textToIndex, texture);
+    if (item == nullptr) {
+        hashmap_set(sprites.textToIndex, texture, sprites.spriteNum);
+        tm_dynamic_atlas_add_texture(sprites.atlasId, texture, sprites.incrementalAtlasIndex);
+        sprites.textMap[sprites.spriteNum] = sprites.incrementalAtlasIndex;
+        sprites.incrementalAtlasIndex++;
+    } else {
+        sprites.textMap[sprites.spriteNum] = item->value;
+    }
     return sprites.spriteNum++;
 }
 
@@ -69,7 +77,7 @@ void UISprite_set_position(UISprite spriteIndex, vec2 position) {
 }
 
 void UISprite_set_texture(UISprite spriteIndex, const char *texture) {
-    sprites.texture[spriteIndex] = tm_get_texture_id(texture);
+    //sprites.texture[spriteIndex] = tm_get_texture_id(texture);
 }
 
 void UISprite_set_enabled(UISprite sprite, bool enabled) {
@@ -99,5 +107,6 @@ void UISprite_draw() {
     glBindTexture(GL_TEXTURE_2D_ARRAY, sprites.atlasId);
     glUniform1iv(glGetUniformLocation(sm_get_shader(SHADER_UI), "enabled"), sprites.spriteNum, sprites.enabled);
     glUniformMatrix4fv(glGetUniformLocation(sm_get_shader(SHADER_UI), "model"), sprites.spriteNum, GL_FALSE, sprites.transform[0][0]);
+    glUniform1iv(glGetUniformLocation(sm_get_shader(SHADER_UI), "textureMap"), sprites.spriteNum, sprites.textMap);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, sprites.spriteNum);
 }
