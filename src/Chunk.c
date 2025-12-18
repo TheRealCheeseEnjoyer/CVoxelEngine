@@ -10,6 +10,7 @@
 #include "FaceOrientation.h"
 #include "stb_image.h"
 #include "Structure.h"
+#include "Engine/Time.h"
 #include "managers/ShaderManager.h"
 #include "libs/CVector/Vector.h"
 #include "VoxelEngine/Block.h"
@@ -69,6 +70,10 @@ void chunk_init(struct init_args *args) {
                          * 16;
             height = fmaxf(3, height);
             for (int y = 0; y <= fminf(height, CHUNK_SIZE_Y); y++) {
+                if (x == 0 || z == 0 || x == CHUNK_SIZE_X - 1 || z == CHUNK_SIZE_Z - 1) {
+                    args->chunk->blocks[COORDS_TO_INDEX(x, y, z)] = BLOCK_WOOD;
+                    continue;
+                }
                 args->chunk->blocks[COORDS_TO_INDEX(x, y, z)] = height_mapper(y);
             }
 
@@ -449,6 +454,7 @@ void chunk_draw(Chunk *chunk) {
     glActiveTexture(GL_TEXTURE0);
 
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, chunk->model[0]);
+    chunk->lastDrawnFrame = Time.frameNumber;
 
     for (size_t i = 0; i < vec_size(chunk->vbos); i++) {
         if (chunk->vbos[i].vbo == 0 || vec_size(chunk->vbos[i].mesh) == 0) continue;
@@ -587,4 +593,8 @@ BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z) {
 void chunk_set_block(Chunk *chunk, int x, int y, int z, BlockId type) {
     chunk->blocks[COORDS_TO_INDEX(x, y, z)] = type;
     chunk_register_changes(chunk, x, y, z, type);
+}
+
+bool chunk_is_already_drawn(Chunk* chunk) {
+    return Time.frameNumber == chunk->lastDrawnFrame;
 }

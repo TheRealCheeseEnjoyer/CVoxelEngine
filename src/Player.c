@@ -70,7 +70,7 @@ void recalculate_view();
 
 void player_init() {
     controls = &Settings.controls;
-    glm_perspective(glm_rad(120), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f,
+    glm_perspective(glm_rad(90), (float)Settings.window.width / (float)Settings.window.height, 0.1f, 1000.0f,
                     projectionMatrix);
     recalculate_view();
     glGenVertexArrays(1, &vao);
@@ -94,12 +94,12 @@ void player_get_eye_position(vec3 eye_pos) {
 }
 
 void player_get_aabb(vec3 pos, AABB* out) {
-    out->max[0] = pos[0] + aabbSize[0] / 2;
-    out->min[0] = pos[0] - aabbSize[0] / 2;
-    out->max[1] = pos[1] + aabbSize[1] / 2;
-    out->min[1] = pos[1] - aabbSize[1] / 2;
-    out->max[2] = pos[2] + aabbSize[2] / 2;
-    out->min[2] = pos[2] - aabbSize[2] / 2;
+    out->center[0] = pos[0];
+    out->center[1] = pos[1];
+    out->center[2] = pos[2];
+    out->extent[0] = aabbSize[0] / 2;
+    out->extent[1] = aabbSize[1] / 2;
+    out->extent[2] = aabbSize[2] / 2;
 }
 
 bool player_is_grounded() {
@@ -233,12 +233,6 @@ void player_physics_update() {
 
     glm_vec3_muladds(Gravity, dt, oldVelocity);
     glm_vec3_muladds(oldVelocity, dt, oldPosition);
-
-    AABB aabb;
-    vec3 halfSize;
-    glm_vec3_divs(aabbSize, 2, halfSize);
-    glm_vec3_add(oldPosition, halfSize, aabb.max);
-    glm_vec3_sub(oldPosition, halfSize, aabb.min);
 
     if (player_is_colliding_with_near_blocks(oldPosition)) {
         if (velocity[1] < 0 && Time.deltaTime > 1 / 70.f)

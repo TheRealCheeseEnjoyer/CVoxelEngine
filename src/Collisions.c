@@ -10,35 +10,35 @@ bool collisions_ray_to_aabb(vec3 origin, vec3 direction, AABB aabb, float* dista
     float tMin = -INFINITY, tMax = INFINITY;
 
     FaceOrientation yFace = (FaceOrientation)-1, xFace = (FaceOrientation)-1, zFace = (FaceOrientation)-1;
-    if (origin[Y] > aabb.max[Y])
+    if (origin[Y] > aabb.center[Y] + aabb.extent[Y])
         yFace = FACE_TOP;
-    else if (origin[Y] < aabb.min[Y])
+    else if (origin[Y] < aabb.center[Y] - aabb.extent[Y])
         yFace = FACE_BOTTOM;
 
-    if (origin[X] > aabb.max[X])
+    if (origin[X] > aabb.center[X] + aabb.extent[X])
         xFace = FACE_LEFT;
-    else if (origin[X] < aabb.min[X])
+    else if (origin[X] < aabb.center[X] - aabb.extent[X])
         xFace = FACE_RIGHT;
 
-    if (origin[Z] > aabb.max[Z])
+    if (origin[Z] > aabb.center[Z] + aabb.extent[Z])
         zFace = FACE_FRONT;
-    else if (origin[Z] < aabb.min[Z])
+    else if (origin[Z] < aabb.center[Z] - aabb.extent[Z])
         zFace = FACE_BACK;
 
-    float tx1 = (aabb.min[X] - origin[X]) / direction[X];
-    float tx2 = (aabb.max[X] - origin[X]) / direction[X];
+    float tx1 = (aabb.center[X] - aabb.extent[X] - origin[X]) / direction[X];
+    float tx2 = (aabb.center[X] + aabb.extent[X] - origin[X]) / direction[X];
 
     tMin = fmax(tMin, fmin(tx1, tx2));
     tMax = fmin(tMax, fmax(tx1, tx2));
 
-    float ty1 = (aabb.min[Y] - origin[Y]) / direction[Y];
-    float ty2 = (aabb.max[Y] - origin[Y]) / direction[Y];
+    float ty1 = (aabb.center[Y] - aabb.extent[Y] - origin[Y]) / direction[Y];
+    float ty2 = (aabb.center[Y] + aabb.extent[Y] - origin[Y]) / direction[Y];
 
     tMin = fmax(tMin, fmin(ty1, ty2));
     tMax = fmin(tMax, fmax(ty1, ty2));
 
-    float tz1 = (aabb.min[Z] - origin[Z]) / direction[Z];
-    float tz2 = (aabb.max[Z] - origin[Z]) / direction[Z];
+    float tz1 = (aabb.center[Z] - aabb.extent[Z] - origin[Z]) / direction[Z];
+    float tz2 = (aabb.center[Z] + aabb.extent[Z] - origin[Z]) / direction[Z];
 
     tMin = fmax(tMin, fmin(tz1, tz2));
     tMax = fmin(tMax, fmax(tz1, tz2)),
@@ -48,13 +48,13 @@ bool collisions_ray_to_aabb(vec3 origin, vec3 direction, AABB aabb, float* dista
     glm_vec3_scale(direction, *distance, ray);
     glm_vec3_add(ray, origin, ray);
 
-    if (ray[Y] > aabb.min[Y] && ray[Y] < aabb.max[Y] && ray[Z] > aabb.min[Z] && ray[Z] < aabb.max[Z]) {
+    if (ray[Y] > aabb.center[Y] - aabb.extent[Y] && ray[Y] < aabb.center[Y] + aabb.extent[Y] && ray[Z] > aabb.center[Z] - aabb.extent[Z] && ray[Z] < aabb.center[Z] + aabb.extent[Z]) {
         *faceHit = xFace;
     }
-    else if (ray[Y] > aabb.min[Y] && ray[Y] < aabb.max[Y] && ray[X] > aabb.min[X] && ray[X] < aabb.max[X]) {
+    else if (ray[Y] > aabb.center[Y] - aabb.extent[Y] && ray[Y] < aabb.center[Y] + aabb.extent[Y] && ray[X] > aabb.center[X] - aabb.extent[X] && ray[X] < aabb.center[X] + aabb.extent[X]) {
         *faceHit = zFace;
     }
-    else if (ray[X] > aabb.min[X] && ray[X] < aabb.max[X] && ray[Z] > aabb.min[Z] && ray[Z] < aabb.max[Z]) {
+    else if (ray[X] > aabb.center[X] - aabb.extent[X] && ray[X] < aabb.center[X] + aabb.extent[X] && ray[Z] > aabb.center[Z] - aabb.extent[Z] && ray[Z] < aabb.center[Z] + aabb.extent[Z]) {
         *faceHit = yFace;
     }
 
@@ -62,29 +62,19 @@ bool collisions_ray_to_aabb(vec3 origin, vec3 direction, AABB aabb, float* dista
 }
 
 bool collisions_aabb_to_aabb(AABB first, AABB second) {
-    return first.min[X] <= second.max[X] &&
-            first.max[X] >= second.min[X] &&
-            first.min[Y] <= second.max[Y] &&
-            first.max[Y] >= second.min[Y] &&
-            first.min[Z] <= second.max[Z] &&
-            first.max[Z] >= second.min[Z];
+    return first.center[X] - first.extent[X] <= second.center[X] + second.extent[X] &&
+            first.center[X] + first.extent[X] >= second.center[X] - second.extent[X] &&
+            first.center[Y] - first.extent[Y] <= second.center[Y] + second.extent[Y] &&
+            first.center[Y] + first.extent[Y] >= second.center[Y] - second.extent[Y] &&
+            first.center[Z] - first.extent[Z] <= second.center[Z] + second.extent[Z]&&
+            first.center[Z] + first.extent[Z] >= second.center[Z] - second.extent[Z];
 }
 
 bool collisions_aabb_to_near_blocks(AABB aabb) {
-    vec3 pos = {
-        (aabb.min[X] + aabb.max[X]) / 2,
-        (aabb.min[Y] + aabb.max[Y]) / 2,
-        (aabb.min[Z] + aabb.max[Z]) / 2
-    };
-    vec3 aabbSize = {
-        aabb.max[X] - aabb.min[X],
-        aabb.max[Y] - aabb.min[Y],
-        aabb.max[Z] - aabb.min[Z]
-    };
-    for (int x = -ceil(aabbSize[X] / 2); x <= ceil(aabbSize[X] / 2); x++) {
-        for (int y = -ceil(aabbSize[Y] / 2); y <= ceil(aabbSize[Y] / 2); y++) {
-            for (int z = -ceil(aabbSize[Z] / 2); z <= ceil(aabbSize[Z] / 2); z++) {
-                vec3 blockPos = {round(pos[X] + x), round(pos[Y] + y), round(pos[Z] + z)};
+    for (int x = -ceil(aabb.extent[X]); x <= ceil(aabb.extent[X]); x++) {
+        for (int y = -ceil(aabb.extent[Y]); y <= ceil(aabb.extent[Y]); y++) {
+            for (int z = -ceil(aabb.extent[Z]); z <= ceil(aabb.extent[Z]); z++) {
+                vec3 blockPos = {round(aabb.center[X] + x), round(aabb.center[Y] + y), round(aabb.center[Z] + z)};
                 BlockId block = world_get_block_at(blockPos[X], blockPos[Y], blockPos[Z]);
                 if (block == BLOCK_INVALID_ID || block == BLOCK_AIR)
                     continue;

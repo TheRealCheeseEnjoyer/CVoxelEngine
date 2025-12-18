@@ -2,6 +2,7 @@
 #define TIME_H
 
 struct time_t {
+    uint64_t frameNumber;
     float elapsedTime;
     float deltaTime;
 };

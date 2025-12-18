@@ -3,8 +3,8 @@
 #include <cglm/vec3.h>
 
 typedef struct {
-    vec3 min;
-    vec3 max;
+    vec3 center;
+    vec3 extent;
 } AABB;
 
 #endif

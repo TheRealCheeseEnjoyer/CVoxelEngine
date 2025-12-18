@@ -45,8 +45,8 @@ void rigidbody_update() {
         AABB aabb;
         vec3 halfSize;
         glm_vec3_divs(rigidbodies[i].size, 2, halfSize);
-        glm_vec3_add(oldPosition, halfSize, aabb.max);
-        glm_vec3_sub(oldPosition, halfSize, aabb.min);
+        //glm_vec3_add(oldPosition, halfSize, aabb.max);
+        //glm_vec3_sub(oldPosition, halfSize, aabb.min);
 
         if (collisions_aabb_to_near_blocks(aabb)) {
             memset(rigidbodies[i].velocity, 0, sizeof(vec3));

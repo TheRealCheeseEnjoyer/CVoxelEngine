@@ -25,6 +25,7 @@ typedef struct chunk_t {
     ivec3 position;
     mat4 model;
     unsigned int VAO;
+    uint64_t lastDrawnFrame;
     struct chunk_t *north;
     struct chunk_t *south;
     struct chunk_t *east;
@@ -50,5 +51,7 @@ void chunk_draw(Chunk *chunk);
 BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z);
 
 void chunk_set_block(Chunk *chunk, int x, int y, int z, BlockId type);
+
+bool chunk_is_already_drawn(Chunk *chunk);
 
 #endif

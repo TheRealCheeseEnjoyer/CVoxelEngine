@@ -43,6 +43,7 @@ void engine_main_loop_start() {
     float currentTime = (float)glfwGetTime();
     Time.deltaTime = currentTime - Time.elapsedTime;
     Time.elapsedTime = currentTime;
+    Time.frameNumber++;
 }
 
 void engine_main_loop_end() {
