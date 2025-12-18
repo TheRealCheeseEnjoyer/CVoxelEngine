@@ -8,6 +8,7 @@
 #include "Player.h"
 #include "Shader.h"
 #include "CVector/Vector.h"
+#include "Engine/Time.h"
 #include "managers/ShaderManager.h"
 #include "ui/UIManager.h"
 #include "VoxelEngine/BlockId.h"
@@ -42,8 +43,10 @@ UIItem UIItem_init(const BlockId type, vec2 position, vec2 size, bool enabled) {
     item.type = type;
     glm_mat4_identity(item.model);
     glm_translate(item.model, (vec3){position[0], position[1], 0});
-    // TODO: rotation (like minecraft)
-    glm_scale(item.model, (vec3){size[0], size[1], 1});
+    glm_scale(item.model, (vec3){50, 50, 1});
+    glm_rotate(item.model, glm_rad(45), (vec3) {0, 1, 0});
+    glm_rotate(item.model, glm_rad(20), (vec3){1, 0, 1});
+
     item.enabled = enabled;
     vec_append(&items, &item);
 
@@ -93,6 +96,8 @@ void UIItem_draw() {
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "ortho", &ortho);
     shader_set_int(sm_get_shader(SHADER_UI_3D), "atlas", 0);
 
+    static float rot = 0;
+    rot += Time.deltaTime;
     for (size_t i = 0; i < vec_size(items); i++) {
         if (!items[i].enabled) continue;
         shader_set_mat4(sm_get_shader(SHADER_UI_3D), "model", &items[i].model);
