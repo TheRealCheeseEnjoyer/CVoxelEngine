@@ -1,7 +1,5 @@
 #include "ui/UIInventory.h"
 
-#include <stdio.h>
-
 #include "managers/InputManager.h"
 #include "Inventory.h"
 #include "Settings.h"
@@ -18,7 +16,7 @@ static constexpr vec2 slotSpriteSize = {90, 90};
 static constexpr vec2 slotBackgroundSpacerSize = {6, 6};
 
 static UISprite background;
-static UIStack slotSprites[NUM_SLOTS];
+static UIStack stacks[NUM_SLOTS];
 static UISprite slotBackgrounds[NUM_SLOTS];
 static UIStack itemPickedUp;
 static bool isPickingUp = false;
@@ -31,8 +29,8 @@ int check_hovered_slot() {
     for (int i = 0; i < NUM_SLOTS; i++) {
         vec2 spritePos;
         vec2 spriteSize;
-        UIStack_get_size(slotSprites[i], spriteSize);
-        UIStack_get_position(slotSprites[i], spritePos);
+        UIStack_get_size(stacks[i], spriteSize);
+        UIStack_get_position(stacks[i], spritePos);
         if (mousePos[0] > spritePos[0] - spriteSize[0] / 2 &&
             mousePos[0] < spritePos[0] + spriteSize[0] / 2 &&
             mousePos[1] > spritePos[1] - spriteSize[1] / 2 &&
@@ -52,21 +50,21 @@ void UIInventory_init() {
                                    (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
                                    (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y
                                }, false);
-    itemPickedUp = UIStack_init(0, 0, (vec2){0, 0}, (vec2){90, 90});
+    itemPickedUp = UIStack_init(0, 0, (vec2){0, 0}, (vec2){90, 90}, false);
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
-            slotSprites[y * NUM_SLOTS_X + x] = UIStack_init(
+            stacks[y * NUM_SLOTS_X + x] = UIStack_init(
                 g_blockData[inventory_get_stack_from_slot(x, y).type].sideTextures[0],
-                                 0,
-                                 (vec2){
-                                     screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
-                                         slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
-                                         slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
-                                     screenSize[1] / 2 - (y - NUM_SLOTS_Y / 2.f) * (
-                                         slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (
-                                         slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
-                                 },
-                                 (vec2){90, 90});
+                0,
+                (vec2){
+                    screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
+                        slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
+                        slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) / 2,
+                    screenSize[1] / 2 - (y - NUM_SLOTS_Y / 2.f) * (
+                        slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) - (
+                        slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) / 2
+                },
+                (vec2){90, 90}, false);
             slotBackgrounds[y * NUM_SLOTS_X + x] = UISprite_init("assets/ui/hotbar_bg.png", (vec2){
                                                                      screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
                                                                          slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) + (
@@ -83,11 +81,9 @@ void UIInventory_init() {
 void UIInventory_draw() {
     if (!enabled) return;
 
-    UISprite_draw();
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
-        UISprite_draw();
         if (inventory_get_stack_from_slot(i % NUM_SLOTS_X, i / NUM_SLOTS_X).type != 0)
-            UIStack_draw(slotSprites[i]);
+            UIStack_draw(stacks[i]);
     }
     if (isPickingUp)
         UIStack_draw(itemPickedUp);
@@ -121,7 +117,7 @@ void UIInventory_update() {
                     UIHotbar_reload_slot(hovered % 9, STACK_EMPTY);
             } else if (isPickingUp) {
                 isPickingUp = stack.type != 0;
-                UIStack_set_stack(slotSprites[hovered], stack);
+                UIStack_set_stack(stacks[hovered], stack);
                 inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, stackPickedUp);
                 UIStack_set_stack(itemPickedUp, stack);
                 stackPickedUp = stack;
@@ -139,8 +135,10 @@ void UIInventory_toggle() {
     enabled = !enabled;
 
     UISprite_set_enabled(background, enabled);
+    UIStack_set_enabled(itemPickedUp, enabled);
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
-        UISprite_set_enabled(slotSprites[i], enabled);
+        UISprite_set_enabled(slotBackgrounds[i], enabled);
+        UIStack_set_enabled(stacks[i], enabled);
     }
 
     glfwSetInputMode(window_get_handler(), GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
@@ -151,5 +149,5 @@ void UIInventory_reload_slot(int x, int y, BlockStack stack) {
         UIHotbar_reload_slot(x, stack);
     }
 
-    UIStack_set_stack(slotSprites[y * NUM_SLOTS_X + x], stack);
+    UIStack_set_stack(stacks[y * NUM_SLOTS_X + x], stack);
 }

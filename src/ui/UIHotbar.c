@@ -17,7 +17,7 @@ void UIHotbar_init() {
     };
     for (int i = 0; i < NUM_SLOTS_X; i++) {
         BlockStack stack = inventory_get_stack_from_slot(i, 0);
-        sprites[i] = UIStack_init(stack.type, stack.size, (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90});
+        sprites[i] = UIStack_init(stack.type, stack.size, (vec2){screenSize[0] / 2 + (i - 4) * 100, screenSize[1] - 100},(vec2){90, 90}, true);
     }
     background = UISprite_init("assets/ui/hotbar_bg.png", (vec2){screenSize[0] / 2, screenSize[1] - 100}, (vec2) {900, 100}, true);
     selector = UISprite_init("assets/ui/hotbar_selector.png", (vec2){screenSize[0] / 2 - 4 * 100, screenSize[1] - 100}, (vec2){100, 100}, true);
@@ -46,10 +46,8 @@ BlockId UIHotbar_move_selector_to_slot(int slotSelected) {
 }
 
 void UIHotbar_draw() {
-    UISprite_draw();
     for (int i = 0; i < 9; i++) {
         if (inventory_get_stack_from_slot(i, 0).type != 0)
             UIStack_draw(sprites[i]);
     }
-    UISprite_draw();
 }

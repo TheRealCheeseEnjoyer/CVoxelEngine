@@ -10,11 +10,12 @@ typedef struct {
     UIItem uiItem;
     UIText amountText;
     int amount;
+    bool enabled;
 } uiinventoryslot_t;
 
 static uiinventoryslot_t* slots = nullptr;
 
-UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size) {
+UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size, bool enabled) {
     if (slots == nullptr) {
         slots = vec_init(sizeof(uiinventoryslot_t));
     }
@@ -22,7 +23,7 @@ UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size) {
     slot.uiItem = UIItem_init(type, position, size);
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
-    slot.amountText = UIText_init(amountStr, (vec2) {position[0] + 0.2 * size[0], position[1] + 0.7f * size[1]}, false);
+    slot.amountText = UIText_init(amountStr, (vec2) {position[0] + 3 * size[0] / 8, position[1] + size[1] / 8 }, false);
     slot.amount = amount;
     vec_append(&slots, &slot);
     return vec_size(slots) - 1;
@@ -36,8 +37,10 @@ void UIStack_set_amount(UIStack slotIndex, int amount) {
 
 void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
     UIItem_set_type(slots[slotIndex].uiItem, stack.type);
+    slots[slotIndex].amount = stack.size;
     char amountStr[10];
     sprintf(amountStr, "%d", stack.size);
+    UIText_set_enabled(slots[slotIndex].amountText, stack.size > 1 && slots[slotIndex].enabled);
     UIText_set_text(slots[slotIndex].amountText, amountStr);
     if (stack.size == stack.maxSize)
         UIText_set_color(slots[slotIndex].amountText, (vec3){255, 0, 0});
@@ -56,6 +59,11 @@ void UIStack_set_position(UIStack slotIndex, vec2 position) {
     UIText_set_position(slots[slotIndex].amountText, (vec2){position[0] + size[0] / 4, position[1] + 0.7f * size[1]});
 }
 
+void UIStack_set_enabled(UIStack uistack, bool enabled) {
+    slots[uistack].enabled = enabled;
+    UIText_set_enabled(slots[uistack].amountText, slots[uistack].amount > 1 && enabled);
+}
+
 void UIStack_get_position(UIStack slotIndex, vec2 position) {
     UIItem_get_position(slots[slotIndex].uiItem, position);
 }
@@ -66,5 +74,4 @@ void UIStack_get_size(UIStack slotIndex, vec2 size) {
 
 void UIStack_draw(UIStack slotIndex) {
     UIItem_draw(slots[slotIndex].uiItem);
-    UIText_draw();
 }

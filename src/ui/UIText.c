@@ -67,26 +67,28 @@ void UIText_set_enabled(UIText text, bool enabled) {
     texts[text].enabled = enabled;
 }
 
-/*void update_position(UIText textId) {
+void update_position(UIText textId) {
+    float scale = 48.f / 256.f;
     int posX = texts[textId].position[0];
-    for (int i = 0; i < vec_size(texts[textId].chars); i++) {
+    for (int i = 0; i < texts[textId].textLen; i++) {
         CharGlyph glyph;
-        glyph_manager_get_glyph(texts[textId].chars[i].c, &glyph);
-        float xPos = posX + glyph.bearing[0];
-        float yPos = texts[textId].position[1] - glyph.bearing[1];
+        glyph_manager_get_glyph(texts[textId].letterMap[i], &glyph);
 
-        glm_mat4_identity(texts[textId].chars[i].transform);
-        glm_translate(texts[textId].chars[i].transform, (vec3) {xPos, yPos, 0});
-        glm_scale(texts[textId].chars[i].transform, (vec3) {glyph.size[0], glyph.size[1], 1});
+        float xPos = posX + glyph.bearing[0] * scale;
+        float yPos = texts[textId].position[1] + (256 - glyph.bearing[1]) * scale;
 
-        posX += glyph.advance >> 6;
+        glm_mat4_identity(texts[textId].transforms[i]);
+        glm_translate(texts[textId].transforms[i], (vec3) {xPos, yPos, 0});
+        glm_scale(texts[textId].transforms[i], (vec3) {256 * scale, 256 * scale, 1});
+        texts[textId].letterMap[i] = glyph.character;
+        posX += (glyph.advance >> 6) * scale;
     }
-}*/
+}
 
 void UIText_set_position(UIText ui_text, vec2 position) {
     texts[ui_text].position[0] = position[0];
     texts[ui_text].position[1] = position[1];
-    //update_position(ui_text);
+    update_position(ui_text);
 }
 
 void UIText_set_color(UIText ui_text, vec3 color) {
