@@ -50,11 +50,12 @@ void UIInventory_init() {
                                    (slotBackgroundSize[0] + slotBackgroundSpacerSize[0]) * NUM_SLOTS_X,
                                    (slotBackgroundSize[1] + slotBackgroundSpacerSize[1]) * NUM_SLOTS_Y
                                }, false);
+
     itemPickedUp = UIStack_init(0, 0, (vec2){0, 0}, (vec2){90, 90}, false);
     for (int y = 0; y < NUM_SLOTS_Y; y++) {
         for (int x = 0; x < NUM_SLOTS_X; x++) {
             stacks[y * NUM_SLOTS_X + x] = UIStack_init(
-                g_blockData[inventory_get_stack_from_slot(x, y).type].sideTextures[0],
+                inventory_get_stack_from_slot(x, y).type,
                 0,
                 (vec2){
                     screenSize[0] / 2 + (x - NUM_SLOTS_X / 2.f) * (
@@ -112,11 +113,13 @@ void UIInventory_update() {
                 isPickingUp = true;
                 stackPickedUp = stack;
                 UIStack_set_stack(itemPickedUp, stack);
+                UIStack_set_enabled(stacks[hovered], false);
                 inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, STACK_EMPTY);
                 if (hovered / NUM_SLOTS_X == 0)
                     UIHotbar_reload_slot(hovered % 9, STACK_EMPTY);
             } else if (isPickingUp) {
                 isPickingUp = stack.type != 0;
+                UIStack_set_enabled(stacks[hovered], true);
                 UIStack_set_stack(stacks[hovered], stack);
                 inventory_set_stack_in_slot(hovered % NUM_SLOTS_X, hovered / NUM_SLOTS_X, stackPickedUp);
                 UIStack_set_stack(itemPickedUp, stack);

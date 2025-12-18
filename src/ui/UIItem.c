@@ -64,7 +64,8 @@ void UIItem_set_position(const UIItem item, vec2 position) {
     glm_decompose_rs(items[item].model, rotation, scale);
     glm_mat4_identity(items[item].model);
     glm_translate(items[item].model, (vec3){position[0], position[1], 0});
-    glm_scale(items[item].model, (vec3){scale[0], scale[1], 1});
+    glm_mul(items[item].model, rotation, items[item].model);
+    glm_scale(items[item].model, scale);
 }
 
 void UIItem_set_enabled(UIItem item, bool enabled) {
