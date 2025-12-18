@@ -1,5 +1,6 @@
 #include "../include/Chunk.h"
 
+#include <iso646.h>
 #include <string.h>
 #include <cglm/affine.h>
 #include <glad/glad.h>
@@ -201,9 +202,9 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
             vertices[0].position[1] = start[1] - block_size[1] / 2;
             vertices[0].position[2] = start[2] + (orientation == FACE_FRONT ? block_size[2] : -block_size[2]) / 2;
             vertices[1].position[2] = start[2] + (orientation == FACE_FRONT ? block_size[2] : -block_size[2]) / 2;
-            vertices[0].texCoords[0] = 0;
+            vertices[0].texCoords[0] = orientation == FACE_FRONT ? 0 : 1;
             vertices[0].texCoords[1] = 0;
-            vertices[1].texCoords[0] = 1;
+            vertices[1].texCoords[0] = orientation == FACE_FRONT ? 1 : 0;
             vertices[1].texCoords[1] = 1;
             break;
     }
