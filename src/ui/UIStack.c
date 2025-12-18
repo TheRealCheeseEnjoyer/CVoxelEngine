@@ -20,7 +20,7 @@ UIStack UIStack_init(BlockId type, int amount, vec2 position, vec2 size, bool en
         slots = vec_init(sizeof(uiinventoryslot_t));
     }
     uiinventoryslot_t slot;
-    slot.uiItem = UIItem_init(type, position, size);
+    slot.uiItem = UIItem_init(type, position, size, false);
     char amountStr[10];
     sprintf(amountStr, "%d", amount);
     slot.amountText = UIText_init(amountStr, (vec2) {position[0] + 3 * size[0] / 8, position[1] + size[1] / 8 }, false);
@@ -37,6 +37,7 @@ void UIStack_set_amount(UIStack slotIndex, int amount) {
 
 void UIStack_set_stack(UIStack slotIndex, BlockStack stack) {
     UIItem_set_type(slots[slotIndex].uiItem, stack.type);
+    UIItem_set_enabled(slots[slotIndex].uiItem, slots[slotIndex].enabled && stack.size > 0);
     slots[slotIndex].amount = stack.size;
     char amountStr[10];
     sprintf(amountStr, "%d", stack.size);
@@ -61,6 +62,7 @@ void UIStack_set_position(UIStack slotIndex, vec2 position) {
 
 void UIStack_set_enabled(UIStack uistack, bool enabled) {
     slots[uistack].enabled = enabled;
+    UIItem_set_enabled(uistack, slots[uistack].enabled);
     UIText_set_enabled(slots[uistack].amountText, slots[uistack].amount > 1 && enabled);
 }
 
@@ -73,5 +75,5 @@ void UIStack_get_size(UIStack slotIndex, vec2 size) {
 }
 
 void UIStack_draw(UIStack slotIndex) {
-    UIItem_draw(slots[slotIndex].uiItem);
+    UIItem_draw();
 }

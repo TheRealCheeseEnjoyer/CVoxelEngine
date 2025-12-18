@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 
 #include "Settings.h"
+#include "UIItem.h"
 #include "../../include/managers/InputManager.h"
 #include "ui/UIText.h"
 
@@ -38,6 +39,7 @@ int UIManager_check_hovered(UISprite *sprite, int size) {
             return i;
         }
     }
+
     return -1;
 }
 
@@ -45,6 +47,7 @@ void UIManager_draw() {
     glDisable(GL_DEPTH_TEST);
 
     UISprite_draw();
+    UIItem_draw();
     UIText_draw();
 
     glEnable(GL_DEPTH_TEST);

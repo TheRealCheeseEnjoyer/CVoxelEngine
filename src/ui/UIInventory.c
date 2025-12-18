@@ -138,7 +138,8 @@ void UIInventory_toggle() {
     UIStack_set_enabled(itemPickedUp, enabled);
     for (int i = 0; i < NUM_SLOTS_X * NUM_SLOTS_Y; i++) {
         UISprite_set_enabled(slotBackgrounds[i], enabled);
-        UIStack_set_enabled(stacks[i], enabled);
+        if (inventory_get_stack_from_slot(i % NUM_SLOTS_X, i / NUM_SLOTS_X).size != 0)
+            UIStack_set_enabled(stacks[i], enabled);
     }
 
     glfwSetInputMode(window_get_handler(), GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);

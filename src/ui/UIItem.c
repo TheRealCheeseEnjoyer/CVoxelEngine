@@ -16,12 +16,13 @@
 struct ui_item {
     mat4 model;
     BlockId type;
+    bool enabled;
 };
 
 static unsigned int vao, vbo;
 static struct ui_item* items = nullptr;
 
-UIItem UIItem_init(const BlockId type, vec2 position, vec2 size) {
+UIItem UIItem_init(const BlockId type, vec2 position, vec2 size, bool enabled) {
     if (items == nullptr) {
         items = vec_init(sizeof(struct ui_item));
         glGenVertexArrays(1, &vao);
@@ -43,7 +44,7 @@ UIItem UIItem_init(const BlockId type, vec2 position, vec2 size) {
     glm_translate(item.model, (vec3){position[0], position[1], 0});
     // TODO: rotation (like minecraft)
     glm_scale(item.model, (vec3){size[0], size[1], 1});
-
+    item.enabled = enabled;
     vec_append(&items, &item);
 
     return vec_size(items) - 1;
@@ -63,6 +64,10 @@ void UIItem_set_position(const UIItem item, vec2 position) {
     glm_scale(items[item].model, (vec3){scale[0], scale[1], 1});
 }
 
+void UIItem_set_enabled(UIItem item, bool enabled) {
+    items[item].enabled = enabled;
+}
+
 void UIItem_get_size(const UIItem item, vec2 size) {
     vec3 scale;
     glm_decompose_scalev(items[item].model, scale);
@@ -79,18 +84,20 @@ void UIItem_get_position(const UIItem item, vec2 position) {
     position[1] = pos[1];
 }
 
-void UIItem_draw(const UIItem item) {
+void UIItem_draw() {
     glBindVertexArray(vao);
     glBindTexture(GL_TEXTURE_2D_ARRAY, VoxelEngine_get_atlas_id());
     shader_use(sm_get_shader(SHADER_UI_3D));
     mat4 ortho;
     UIManager_get_ortho_matrix(ortho);
     shader_set_mat4(sm_get_shader(SHADER_UI_3D), "ortho", &ortho);
-
     shader_set_int(sm_get_shader(SHADER_UI_3D), "atlas", 0);
-    shader_set_mat4(sm_get_shader(SHADER_UI_3D), "model", &items[item].model);
 
-    shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", g_blockData[items[item].type].sideTextures[0]);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    for (size_t i = 0; i < vec_size(items); i++) {
+        if (!items[i].enabled) continue;
+        shader_set_mat4(sm_get_shader(SHADER_UI_3D), "model", &items[i].model);
+        shader_set_int(sm_get_shader(SHADER_UI_3D), "atlasIndex", g_blockData[items[i].type].sideTextures[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
     glBindVertexArray(0);
 }
