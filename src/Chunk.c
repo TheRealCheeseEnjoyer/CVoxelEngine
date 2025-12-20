@@ -36,7 +36,8 @@ void chunk_load_structure(Chunk *chunk, int x, int y, int z, StructureId structu
     StructureData data = structure_get_data(structure);
     for (int i = 0; i < data.numBlocks; i++) {
         ivec3 newBlockPos = {x + data.positions[i][0], y + data.positions[i][1], z + data.positions[i][2]};
-        if (newBlockPos[0] > CHUNK_SIZE_X - 1 || newBlockPos[0] < 0 || newBlockPos[1] > CHUNK_SIZE_Y - 1 || newBlockPos[1] < 0 || newBlockPos[2] > CHUNK_SIZE_Z - 1 || newBlockPos[2] < 0)
+        if (newBlockPos[0] > CHUNK_SIZE_X - 1 || newBlockPos[0] < 0 || newBlockPos[1] > CHUNK_SIZE_Y - 1 || newBlockPos[
+                1] < 0 || newBlockPos[2] > CHUNK_SIZE_Z - 1 || newBlockPos[2] < 0)
             continue;
         chunk->blocks[COORDS_TO_INDEX(newBlockPos[0], newBlockPos[1], newBlockPos[2])] =
                 data.blocks[i];
@@ -80,7 +81,8 @@ void chunk_init(struct init_args *args) {
                 args->chunk->blocks[COORDS_TO_INDEX(x, y, z)] = height_mapper(y);
             }
 
-            if ((float)rand() / RAND_MAX < .005f && args->chunk->blocks[COORDS_TO_INDEX(x, height, z)] == BLOCK_GRASS) {
+            if ((float) rand() / RAND_MAX < .005f && args->chunk->blocks[COORDS_TO_INDEX(x, height, z)] ==
+                BLOCK_GRASS) {
                 args->chunk->blocks[COORDS_TO_INDEX(x, height, z)] = BLOCK_DIRT;
                 chunk_load_structure(args->chunk, x, height + 1, z, STRUCTURE_TREE);
             }
@@ -220,8 +222,9 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
             block == BLOCK_INVALID_ID ||
             block == BLOCK_AIR ||
             (chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2]) != BLOCK_INVALID_ID &&
-             (g_blockData[chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2])].properties & PROPERTY_TRANSPARENCY) == 0) ||
-             g_blockData[block].sideTextures[orientation] != currentTexture) {
+             (g_blockData[chunk_get_block(chunk, *neighbor[0], *neighbor[1], *neighbor[2])].properties &
+              PROPERTY_TRANSPARENCY) == 0) ||
+            g_blockData[block].sideTextures[orientation] != currentTexture) {
             break;
         }
 
@@ -269,7 +272,7 @@ void chunk_get_surface_bounds(Chunk *chunk, ivec3 startPos, Vertex vertices[2], 
     vertices[1].texCoords[1] *= width + 1;
 }
 
-void chunk_update_mesh(Chunk *chunk, int targetTexture) {
+void chunk_create_mesh(Chunk *chunk) {
     char meshedFaces[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z] = {0};
 
     for (int z = 0; z < CHUNK_SIZE_Z; ++z) {
@@ -280,142 +283,139 @@ void chunk_update_mesh(Chunk *chunk, int targetTexture) {
                     continue;
 
                 ivec3 blockPosition = {x, y, z};
-                BlockId tempBlock = chunk_get_block(chunk, x, y + 1, z);
                 Vertex vertices[2];
-                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (meshedFaces[x][y][z] & FACE_TOP_MASK)
-                    != FACE_TOP_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_TOP] == targetTexture)) {
-                    chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_TOP, meshedFaces);
-                    Vertex v1 = {
-                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
-                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    Vertex v2 = {
-                        .position = {vertices[1].position[0], vertices[1].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    vec_append(&chunk->mesh, &vertices[0]);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &vertices[1]);
-                }
+                for (FaceOrientation orientation = 0; orientation < FACE_NUM; orientation++) {
+                    BlockId tempBlock;
+                    switch (orientation) {
+                        case FACE_TOP:
+                            tempBlock = chunk_get_block(chunk, x, y + 1, z);
+                            break;
+                        case FACE_BOTTOM:
+                            tempBlock = chunk_get_block(chunk, x, y - 1, z);
+                            break;
+                        case FACE_LEFT:
+                            tempBlock = chunk_get_block(chunk, x + 1, y, z);
+                            break;
+                        case FACE_RIGHT:
+                            tempBlock = chunk_get_block(chunk, x - 1, y, z);
+                            break;
+                        case FACE_FRONT:
+                            tempBlock = chunk_get_block(chunk, x, y, z + 1);
+                            break;
+                        case FACE_BACK:
+                            tempBlock = chunk_get_block(chunk, x, y, z - 1);
+                            break;
+                    }
 
-                tempBlock = chunk_get_block(chunk, x, y - 1, z);
-                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (
-                        meshedFaces[x][y][z] & FACE_BOTTOM_MASK) !=
-                    FACE_BOTTOM_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_BOTTOM] == targetTexture)) {
-                    chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BOTTOM, meshedFaces);
-                    Vertex v1 = {
-                        .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    Vertex v2 = {
-                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
-                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    vec_append(&chunk->mesh, &vertices[0]);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &vertices[1]);
-                }
+                    if (tempBlock != BLOCK_INVALID_ID &&
+                        g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY &&
+                        !(meshedFaces[x][y][z] & FaceOrientation_to_mask(orientation))) {
+                        chunk_get_surface_bounds(chunk, blockPosition, vertices, orientation, meshedFaces);
+                        Vertex v1, v2;
+                        switch (orientation) {
+                            case FACE_TOP:
+                                v1.position[0] = vertices[0].position[0];
+                                v1.position[1] = vertices[0].position[1];
+                                v1.position[2] = vertices[1].position[2];
+                                v1.texCoords[0] = vertices[0].texCoords[0];
+                                v1.texCoords[1] = vertices[1].texCoords[1];
+                                v1.texCoords[2] = vertices[0].texCoords[2];
 
-                tempBlock = chunk_get_block(chunk, x + 1, y, z);
-                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (meshedFaces[x][y][z] & FACE_LEFT_MASK)
-                    !=
-                    FACE_LEFT_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_LEFT] == targetTexture)) {
-                    chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_LEFT, meshedFaces);
-                    Vertex v1 = {
-                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    Vertex v2 = {
-                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
-                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1], vertices[0].texCoords[2]}
-                    };
+                                v2.position[0] = vertices[1].position[0];
+                                v2.position[1] = vertices[1].position[1];
+                                v2.position[2] = vertices[0].position[2];
+                                v2.texCoords[0] = vertices[1].texCoords[0];
+                                v2.texCoords[1] = vertices[0].texCoords[1];
+                                v2.texCoords[2] = vertices[0].texCoords[2];
+                                break;
+                            case FACE_BOTTOM:
+                                v1.position[0] = vertices[1].position[0];
+                                v1.position[1] = vertices[0].position[1];
+                                v1.position[2] = vertices[0].position[2];
+                                v1.texCoords[0] = vertices[1].texCoords[0];
+                                v1.texCoords[1] = vertices[0].texCoords[1];
+                                v1.texCoords[2] = vertices[0].texCoords[2];
 
-                    vec_append(&chunk->mesh, &vertices[0]);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &vertices[1]);
-                }
+                                v2.position[0] = vertices[0].position[0];
+                                v2.position[1] = vertices[0].position[1];
+                                v2.position[2] = vertices[1].position[2];
+                                v2.texCoords[0] = vertices[0].texCoords[0];
+                                v2.texCoords[1] = vertices[1].texCoords[1];
+                                v2.texCoords[2] = vertices[0].texCoords[2];
+                                break;
+                            case FACE_LEFT:
+                                v1.position[0] = vertices[0].position[0];
+                                v1.position[1] = vertices[1].position[1];
+                                v1.position[2] = vertices[0].position[2];
+                                v1.texCoords[0] = vertices[0].texCoords[0];
+                                v1.texCoords[1] = vertices[1].texCoords[1];
+                                v1.texCoords[2] = vertices[0].texCoords[2];
 
-                tempBlock = chunk_get_block(chunk, x - 1, y, z);
-                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (
-                        meshedFaces[x][y][z] & FACE_RIGHT_MASK) !=
-                    FACE_RIGHT_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_RIGHT] == targetTexture)) {
-                    chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_RIGHT, meshedFaces);
-                    Vertex v1 = {
-                        .position = {vertices[0].position[0], vertices[0].position[1], vertices[1].position[2]},
-                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    Vertex v2 = {
-                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1], vertices[0].texCoords[2]}
-                    };
+                                v2.position[0] = vertices[0].position[0];
+                                v2.position[1] = vertices[0].position[1];
+                                v2.position[2] = vertices[1].position[2];
+                                v2.texCoords[0] = vertices[1].texCoords[0];
+                                v2.texCoords[1] = vertices[0].texCoords[1];
+                                v2.texCoords[2] = vertices[0].texCoords[2];
+                                break;
+                            case FACE_RIGHT:
+                                v1.position[0] = vertices[0].position[0];
+                                v1.position[1] = vertices[0].position[1];
+                                v1.position[2] = vertices[1].position[2];
+                                v1.texCoords[0] = vertices[1].texCoords[0];
+                                v1.texCoords[1] = vertices[0].texCoords[1];
+                                v1.texCoords[2] = vertices[0].texCoords[2];
 
-                    vec_append(&chunk->mesh, &vertices[0]);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &vertices[1]);
-                }
+                                v2.position[0] = vertices[0].position[0];
+                                v2.position[1] = vertices[1].position[1];
+                                v2.position[2] = vertices[0].position[2];
+                                v2.texCoords[0] = vertices[0].texCoords[0];
+                                v2.texCoords[1] = vertices[1].texCoords[1];
+                                v2.texCoords[2] = vertices[0].texCoords[2];
+                                break;
+                            case FACE_FRONT:
+                                v1.position[0] = vertices[1].position[0];
+                                v1.position[1] = vertices[0].position[1];
+                                v1.position[2] = vertices[0].position[2];
+                                v1.texCoords[0] = vertices[1].texCoords[0];
+                                v1.texCoords[1] = vertices[0].texCoords[1];
+                                v1.texCoords[2] = vertices[0].texCoords[2];
 
-                tempBlock = chunk_get_block(chunk, x, y, z + 1);
-                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (
-                        meshedFaces[x][y][z] & FACE_FRONT_MASK) !=
-                    FACE_FRONT_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_FRONT] == targetTexture)) {
-                    chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_FRONT, meshedFaces);
-                    Vertex v1 = {
-                        .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    Vertex v2 = {
-                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1], vertices[0].texCoords[2]}
-                    };
+                                v2.position[0] = vertices[0].position[0];
+                                v2.position[1] = vertices[1].position[1];
+                                v2.position[2] = vertices[0].position[2];
+                                v2.texCoords[0] = vertices[0].texCoords[0];
+                                v2.texCoords[1] = vertices[1].texCoords[1];
+                                v2.texCoords[2] = vertices[0].texCoords[2];
+                                break;
+                            case FACE_BACK:
+                                v1.position[0] = vertices[0].position[0];
+                                v1.position[1] = vertices[1].position[1];
+                                v1.position[2] = vertices[0].position[2];
+                                v1.texCoords[0] = vertices[0].texCoords[0];
+                                v1.texCoords[1] = vertices[1].texCoords[1];
+                                v1.texCoords[2] = vertices[0].texCoords[2];
 
-                    vec_append(&chunk->mesh, &vertices[0]);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &vertices[1]);
-                }
+                                v2.position[0] = vertices[1].position[0];
+                                v2.position[1] = vertices[0].position[1];
+                                v2.position[2] = vertices[0].position[2];
+                                v2.texCoords[0] = vertices[1].texCoords[0];
+                                v2.texCoords[1] = vertices[0].texCoords[1];
+                                v2.texCoords[2] = vertices[0].texCoords[2];
+                                break;
+                        }
 
-                tempBlock = chunk_get_block(chunk, x, y, z - 1);
-                if ((tempBlock == BLOCK_INVALID_ID || g_blockData[tempBlock].properties & PROPERTY_TRANSPARENCY) && (meshedFaces[x][y][z] & FACE_BACK_MASK)
-                    !=
-                    FACE_BACK_MASK && (targetTexture == -1 || g_blockData[block].sideTextures[FACE_BACK] == targetTexture)) {
-                    chunk_get_surface_bounds(chunk, blockPosition, vertices, FACE_BACK, meshedFaces);
-                    Vertex v1 = {
-                        .position = {vertices[0].position[0], vertices[1].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[0].texCoords[0], vertices[1].texCoords[1], vertices[0].texCoords[2]}
-                    };
-                    Vertex v2 = {
-                        .position = {vertices[1].position[0], vertices[0].position[1], vertices[0].position[2]},
-                        .texCoords = {vertices[1].texCoords[0], vertices[0].texCoords[1], vertices[0].texCoords[2]}
-                    };
-
-                    vec_append(&chunk->mesh, &vertices[0]);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v2);
-                    vec_append(&chunk->mesh, &v1);
-                    vec_append(&chunk->mesh, &vertices[1]);
+                        vec_append(&chunk->mesh, &vertices[0]);
+                        vec_append(&chunk->mesh, &v1);
+                        vec_append(&chunk->mesh, &v2);
+                        vec_append(&chunk->mesh, &v2);
+                        vec_append(&chunk->mesh, &v1);
+                        vec_append(&chunk->mesh, &vertices[1]);
+                    }
                 }
             }
         }
     }
-}
-
-void chunk_create_mesh(Chunk *chunk) {
-    chunk_update_mesh(chunk, -1);
 }
 
 void chunk_load_mesh(Chunk *chunk) {
@@ -447,7 +447,7 @@ void chunk_draw(Chunk *chunk) {
 
 void chunk_remesh(Chunk *chunk) {
     vec_clear(chunk->mesh);
-    chunk_update_mesh(chunk, -1);
+    chunk_create_mesh(chunk);
     chunk_load_mesh(chunk);
 }
 
@@ -478,6 +478,6 @@ void chunk_set_block(Chunk *chunk, int x, int y, int z, BlockId type) {
     chunk_register_changes(chunk, x, y, z, type);
 }
 
-bool chunk_is_already_drawn(Chunk* chunk) {
+bool chunk_is_already_drawn(Chunk *chunk) {
     return Time.frameNumber == chunk->lastDrawnFrame;
 }
