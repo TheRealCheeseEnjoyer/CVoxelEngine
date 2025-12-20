@@ -1,13 +1,13 @@
 #version 330 core
 
 out vec4 FragColor;
-in vec2 TexCoord;
+in vec3 TexCoord;
 
 uniform sampler2DArray TextureUnitId;
 uniform int atlasIndex;
 
 void main() {
-    vec4 texColor = texture(TextureUnitId, vec3(TexCoord, atlasIndex));
+    vec4 texColor = texture(TextureUnitId, TexCoord);
     if (texColor.a < 0.1f)
         discard;
     FragColor = texColor;

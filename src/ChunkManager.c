@@ -78,7 +78,7 @@ void ChunkManager_init() {
     for (int z = 0; z < WORLD_SIZE_X; z++) {
         for (int y = 0; y < WORLD_SIZE_Y; y++) {
             for (int x = 0; x < WORLD_SIZE_Z; x++) {
-                chunk_load_all_mesh(ChunkManager_get_chunk(x, z));
+                chunk_load_mesh(ChunkManager_get_chunk(x, z));
             }
         }
     }
@@ -146,6 +146,7 @@ void ChunkManager_draw_chunks() {
     glDisable(GL_BLEND);
     while (!is_empty(&queue)) {
         Chunk* chunk = dequeue(&queue);
+        if (!chunk) continue;
         chunkAABB.center[0] = chunk->position[0] * CHUNK_SIZE_X + chunkAABB.extent[0];
         chunkAABB.center[1] = 0 + chunkAABB.extent[1];
         chunkAABB.center[2] = chunk->position[2] * CHUNK_SIZE_Z + chunkAABB.extent[2];

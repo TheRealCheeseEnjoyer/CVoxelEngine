@@ -46,7 +46,7 @@ static mat4 projectionMatrix;
 static mat4 viewMatrix;
 
 static vec2 rotation = {DEFAULT_YAW, DEFAULT_PITCH}; // yaw and pitch
-static vec3 position = {500, 17, 500};
+static vec3 position = {500, 70, 500};
 static vec3 front;
 static vec3 up;
 static vec3 right;

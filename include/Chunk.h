@@ -12,7 +12,7 @@
 
 typedef struct {
     vec3 position;
-    vec2 texCoords;
+    vec3 texCoords;
 } Vertex;
 
 typedef struct {
@@ -25,6 +25,8 @@ typedef struct chunk_t {
     ivec3 position;
     mat4 model;
     unsigned int VAO;
+    unsigned int VBO;
+    Vertex* mesh;
     uint64_t lastDrawnFrame;
     struct chunk_t *north;
     struct chunk_t *south;
@@ -32,7 +34,6 @@ typedef struct chunk_t {
     struct chunk_t *west;
 
     BlockId blocks[CHUNK_BLOCK_NUM];
-    VboData* vbos;
 } Chunk;
 
 struct init_args {
@@ -45,7 +46,7 @@ void chunk_init(struct init_args* args);
 void chunk_init_mesh(Chunk* chunk);
 BlockId chunk_get_block(Chunk *chunk, int x, int y, int z);
 void chunk_create_mesh(Chunk *chunk);
-void chunk_load_all_mesh(Chunk *chunk);
+void chunk_load_mesh(Chunk *chunk);
 void chunk_draw(Chunk *chunk);
 
 BlockId chunk_destroy_block(Chunk *chunk, int x, int y, int z);
