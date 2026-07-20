@@ -1,4 +1,4 @@
-# A Voxel Engine made in pure C
+# A Voxel Engine made in C
 
 ## Dependencies
 + [cglm](https://github.com/recp/cglm)
